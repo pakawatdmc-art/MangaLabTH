@@ -1,0 +1,193 @@
+{% extends "reader/base.html" %}
+
+{% block title %}{{ manga.title }} - mangaFactory{% endblock %}
+
+{% block extra_head %}
+<style>
+    .hero-blur {
+        background-image: url('{{ manga.cover.url }}');
+        background-size: cover;
+        background-position: center;
+        filter: blur(60px) saturate(1.3);
+        opacity: 0.18;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="relative overflow-hidden" data-manga-id="{{ manga.pk }}" id="mangaDetailRoot">
+    <div class="hero-blur absolute inset-0 scale-110"></div>
+    <div class="absolute inset-0 bg-gradient-to-b from-surface/35 via-surface/80 to-surface"></div>
+
+    <div class="relative max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-14">
+        <div class="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-8 items-start">
+            <div class="mx-auto md:mx-0 w-44 sm:w-52">
+                <img
+                    src="{{ manga.cover.url }}"
+                    alt="{{ manga.title }}"
+                    class="w-full rounded-xl shadow-2xl shadow-black/50 ring-1 ring-white/10"
+                >
+            </div>
+
+            <div>
+                <div class="flex flex-wrap items-center gap-2 mb-3">
+                    <span class="px-2.5 py-1 rounded-full text-xs bg-gold/15 text-gold ring-1 ring-gold/30">
+                        {{ manga.get_category_display }}
+                    </span>
+                    <span class="px-2.5 py-1 rounded-full text-xs bg-white/5 text-gray-300 ring-1 ring-white/10">
+                        {{ manga.get_status_display }}
+                    </span>
+                </div>
+
+                <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-white">
+                    {{ manga.title }}
+                </h1>
+
+                {% if manga.description %}
+                <p class="mt-4 text-sm sm:text-base text-gray-300 leading-relaxed max-w-3xl">
+                    {{ manga.description }}
+                </p>
+                {% else %}
+                <p class="mt-4 text-sm text-gray-500">ยังไม่มีเรื่องย่อสำหรับเรื่องนี้</p>
+                {% endif %}
+
+                <div class="mt-5 flex flex-wrap gap-5 text-xs text-gray-500">
+                    <span>เพิ่มเมื่อ {{ manga.created_at|date:"d/m/Y" }}</span>
+                    <span>ทั้งหมด {{ chapters|length }} ตอน</span>
+                </div>
+
+                <div class="mt-7 flex flex-wrap gap-3">
+                    {% if latest_chapter %}
+                    <a
+                        href="{% url 'reader:chapter_read' latest_chapter.pk %}"
+                        class="inline-flex items-center px-5 h-10 rounded-lg bg-gold text-black text-sm font-semibold hover:bg-gold-light transition"
+                    >
+                        อ่านตอนล่าสุด ({{ latest_chapter.number|floatformat:"-1" }})
+                    </a>
+                    {% endif %}
+
+                    {% if first_chapter and latest_chapter and first_chapter.pk != latest_chapter.pk %}
+                    <a
+                        href="{% url 'reader:chapter_read' first_chapter.pk %}"
+                        class="inline-flex items-center px-5 h-10 rounded-lg bg-surface-200 text-gray-200 text-sm hover:bg-surface-50 transition ring-1 ring-white/10"
+                    >
+                        เริ่มจากตอนแรก ({{ first_chapter.number|floatformat:"-1" }})
+                    </a>
+                    {% endif %}
+
+                    <a
+                        id="resumeReadingButton"
+                        href="#"
+                        class="hidden inline-flex items-center px-5 h-10 rounded-lg bg-surface-200 text-gray-200 text-sm hover:bg-surface-50 transition ring-1 ring-gold/30"
+                    >
+                        อ่านต่อจากที่ค้างไว้
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+    <div class="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
+        <section>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-semibold text-white">รายการตอน</h2>
+                <span class="text-xs text-gray-500">เรียงจากล่าสุดไปเก่าสุด</span>
+            </div>
+
+            {% if chapters %}
+            <div class="space-y-2">
+                {% for ch in chapters %}
+                <a
+                    href="{% url 'reader:chapter_read' ch.pk %}"
+                    class="group flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-surface-100/75 ring-1 ring-white/5 hover:ring-gold/25 hover:bg-surface-200/70 transition"
+                >
+                    <div class="min-w-0">
+                        <p class="text-sm text-white font-medium truncate">
+                            ตอนที่ {{ ch.number|floatformat:"-1" }}{% if ch.title %} · {{ ch.title }}{% endif %}
+                        </p>
+                        <p class="text-xs text-gray-500 mt-0.5">
+                            {{ ch.page_total }} หน้า · {{ ch.uploaded_at|date:"d/m/Y" }}
+                        </p>
+                    </div>
+                    <span class="text-xs text-gold opacity-0 group-hover:opacity-100 transition">อ่าน</span>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-14 rounded-xl bg-surface-100/65 ring-1 ring-white/5">
+                <p class="text-gray-400">ยังไม่มีตอนในเรื่องนี้</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <aside>
+            <div class="rounded-2xl bg-surface-100/80 ring-1 ring-white/10 p-4">
+                <h3 class="text-sm font-semibold text-white mb-3">แนะนำเรื่องใกล้เคียง</h3>
+                <div class="space-y-3">
+                    {% for item in related_mangas %}
+                    <a href="{% url 'reader:manga_detail' item.pk %}" class="flex gap-3 group">
+                        <img src="{{ item.cover.url }}" alt="{{ item.title }}" class="w-14 h-20 rounded-md object-cover">
+                        <div class="min-w-0">
+                            <p class="text-sm text-gray-200 group-hover:text-white truncate">{{ item.title }}</p>
+                            <p class="text-[11px] text-gray-500 mt-1">
+                                {{ item.get_category_display }} · {{ item.chapter_total }} ตอน
+                            </p>
+                        </div>
+                    </a>
+                    {% empty %}
+                    <p class="text-xs text-gray-500">ยังไม่มีเรื่องใกล้เคียงในหมวดเดียวกัน</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const root = document.getElementById('mangaDetailRoot');
+        const resumeButton = document.getElementById('resumeReadingButton');
+        if (!root || !resumeButton) {
+            return;
+        }
+
+        const mangaId = root.dataset.mangaId;
+        if (!mangaId) {
+            return;
+        }
+
+        let saved = null;
+        try {
+            saved = localStorage.getItem(`mangafactory:lastRead:${mangaId}`);
+        } catch (error) {
+            return;
+        }
+
+        if (!saved) {
+            return;
+        }
+
+        try {
+            const payload = JSON.parse(saved);
+            if (!payload || !payload.url) {
+                return;
+            }
+
+            const progressValue = Number(payload.progress);
+            const progress = Number.isFinite(progressValue) ? Math.min(100, Math.max(0, Math.round(progressValue))) : null;
+            const progressText = progress !== null ? ` · ${progress}%` : '';
+            resumeButton.href = payload.url;
+            resumeButton.textContent = `อ่านต่อจาก ${payload.chapterLabel || 'ตอนล่าสุด'}${progressText}`;
+            resumeButton.classList.remove('hidden');
+        } catch (error) {
+            try {
+                localStorage.removeItem(`mangafactory:lastRead:${mangaId}`);
+            } catch (storageError) {
+                // Ignore storage errors in restricted browser contexts.
+            }
+        }
+    })();
+</script>
+{% endblock %}
