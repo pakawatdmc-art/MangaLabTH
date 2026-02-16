@@ -10,7 +10,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -66,7 +65,5 @@ Thumbs.db
 temp/
 tmp/
 
-# Credentials
-*.json
-!package.json
-!package-lock.json
+# Python credentials (not frontend json)
+/credentials*.json

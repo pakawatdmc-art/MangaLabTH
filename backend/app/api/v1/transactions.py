@@ -1,0 +1,156 @@
+"""Transaction / Coin Economy endpoints.
+
+Critical: all balance mutations use SELECT ... FOR UPDATE
+to guarantee atomicity under concurrent requests.
+"""
+
+from fastapi import APIRouter, HTTPException, Query, status
+from sqlalchemy import text
+from sqlmodel import select
+
+from app.api.deps import AdminUser, CurrentUser, DBSession
+from app.models.manga import Chapter
+from app.models.transaction import Transaction, TransactionType
+from app.models.user import User
+from app.schemas.transaction import (
+    AdminGrantRequest,
+    TransactionRead,
+    UnlockChapterRequest,
+    UnlockChapterResponse,
+)
+
+router = APIRouter(prefix="/transactions", tags=["Transactions"])
+
+
+# ── Reader: list my transactions ─────────────────
+
+
+@router.get("/me", response_model=list[TransactionRead])
+async def my_transactions(
+    user: CurrentUser,
+    session: DBSession,
+    limit: int = Query(50, ge=1, le=200),
+):
+    stmt = (
+        select(Transaction)
+        .where(Transaction.user_id == user.id)
+        .order_by(Transaction.created_at.desc())
+        .limit(limit)
+    )
+    results = (await session.execute(stmt)).scalars().all()
+    return [TransactionRead.model_validate(t) for t in results]
+
+
+# ── Reader: unlock a chapter ─────────────────────
+
+
+@router.post("/unlock", response_model=UnlockChapterResponse)
+async def unlock_chapter(
+    body: UnlockChapterRequest,
+    user: CurrentUser,
+    session: DBSession,
+):
+    """Atomically deduct coins and create an unlock transaction."""
+
+    chapter = await session.get(Chapter, body.chapter_id)
+    if not chapter:
+        raise HTTPException(status_code=404, detail="Chapter not found")
+
+    if chapter.is_free or chapter.coin_price == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="This chapter is free — no unlock needed",
+        )
+
+    # Check if already unlocked
+    existing = (
+        await session.execute(
+            select(Transaction).where(
+                Transaction.user_id == user.id,
+                Transaction.chapter_id == chapter.id,
+                Transaction.type == TransactionType.CHAPTER_UNLOCK,
+            )
+        )
+    ).scalar_one_or_none()
+
+    if existing:
+        return UnlockChapterResponse(
+            success=True,
+            new_balance=user.coin_balance,
+            transaction_id=existing.id,
+            message="Already unlocked",
+        )
+
+    # ── Atomic balance mutation ──────────────────
+    # Lock the user row to prevent concurrent double-spend
+    lock_stmt = (
+        select(User)
+        .where(User.id == user.id)
+        .with_for_update()
+    )
+    locked_user = (await session.execute(lock_stmt)).scalar_one()
+
+    if locked_user.coin_balance < chapter.coin_price:
+        raise HTTPException(
+            status_code=402,
+            detail=f"Insufficient coins. Need {chapter.coin_price}, have {locked_user.coin_balance}",
+        )
+
+    new_balance = locked_user.coin_balance - chapter.coin_price
+    locked_user.coin_balance = new_balance
+
+    tx = Transaction(
+        user_id=locked_user.id,
+        type=TransactionType.CHAPTER_UNLOCK,
+        amount=-chapter.coin_price,
+        balance_after=new_balance,
+        chapter_id=chapter.id,
+        note=f"Unlocked chapter {chapter.number}",
+    )
+    session.add(tx)
+    session.add(locked_user)
+    await session.commit()
+    await session.refresh(tx)
+
+    return UnlockChapterResponse(
+        success=True,
+        new_balance=new_balance,
+        transaction_id=tx.id,
+    )
+
+
+# ── Admin: grant coins ──────────────────────────
+
+
+@router.post("/admin/grant", response_model=TransactionRead)
+async def admin_grant_coins(
+    body: AdminGrantRequest,
+    session: DBSession,
+    admin: AdminUser,
+):
+    """Admin: grant coins to a user."""
+    lock_stmt = (
+        select(User)
+        .where(User.id == body.user_id)
+        .with_for_update()
+    )
+    locked_user = (await session.execute(lock_stmt)).scalar_one_or_none()
+    if not locked_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    new_balance = locked_user.coin_balance + body.amount
+    locked_user.coin_balance = new_balance
+
+    tx = Transaction(
+        user_id=locked_user.id,
+        type=TransactionType.ADMIN_GRANT,
+        amount=body.amount,
+        balance_after=new_balance,
+        note=body.note or f"Granted by admin {admin.id}",
+    )
+    session.add(tx)
+    session.add(locked_user)
+    await session.commit()
+    await session.refresh(tx)
+
+    return TransactionRead.model_validate(tx)

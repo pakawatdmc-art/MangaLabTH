@@ -1,0 +1,51 @@
+"""Stripe payment service for the Coin Economy.
+
+Handles checkout session creation and webhook processing
+for coin purchases.
+"""
+
+import stripe
+from fastapi import HTTPException
+
+from app.config import get_settings
+
+settings = get_settings()
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+
+def create_checkout_session(
+    *,
+    stripe_price_id: str,
+    user_id: str,
+    package_id: str,
+    success_url: str,
+    cancel_url: str,
+) -> str:
+    """Create a Stripe Checkout Session and return the URL."""
+    try:
+        session = stripe.checkout.Session.create(
+            mode="payment",
+            line_items=[{"price": stripe_price_id, "quantity": 1}],
+            success_url=success_url,
+            cancel_url=cancel_url,
+            metadata={
+                "user_id": user_id,
+                "package_id": package_id,
+            },
+        )
+        return session.url
+    except stripe.StripeError as e:
+        raise HTTPException(status_code=502, detail=f"Stripe error: {e}")
+
+
+def verify_webhook_signature(payload: bytes, sig_header: str) -> dict:
+    """Verify and parse a Stripe webhook event."""
+    try:
+        event = stripe.Webhook.construct_event(
+            payload,
+            sig_header,
+            settings.STRIPE_WEBHOOK_SECRET,
+        )
+        return event
+    except stripe.SignatureVerificationError:
+        raise HTTPException(status_code=400, detail="Invalid webhook signature")
