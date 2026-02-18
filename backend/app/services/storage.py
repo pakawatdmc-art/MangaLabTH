@@ -2,9 +2,16 @@
 
 Provides presigned URL generation for direct browser uploads
 and server-side upload/delete helpers.
+
+Environment variables required:
+    R2_ENDPOINT_URL       — e.g. https://<account_id>.r2.cloudflarestorage.com
+    R2_ACCESS_KEY_ID      — R2 API token Access Key ID
+    R2_SECRET_ACCESS_KEY  — R2 API token Secret Access Key
+    R2_BUCKET_NAME        — Target bucket (default: mangafactory)
+    R2_PUBLIC_URL         — Public URL prefix, e.g. https://pub-xxx.r2.dev
 """
 
-from typing import List, Optional
+from typing import List
 
 import boto3
 from botocore.config import Config as BotoConfig
@@ -17,11 +24,12 @@ _client = None
 
 
 def _get_r2_client():
+    """Lazy-init a thread-safe boto3 S3 client pointed at Cloudflare R2."""
     global _client
     if _client is None:
         _client = boto3.client(
             "s3",
-            endpoint_url=f"https://{settings.R2_ACCOUNT_ID}.r2.cloudflarestorage.com",
+            endpoint_url=settings.R2_ENDPOINT_URL,
             aws_access_key_id=settings.R2_ACCESS_KEY_ID,
             aws_secret_access_key=settings.R2_SECRET_ACCESS_KEY,
             config=BotoConfig(

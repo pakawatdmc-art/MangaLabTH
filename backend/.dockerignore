@@ -1,0 +1,38 @@
+# Virtual environments
+.venv/
+.venv-*/
+venv/
+env/
+__pycache__/
+
+# Environment files (injected at runtime)
+.env
+.env.local
+.env.example
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# Git
+.git/
+.gitignore
+
+# Logs & temp
+*.log
+*.tmp
+tmp/
+
+# Alembic versions (optional: include if you run migrations in container)
+# alembic/versions/
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Misc
+README.md
+*.md
