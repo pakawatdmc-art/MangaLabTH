@@ -182,7 +182,29 @@ export async function createCheckoutSession(packageId: string, token: string) {
   });
 }
 
-// ── Upload (R2) ─────────────────────────────────
+// ── Upload (R2 via Backend Proxy) ────────────────
+
+export async function uploadCoverImage(file: File, token: string): Promise<string> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(`${API}/upload/cover`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      // Do NOT set Content-Type — browser sets it automatically with boundary
+    },
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail || "อัปโหลดรูปภาพล้มเหลว");
+  }
+
+  const data = await res.json();
+  return data.public_url;
+}
 
 export async function getPresignedUploadUrls(
   files: { key: string; content_type: string }[],

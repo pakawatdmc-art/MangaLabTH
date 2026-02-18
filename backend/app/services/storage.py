@@ -56,6 +56,22 @@ def generate_presigned_upload_url(
     return {"upload_url": upload_url, "public_url": public_url, "key": key}
 
 
+def upload_file_to_r2(key: str, file_bytes: bytes, content_type: str = "image/webp") -> str:
+    """Upload a file directly to R2 from the backend (bypasses browser CORS).
+
+    Returns:
+        The public URL of the uploaded object.
+    """
+    client = _get_r2_client()
+    client.put_object(
+        Bucket=settings.R2_BUCKET_NAME,
+        Key=key,
+        Body=file_bytes,
+        ContentType=content_type,
+    )
+    return f"{settings.R2_PUBLIC_URL}/{key}"
+
+
 def delete_object(key: str) -> None:
     """Delete a single object from R2."""
     client = _get_r2_client()

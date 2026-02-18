@@ -7,6 +7,9 @@ import { CATEGORY_LABELS, STATUS_LABELS } from "@/lib/types";
 import type { Manga, MangaCategory, MangaStatus } from "@/lib/types";
 import { getMangaList, createManga, deleteManga } from "@/lib/api";
 
+// ... existing imports
+import { uploadCoverImage } from "@/lib/api"; // Add this import
+
 export default function AdminMangaPage() {
   const { getToken } = useAuth();
   const [mangas, setMangas] = useState<Manga[]>([]);
@@ -14,6 +17,10 @@ export default function AdminMangaPage() {
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // New state for file upload
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>("");
 
   const fetchMangas = async () => {
     try {
@@ -27,27 +34,57 @@ export default function AdminMangaPage() {
     }
   };
 
+  // Reset form when opening/closing
+  useEffect(() => {
+    if (!showForm) {
+      setSelectedFile(null);
+      setPreviewUrl("");
+    }
+  }, [showForm]);
+
   useEffect(() => {
     fetchMangas();
   }, []);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      const objectUrl = URL.createObjectURL(file);
+      setPreviewUrl(objectUrl);
+
+      // Cleanup object URL when component unmounts or file changes
+      return () => URL.revokeObjectURL(objectUrl);
+    }
+  };
 
   const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSaving(true);
     const form = new FormData(e.currentTarget);
-    const data = {
-      title: form.get("title") as string,
-      slug: form.get("slug") as string,
-      author: (form.get("author") as string) || "",
-      artist: (form.get("artist") as string) || "",
-      category: (form.get("category") as string) as MangaCategory || "action",
-      status: (form.get("status") as string) as MangaStatus || "ongoing",
-      description: (form.get("description") as string) || "",
-      cover_url: (form.get("cover_url") as string) || "",
-    };
+
     try {
       const token = await getToken();
       if (!token) return;
+
+      let coverUrl = (form.get("cover_url") as string) || "";
+
+      // Upload image if selected
+      if (selectedFile) {
+        coverUrl = await uploadCoverImage(selectedFile, token);
+      }
+
+      const data = {
+        title: form.get("title") as string,
+        slug: form.get("slug") as string,
+        author: (form.get("author") as string) || "",
+        artist: (form.get("artist") as string) || "",
+        category: (form.get("category") as string) as MangaCategory || "action",
+        status: (form.get("status") as string) as MangaStatus || "ongoing",
+        description: (form.get("description") as string) || "",
+        cover_url: coverUrl,
+      };
+
       await createManga(data, token);
       setShowForm(false);
       await fetchMangas();
@@ -57,6 +94,8 @@ export default function AdminMangaPage() {
       setSaving(false);
     }
   };
+
+
 
   const handleDelete = async (manga: Manga) => {
     if (!confirm(`ลบมังงะ "${manga.title}"?`)) return;
@@ -178,13 +217,33 @@ export default function AdminMangaPage() {
               />
             </div>
             <div className="sm:col-span-2">
-              <label className="mb-1 block text-xs text-gray-400">URL ภาพปก (R2)</label>
-              <input
-                type="url"
-                name="cover_url"
-                className="h-10 w-full rounded-lg border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:outline-none"
-                placeholder="https://pub-xxx.r2.dev/covers/..."
-              />
+              <label className="mb-1 block text-xs text-gray-400">รูปภาพปก (R2)</label>
+              <div className="flex gap-4 items-start">
+                <div className="flex-1">
+                  {previewUrl ? (
+                    <div className="relative aspect-[2/3] w-32 rounded overflow-hidden border border-white/10 mb-2">
+                      <img src={previewUrl} alt="Preview" className="object-cover w-full h-full" />
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedFile(null); setPreviewUrl(""); }}
+                        className="absolute top-1 right-1 bg-black/50 p-1 rounded-full hover:bg-red-500/80 transition"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ) : null}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    className="w-full bg-white/5 border border-white/10 rounded px-3 py-2 text-sm focus:outline-none focus:border-gold file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-gold file:text-black hover:file:bg-gold/80"
+                  />
+                  <p className="text-[10px] text-gray-500 mt-1">
+                    รองรับ JPG, PNG, WebP (จะถูกอัปโหลดไปยัง Cloudflare R2 อัตโนมัติ)
+                  </p>
+                </div>
+              </div>
+              <input type="hidden" name="cover_url" value={previewUrl.startsWith("blob:") ? "" : previewUrl} />
             </div>
             <div className="flex gap-2 sm:col-span-2">
               <button
