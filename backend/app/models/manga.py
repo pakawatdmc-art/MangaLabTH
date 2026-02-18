@@ -1,7 +1,7 @@
 """Manga, Chapter, and Page models."""
 
 import enum
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import List, Optional
 from uuid import uuid4
 
@@ -59,7 +59,7 @@ class Manga(SQLModel, table=True):
     total_views: int = Field(default=0, ge=0)
 
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.utcnow(),
     )
     updated_at: Optional[datetime] = Field(default=None)
 
