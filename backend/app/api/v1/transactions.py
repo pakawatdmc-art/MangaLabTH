@@ -24,6 +24,25 @@ from app.schemas.transaction import (
 router = APIRouter(prefix="/transactions", tags=["Transactions"])
 
 
+# ── Admin: list all transactions ─────────────────
+
+
+@router.get("", response_model=List[TransactionRead])
+async def list_all_transactions(
+    session: DBSession,
+    admin: AdminUser,
+    limit: int = Query(200, ge=1, le=1000),
+):
+    """Admin: list all transactions across all users."""
+    stmt = (
+        select(Transaction)
+        .order_by(Transaction.created_at.desc())
+        .limit(limit)
+    )
+    results = (await session.execute(stmt)).scalars().all()
+    return [TransactionRead.model_validate(t) for t in results]
+
+
 # ── Reader: list my transactions ─────────────────
 
 

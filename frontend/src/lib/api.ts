@@ -155,3 +155,46 @@ export async function adminGrantCoins(
 export async function listUsers(token: string) {
   return fetcher<User[]>("/users", { token });
 }
+
+export async function updateUser(userId: string, data: { role?: string; coin_balance?: number }, token: string) {
+  return fetcher<User>(`/users/${userId}`, { method: "PATCH", body: JSON.stringify(data), token });
+}
+
+export async function listAllTransactions(token: string) {
+  return fetcher<Transaction[]>("/transactions", { token });
+}
+
+
+export async function listAllChapters(token: string) {
+  return fetcher<Chapter[]>("/chapters", { token });
+}
+
+// ── Payments ────────────────────────────────────
+
+export async function getPackages() {
+  return fetcher<CoinPackage[]>("/payments/packages");
+}
+
+export async function createCheckoutSession(packageId: string, token: string) {
+  return fetcher<{ url: string }>(`/payments/checkout?package_id=${packageId}`, {
+    method: "POST",
+    token,
+  });
+}
+
+// ── Upload (R2) ─────────────────────────────────
+
+export async function getPresignedUploadUrls(
+  files: { key: string; content_type: string }[],
+  token: string
+) {
+  return fetcher<{ upload_url: string; public_url: string; key: string }[]>(
+    "/upload/presigned",
+    { method: "POST", body: JSON.stringify({ files }), token }
+  );
+}
+
+export async function getChaptersForManga(mangaId: string) {
+  return fetcher<Chapter[]>(`/chapters/manga/${mangaId}`);
+}
+

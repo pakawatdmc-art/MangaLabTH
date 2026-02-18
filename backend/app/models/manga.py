@@ -93,10 +93,10 @@ class Chapter(SQLModel, table=True):
     total_views: int = Field(default=0, ge=0)
 
     published_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.utcnow(),
     )
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.utcnow(),
     )
 
     # ── Relationships ────────────────────────────

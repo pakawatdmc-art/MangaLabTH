@@ -4,7 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BookOpen, Coins, Home, Search, Shield, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, UserButton, useAuth } from "@clerk/nextjs";
+import { useEffect, useState } from "react";
+import { getMe } from "@/lib/api";
 
 const NAV_LINKS = [
   { href: "/", label: "หน้าแรก", icon: Home },
@@ -13,6 +15,25 @@ const NAV_LINKS = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  const { getToken, isLoaded, isSignedIn } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) {
+      setIsAdmin(false);
+      return;
+    }
+    (async () => {
+      try {
+        const token = await getToken();
+        if (!token) return;
+        const user = await getMe(token);
+        setIsAdmin(user.role === "admin");
+      } catch {
+        setIsAdmin(false);
+      }
+    })();
+  }, [isLoaded, isSignedIn, getToken]);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-surface-300/80 backdrop-blur-xl">
@@ -54,13 +75,15 @@ export default function Navbar() {
               <Coins className="h-3.5 w-3.5" />
               เหรียญ
             </Link>
-            <Link
-              href="/admin"
-              className="rounded-lg p-2 text-gray-400 transition hover:bg-white/5 hover:text-white"
-              title="แอดมิน"
-            >
-              <Shield className="h-4 w-4" />
-            </Link>
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className="rounded-lg p-2 text-gray-400 transition hover:bg-white/5 hover:text-white"
+                title="แอดมิน"
+              >
+                <Shield className="h-4 w-4" />
+              </Link>
+            )}
             <UserButton
               appearance={{
                 elements: {

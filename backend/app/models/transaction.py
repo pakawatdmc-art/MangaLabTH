@@ -63,7 +63,7 @@ class Transaction(SQLModel, table=True):
     note: str = Field(default="", max_length=512)
 
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.utcnow(),
         index=True,
     )
 
@@ -93,5 +93,5 @@ class CoinPackage(SQLModel, table=True):
     sort_order: int = Field(default=0)
 
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.utcnow(),
     )

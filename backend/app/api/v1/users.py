@@ -43,7 +43,7 @@ async def list_users(
     admin: AdminUser,
 ):
     """Admin: list all users."""
-    stmt = select(User).order_by(User.created_at.desc())
+    stmt = select(User).order_by(User.role, User.created_at.desc())
     results = (await session.execute(stmt)).scalars().all()
     return [UserRead.model_validate(u) for u in results]
 

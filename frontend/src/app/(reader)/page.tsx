@@ -52,13 +52,11 @@ export default async function HomePage({ searchParams }: Props) {
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
       {/* Hero */}
       <section className="mb-8 text-center sm:mb-10">
-        <p className="mb-2 text-xs uppercase tracking-[0.25em] text-gold">
-          คลังมังงะ
-        </p>
         <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">
-          อ่านมังงะง่ายขึ้น{" "}
+          อ่านการ์ตูนง่ายขึ้น{" "}
           <span className="text-gold">ในที่เดียว</span>
         </h1>
+
         <p className="mt-3 text-sm text-gray-400 sm:text-base">
           ค้นหาเรื่องที่ชอบ กรองตามหมวดหมู่ และอ่านต่อได้ทันที
         </p>
@@ -119,11 +117,10 @@ export default async function HomePage({ searchParams }: Props) {
         <div className="scrollbar-hide flex items-center gap-2 overflow-x-auto pb-2">
           <Link
             href={buildUrl({ category: undefined, page: undefined })}
-            className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs ring-1 transition ${
-              !category
-                ? "bg-gold/20 text-gold ring-gold/40"
-                : "bg-surface-100 text-gray-300 ring-white/10 hover:text-white"
-            }`}
+            className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs ring-1 transition ${!category
+              ? "bg-gold/20 text-gold ring-gold/40"
+              : "bg-surface-100 text-gray-300 ring-white/10 hover:text-white"
+              }`}
           >
             ทั้งหมด
           </Link>
@@ -131,11 +128,10 @@ export default async function HomePage({ searchParams }: Props) {
             <Link
               key={val}
               href={buildUrl({ category: val, page: undefined })}
-              className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs ring-1 transition ${
-                category === val
-                  ? "bg-gold/20 text-gold ring-gold/40"
-                  : "bg-surface-100 text-gray-300 ring-white/10 hover:text-white"
-              }`}
+              className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs ring-1 transition ${category === val
+                ? "bg-gold/20 text-gold ring-gold/40"
+                : "bg-surface-100 text-gray-300 ring-white/10 hover:text-white"
+                }`}
             >
               {label}
             </Link>

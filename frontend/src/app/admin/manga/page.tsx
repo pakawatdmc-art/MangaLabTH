@@ -1,20 +1,91 @@
 "use client";
 
-import { useState } from "react";
-import { BookOpen, Edit, Plus, Search, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useAuth } from "@clerk/nextjs";
+import { BookOpen, Edit, Loader2, Plus, Trash2 } from "lucide-react";
 import { CATEGORY_LABELS, STATUS_LABELS } from "@/lib/types";
 import type { Manga, MangaCategory, MangaStatus } from "@/lib/types";
+import { getMangaList, createManga, deleteManga } from "@/lib/api";
 
 export default function AdminMangaPage() {
-  const [mangas] = useState<Manga[]>([]);
+  const { getToken } = useAuth();
+  const [mangas, setMangas] = useState<Manga[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const fetchMangas = async () => {
+    try {
+      const res = await getMangaList({ per_page: 100 });
+      setMangas(res.items);
+      setError("");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "โหลดข้อมูลมังงะล้มเหลว");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMangas();
+  }, []);
+
+  const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSaving(true);
+    const form = new FormData(e.currentTarget);
+    const data = {
+      title: form.get("title") as string,
+      slug: form.get("slug") as string,
+      author: (form.get("author") as string) || "",
+      artist: (form.get("artist") as string) || "",
+      category: (form.get("category") as string) as MangaCategory || "action",
+      status: (form.get("status") as string) as MangaStatus || "ongoing",
+      description: (form.get("description") as string) || "",
+      cover_url: (form.get("cover_url") as string) || "",
+    };
+    try {
+      const token = await getToken();
+      if (!token) return;
+      await createManga(data, token);
+      setShowForm(false);
+      await fetchMangas();
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "สร้างมังงะล้มเหลว");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (manga: Manga) => {
+    if (!confirm(`ลบมังงะ "${manga.title}"?`)) return;
+    try {
+      const token = await getToken();
+      if (!token) return;
+      await deleteManga(manga.id, token);
+      await fetchMangas();
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "ลบมังงะล้มเหลว");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-gold" />
+      </div>
+    );
+  }
 
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">จัดการมังงะ</h1>
-          <p className="text-sm text-gray-500">เพิ่ม แก้ไข หรือลบมังงะ</p>
+          <p className="text-sm text-gray-500">
+            เพิ่ม แก้ไข หรือลบมังงะ — {mangas.length} เรื่อง
+          </p>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
@@ -25,16 +96,23 @@ export default function AdminMangaPage() {
         </button>
       </div>
 
+      {error && (
+        <div className="mb-4 rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          {error}
+        </div>
+      )}
+
       {/* Create form */}
       {showForm && (
         <div className="mb-6 rounded-xl bg-surface-100 p-5 ring-1 ring-white/10">
           <h3 className="mb-4 text-sm font-semibold text-white">เพิ่มมังงะใหม่</h3>
-          <form className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <form onSubmit={handleCreate} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-xs text-gray-400">ชื่อเรื่อง *</label>
               <input
                 type="text"
                 name="title"
+                required
                 className="h-10 w-full rounded-lg border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:outline-none"
                 placeholder="ชื่อมังงะ"
               />
@@ -44,6 +122,7 @@ export default function AdminMangaPage() {
               <input
                 type="text"
                 name="slug"
+                required
                 className="h-10 w-full rounded-lg border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:outline-none"
                 placeholder="my-manga-slug"
               />
@@ -110,9 +189,10 @@ export default function AdminMangaPage() {
             <div className="flex gap-2 sm:col-span-2">
               <button
                 type="submit"
-                className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black transition hover:bg-gold-light"
+                disabled={saving}
+                className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black transition hover:bg-gold-light disabled:opacity-50"
               >
-                บันทึก
+                {saving ? "กำลังบันทึก..." : "บันทึก"}
               </button>
               <button
                 type="button"
@@ -165,10 +245,10 @@ export default function AdminMangaPage() {
                   </td>
                   <td className="px-4 py-2 text-gray-400">{m.chapter_count ?? 0}</td>
                   <td className="px-4 py-2 text-right">
-                    <button className="mr-2 rounded p-1 text-gray-500 hover:text-white">
-                      <Edit className="h-4 w-4" />
-                    </button>
-                    <button className="rounded p-1 text-gray-500 hover:text-red-400">
+                    <button
+                      onClick={() => handleDelete(m)}
+                      className="rounded p-1 text-gray-500 hover:text-red-400"
+                    >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </td>

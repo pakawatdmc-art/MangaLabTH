@@ -1,20 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   BookOpen,
   Coins,
   Home,
   Layers,
   LayoutDashboard,
+  Loader2,
   Menu,
   Upload,
   Users,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useAuth } from "@clerk/nextjs";
+import { getMe } from "@/lib/api";
 
 const SIDEBAR_LINKS = [
   { href: "/admin", label: "แดชบอร์ด", icon: LayoutDashboard },
@@ -31,7 +34,51 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { getToken, isLoaded, isSignedIn } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [checking, setChecking] = useState(true);
+
+  // ── Frontend Shield: Verify Admin Role ──
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    if (!isSignedIn) {
+      router.replace("/");
+      return;
+    }
+
+    const checkRole = async () => {
+      try {
+        const token = await getToken();
+        if (!token) {
+          router.replace("/");
+          return;
+        }
+        const user = await getMe(token);
+        if (user.role !== "admin") {
+          router.replace("/");
+        } else {
+          setChecking(false);
+        }
+      } catch (err) {
+        console.error("Admin check failed", err);
+        router.replace("/");
+      } finally {
+        setChecking(false);
+      }
+    };
+
+    checkRole();
+  }, [isLoaded, isSignedIn, getToken, router]);
+
+  if (checking) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-surface-300">
+        <Loader2 className="h-8 w-8 animate-spin text-gold" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen">

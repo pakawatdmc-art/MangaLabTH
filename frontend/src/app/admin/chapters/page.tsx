@@ -1,20 +1,100 @@
 "use client";
 
-import { useState } from "react";
-import { Edit, Layers, Plus, Trash2 } from "lucide-react";
-import type { Chapter } from "@/lib/types";
+import { useEffect, useState } from "react";
+import { useAuth } from "@clerk/nextjs";
+import { Edit, Layers, Loader2, Plus, Trash2 } from "lucide-react";
+import type { Chapter, Manga } from "@/lib/types";
 import { formatChapterNumber } from "@/lib/utils";
+import { listAllChapters, getMangaList, createChapter, deleteChapter } from "@/lib/api";
 
 export default function AdminChaptersPage() {
-  const [chapters] = useState<Chapter[]>([]);
+  const { getToken } = useAuth();
+  const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [mangas, setMangas] = useState<Manga[]>([]);
+  const [mangaMap, setMangaMap] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const fetchData = async () => {
+    try {
+      const token = await getToken();
+      if (!token) return;
+      const [chapterData, mangaData] = await Promise.all([
+        listAllChapters(token),
+        getMangaList({ per_page: 100 }),
+      ]);
+      setChapters(chapterData);
+      setMangas(mangaData.items);
+      const map: Record<string, string> = {};
+      mangaData.items.forEach((m) => { map[m.id] = m.title; });
+      setMangaMap(map);
+      setError("");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "โหลดข้อมูลตอนล้มเหลว");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSaving(true);
+    const form = new FormData(e.currentTarget);
+    const mangaId = form.get("manga_id") as string;
+    const data = {
+      number: Number(form.get("number")),
+      title: (form.get("title") as string) || "",
+      coin_price: Number(form.get("coin_price") || 0),
+      is_free: form.has("is_free"),
+    };
+    try {
+      const token = await getToken();
+      if (!token) return;
+      await createChapter(mangaId, data, token);
+      setShowForm(false);
+      await fetchData();
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "สร้างตอนล้มเหลว");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (ch: Chapter) => {
+    if (!confirm(`ลบตอนที่ ${ch.number}?`)) return;
+    try {
+      const token = await getToken();
+      if (!token) return;
+      await deleteChapter(ch.id, token);
+      await fetchData();
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "ลบตอนล้มเหลว");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-gold" />
+      </div>
+    );
+  }
 
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">จัดการตอน</h1>
-          <p className="text-sm text-gray-500">เพิ่ม แก้ไข หรือลบตอนของมังงะ</p>
+          <p className="text-sm text-gray-500">
+            เพิ่ม แก้ไข หรือลบตอนของมังงะ — {chapters.length} ตอน
+          </p>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
@@ -25,17 +105,27 @@ export default function AdminChaptersPage() {
         </button>
       </div>
 
+      {error && (
+        <div className="mb-4 rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          {error}
+        </div>
+      )}
+
       {showForm && (
         <div className="mb-6 rounded-xl bg-surface-100 p-5 ring-1 ring-white/10">
           <h3 className="mb-4 text-sm font-semibold text-white">เพิ่มตอนใหม่</h3>
-          <form className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <form onSubmit={handleCreate} className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>
               <label className="mb-1 block text-xs text-gray-400">มังงะ *</label>
               <select
                 name="manga_id"
+                required
                 className="h-10 w-full rounded-lg border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:outline-none"
               >
                 <option value="">เลือกมังงะ...</option>
+                {mangas.map((m) => (
+                  <option key={m.id} value={m.id}>{m.title}</option>
+                ))}
               </select>
             </div>
             <div>
@@ -45,6 +135,7 @@ export default function AdminChaptersPage() {
                 name="number"
                 step="0.5"
                 min="0"
+                required
                 className="h-10 w-full rounded-lg border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:outline-none"
                 placeholder="1"
               />
@@ -77,9 +168,10 @@ export default function AdminChaptersPage() {
             <div className="flex items-end gap-2">
               <button
                 type="submit"
-                className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black transition hover:bg-gold-light"
+                disabled={saving}
+                className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black transition hover:bg-gold-light disabled:opacity-50"
               >
-                บันทึก
+                {saving ? "กำลังบันทึก..." : "บันทึก"}
               </button>
               <button
                 type="button"
@@ -116,7 +208,7 @@ export default function AdminChaptersPage() {
             ) : (
               chapters.map((ch) => (
                 <tr key={ch.id} className="border-b border-white/5 hover:bg-white/[0.02]">
-                  <td className="px-4 py-2 text-gray-400">{ch.manga_id}</td>
+                  <td className="px-4 py-2 text-gray-400">{mangaMap[ch.manga_id] || ch.manga_id}</td>
                   <td className="px-4 py-2 font-medium text-white">
                     {formatChapterNumber(ch.number)}
                   </td>
@@ -130,10 +222,10 @@ export default function AdminChaptersPage() {
                   </td>
                   <td className="px-4 py-2 text-gray-400">{ch.page_count ?? 0}</td>
                   <td className="px-4 py-2 text-right">
-                    <button className="mr-2 rounded p-1 text-gray-500 hover:text-white">
-                      <Edit className="h-4 w-4" />
-                    </button>
-                    <button className="rounded p-1 text-gray-500 hover:text-red-400">
+                    <button
+                      onClick={() => handleDelete(ch)}
+                      className="rounded p-1 text-gray-500 hover:text-red-400"
+                    >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </td>

@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowDownCircle, ArrowUpCircle, Coins, History } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useAuth } from "@clerk/nextjs";
+import { ArrowDownCircle, ArrowUpCircle, Coins, History, Loader2 } from "lucide-react";
 import type { Transaction } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
+import { listAllTransactions } from "@/lib/api";
 
 const TX_TYPE_LABELS: Record<string, { label: string; color: string }> = {
   coin_purchase: { label: "เติมเหรียญ", color: "text-emerald-400" },
@@ -13,7 +15,41 @@ const TX_TYPE_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 export default function AdminTransactionsPage() {
-  const [transactions] = useState<Transaction[]>([]);
+  const { getToken } = useAuth();
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = await getToken();
+        if (!token) return;
+        const data = await listAllTransactions(token);
+        setTransactions(data);
+        setError("");
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "โหลดรายการเหรียญล้มเหลว");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Summary calculations
+  const totalIn = transactions.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
+  const totalOut = transactions.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
+  const latestBalance = transactions.length > 0 ? transactions[0].balance_after : 0;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-gold" />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -25,26 +61,32 @@ export default function AdminTransactionsPage() {
         <p className="text-sm text-gray-500">ประวัติการเติมเหรียญ ปลดล็อกตอน และการคืนเงิน</p>
       </div>
 
+      {error && (
+        <div className="mb-4 rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          {error}
+        </div>
+      )}
+
       {/* Summary cards */}
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="rounded-xl bg-surface-100 p-4 ring-1 ring-white/5">
           <ArrowUpCircle className="mb-1 h-5 w-5 text-emerald-400" />
-          <p className="text-xl font-bold text-white">—</p>
+          <p className="text-xl font-bold text-white">{totalIn.toLocaleString()}</p>
           <p className="text-xs text-gray-500">ยอดเติม</p>
         </div>
         <div className="rounded-xl bg-surface-100 p-4 ring-1 ring-white/5">
           <ArrowDownCircle className="mb-1 h-5 w-5 text-orange-400" />
-          <p className="text-xl font-bold text-white">—</p>
+          <p className="text-xl font-bold text-white">{totalOut.toLocaleString()}</p>
           <p className="text-xs text-gray-500">ยอดใช้</p>
         </div>
         <div className="rounded-xl bg-surface-100 p-4 ring-1 ring-white/5">
           <Coins className="mb-1 h-5 w-5 text-gold" />
-          <p className="text-xl font-bold text-white">—</p>
+          <p className="text-xl font-bold text-white">{latestBalance.toLocaleString()}</p>
           <p className="text-xs text-gray-500">เหรียญหมุนเวียน</p>
         </div>
         <div className="rounded-xl bg-surface-100 p-4 ring-1 ring-white/5">
           <History className="mb-1 h-5 w-5 text-blue-400" />
-          <p className="text-xl font-bold text-white">—</p>
+          <p className="text-xl font-bold text-white">{transactions.length}</p>
           <p className="text-xs text-gray-500">รายการทั้งหมด</p>
         </div>
       </div>

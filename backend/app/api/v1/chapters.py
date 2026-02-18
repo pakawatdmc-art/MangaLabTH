@@ -18,6 +18,25 @@ from app.schemas.manga import (
 router = APIRouter(prefix="/chapters", tags=["Chapters"])
 
 
+# ── Admin: list all chapters ─────────────────────
+
+
+@router.get("", response_model=List[ChapterRead])
+async def list_all_chapters(
+    session: DBSession,
+    admin: AdminUser,
+):
+    """Admin: list all chapters across all manga."""
+    stmt = select(Chapter).order_by(Chapter.created_at.desc())
+    results = (await session.execute(stmt)).scalars().all()
+    items = []
+    for ch in results:
+        data = ChapterRead.model_validate(ch)
+        data.page_count = len(ch.pages) if ch.pages else 0
+        items.append(data)
+    return items
+
+
 # ── Public ───────────────────────────────────────
 
 

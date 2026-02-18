@@ -42,11 +42,11 @@ class User(SQLModel, table=True):
 
     # ── Timestamps ───────────────────────────────
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.utcnow(),
     )
     updated_at: Optional[datetime] = Field(
         default=None,
-        sa_column_kwargs={"onupdate": lambda: datetime.now(timezone.utc)},
+        sa_column_kwargs={"onupdate": lambda: datetime.utcnow()},
     )
 
     # ── Relationships ────────────────────────────

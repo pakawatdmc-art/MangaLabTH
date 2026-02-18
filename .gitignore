@@ -57,3 +57,8 @@ credentials*.json
 !package.json
 !package-lock.json
 !tsconfig.json
+# ── Project Specific ──────────────────────────────────────────
+stripe
+backend/users_log.txt
+stripe.log
+backend/backend.log
