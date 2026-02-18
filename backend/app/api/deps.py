@@ -1,6 +1,6 @@
 """FastAPI dependencies for Clerk JWT authentication and RBAC."""
 
-from typing import Annotated
+from typing import Annotated, Optional
 
 import httpx
 import jwt
@@ -17,7 +17,7 @@ settings = get_settings()
 bearer_scheme = HTTPBearer(auto_error=False)
 
 # ── JWKS cache ───────────────────────────────────
-_jwks_client: jwt.PyJWKClient | None = None
+_jwks_client: Optional[jwt.PyJWKClient] = None
 
 
 def _get_jwks_client() -> jwt.PyJWKClient:
@@ -63,7 +63,7 @@ def _decode_clerk_token(token: str) -> dict:
 
 async def get_current_user(
     credentials: Annotated[
-        HTTPAuthorizationCredentials | None, Security(bearer_scheme)
+        Optional[HTTPAuthorizationCredentials], Security(bearer_scheme)
     ],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> User:

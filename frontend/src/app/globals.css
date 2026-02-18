@@ -10,8 +10,7 @@
   --color-surface-100: #14141a;
   --color-surface-200: #0f0f14;
   --color-surface-300: #0a0a0f;
-  --font-sans: var(--font-inter);
-  --font-thai: var(--font-noto-thai);
+  --font-sans: var(--font-inter), var(--font-noto-thai), sans-serif;
 }
 
 body {

@@ -2,7 +2,7 @@
 
 import enum
 from datetime import datetime, timezone
-from typing import Optional
+from typing import List, Optional
 from uuid import uuid4
 
 from sqlmodel import Field, SQLModel, Relationship
@@ -50,4 +50,4 @@ class User(SQLModel, table=True):
     )
 
     # ── Relationships ────────────────────────────
-    transactions: list["Transaction"] = Relationship(back_populates="user")  # type: ignore[name-defined]
+    transactions: List["Transaction"] = Relationship(back_populates="user")  # type: ignore[name-defined]

@@ -1,5 +1,7 @@
 """Chapter & Page endpoints."""
 
+from typing import List
+
 from fastapi import APIRouter, HTTPException, status
 from sqlmodel import select
 
@@ -19,7 +21,7 @@ router = APIRouter(prefix="/chapters", tags=["Chapters"])
 # ── Public ───────────────────────────────────────
 
 
-@router.get("/manga/{manga_id}", response_model=list[ChapterRead])
+@router.get("/manga/{manga_id}", response_model=List[ChapterRead])
 async def list_chapters(manga_id: str, session: DBSession):
     """List all chapters for a manga, ordered by number."""
     stmt = (
@@ -117,12 +119,12 @@ async def delete_chapter(
 
 @router.post(
     "/{chapter_id}/pages",
-    response_model=list[PageRead],
+    response_model=List[PageRead],
     status_code=status.HTTP_201_CREATED,
 )
 async def add_pages(
     chapter_id: str,
-    pages: list[PageRead],
+    pages: List[PageRead],
     session: DBSession,
     admin: AdminUser,
 ):

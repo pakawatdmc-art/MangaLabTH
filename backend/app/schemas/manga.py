@@ -1,7 +1,7 @@
 """Pydantic v2 schemas for Manga, Chapter, and Page endpoints."""
 
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -39,7 +39,7 @@ class ChapterRead(BaseModel):
 
 
 class ChapterDetail(ChapterRead):
-    pages: list[PageRead] = []
+    pages: List[PageRead] = []
 
 
 class ChapterCreate(BaseModel):
@@ -78,7 +78,7 @@ class MangaRead(BaseModel):
 
 
 class MangaDetail(MangaRead):
-    chapters: list[ChapterRead] = []
+    chapters: List[ChapterRead] = []
 
 
 class MangaCreate(BaseModel):
@@ -109,7 +109,7 @@ class MangaUpdate(BaseModel):
 
 
 class PaginatedResponse(BaseModel):
-    items: list
+    items: List
     total: int
     page: int
     per_page: int

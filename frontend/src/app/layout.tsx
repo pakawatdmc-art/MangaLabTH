@@ -20,26 +20,21 @@ export const metadata: Metadata = {
   description: "แพลตฟอร์มอ่านมังงะออนไลน์ระดับพรีเมียม",
 };
 
-const clerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || "";
-const hasClerk = clerkKey.startsWith("pk_live_") || clerkKey.startsWith("pk_test_c");
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const body = (
-    <html lang="th">
-      <body
-        className={`${inter.variable} ${notoThai.variable} font-sans antialiased`}
-      >
-        {children}
-      </body>
-    </html>
+  return (
+    <ClerkProvider>
+      <html lang="th">
+        <body
+          className={`${inter.variable} ${notoThai.variable} font-sans antialiased`}
+        >
+          {children}
+        </body>
+      </html>
+    </ClerkProvider>
   );
-
-  if (hasClerk) {
-    return <ClerkProvider>{body}</ClerkProvider>;
-  }
-  return body;
 }
+

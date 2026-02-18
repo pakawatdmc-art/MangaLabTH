@@ -4,7 +4,7 @@ Provides presigned URL generation for direct browser uploads
 and server-side upload/delete helpers.
 """
 
-from typing import Optional
+from typing import List, Optional
 
 import boto3
 from botocore.config import Config as BotoConfig
@@ -62,7 +62,7 @@ def delete_object(key: str) -> None:
     client.delete_object(Bucket=settings.R2_BUCKET_NAME, Key=key)
 
 
-def delete_objects(keys: list[str]) -> None:
+def delete_objects(keys: List[str]) -> None:
     """Batch delete objects from R2."""
     if not keys:
         return

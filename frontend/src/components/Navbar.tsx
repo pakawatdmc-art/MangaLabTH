@@ -4,24 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BookOpen, Coins, Home, Search, Shield, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { HAS_CLERK } from "@/lib/clerk";
-
-let SignedIn: React.FC<{ children: React.ReactNode }>;
-let SignedOut: React.FC<{ children: React.ReactNode }>;
-let UserButton: React.FC<{ appearance?: Record<string, unknown> }>;
-
-if (HAS_CLERK) {
-  // Dynamic require so the import only resolves when Clerk is configured
-  const clerk = require("@clerk/nextjs");
-  SignedIn = clerk.SignedIn;
-  SignedOut = clerk.SignedOut;
-  UserButton = clerk.UserButton;
-} else {
-  // Fallback: always show signed-out state
-  SignedIn = ({ children }) => null;
-  SignedOut = ({ children }) => <>{children}</>;
-  UserButton = () => null;
-}
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
 const NAV_LINKS = [
   { href: "/", label: "หน้าแรก", icon: Home },

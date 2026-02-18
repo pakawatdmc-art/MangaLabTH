@@ -2,7 +2,7 @@
 
 import enum
 from datetime import datetime, timezone
-from typing import Optional
+from typing import List, Optional
 from uuid import uuid4
 
 from sqlmodel import Field, Relationship, SQLModel
@@ -64,7 +64,7 @@ class Manga(SQLModel, table=True):
     updated_at: Optional[datetime] = Field(default=None)
 
     # ── Relationships ────────────────────────────
-    chapters: list["Chapter"] = Relationship(
+    chapters: List["Chapter"] = Relationship(
         back_populates="manga",
         sa_relationship_kwargs={"cascade": "all, delete-orphan", "lazy": "selectin"},
     )
@@ -101,7 +101,7 @@ class Chapter(SQLModel, table=True):
 
     # ── Relationships ────────────────────────────
     manga: Optional[Manga] = Relationship(back_populates="chapters")
-    pages: list["Page"] = Relationship(
+    pages: List["Page"] = Relationship(
         back_populates="chapter",
         sa_relationship_kwargs={"cascade": "all, delete-orphan", "lazy": "selectin"},
     )

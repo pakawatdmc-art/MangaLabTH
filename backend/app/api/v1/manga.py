@@ -1,6 +1,7 @@
 """Manga CRUD endpoints."""
 
 from math import ceil
+from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query, status
 from sqlalchemy import func
@@ -27,9 +28,9 @@ async def list_manga(
     session: DBSession,
     page: int = Query(1, ge=1),
     per_page: int = Query(24, ge=1, le=100),
-    category: MangaCategory | None = None,
-    status_filter: MangaStatus | None = Query(None, alias="status"),
-    q: str | None = None,
+    category: Optional[MangaCategory] = None,
+    status_filter: Optional[MangaStatus] = Query(None, alias="status"),
+    q: Optional[str] = None,
     sort: str = "latest",
 ):
     """Public listing with filtering, search, and pagination."""

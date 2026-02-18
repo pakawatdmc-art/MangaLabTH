@@ -1,6 +1,7 @@
 """Application settings loaded from environment variables."""
 
 from functools import lru_cache
+from typing import List
 
 from pydantic_settings import BaseSettings
 
@@ -32,7 +33,7 @@ class Settings(BaseSettings):
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
     @property
-    def cors_origin_list(self) -> list[str]:
+    def cors_origin_list(self) -> List[str]:
         return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
 
     @property

@@ -4,6 +4,8 @@ Critical: all balance mutations use SELECT ... FOR UPDATE
 to guarantee atomicity under concurrent requests.
 """
 
+from typing import List
+
 from fastapi import APIRouter, HTTPException, Query, status
 from sqlalchemy import text
 from sqlmodel import select
@@ -25,7 +27,7 @@ router = APIRouter(prefix="/transactions", tags=["Transactions"])
 # ── Reader: list my transactions ─────────────────
 
 
-@router.get("/me", response_model=list[TransactionRead])
+@router.get("/me", response_model=List[TransactionRead])
 async def my_transactions(
     user: CurrentUser,
     session: DBSession,
