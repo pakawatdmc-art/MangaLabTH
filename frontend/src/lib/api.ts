@@ -32,7 +32,10 @@ async function fetcher<T>(
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.detail || `API error ${res.status}`);
+    const detail = Array.isArray(body.detail)
+      ? body.detail.map((d: any) => d.msg || JSON.stringify(d)).join(", ")
+      : body.detail;
+    throw new Error(detail || `API error ${res.status}`);
   }
 
   if (res.status === 204) return undefined as T;

@@ -7,11 +7,13 @@ from sqlmodel import select
 
 from app.api.deps import AdminUser, CurrentUser, DBSession
 from app.models.manga import Chapter, Manga, Page
+from app.services.storage import delete_objects
 from app.schemas.manga import (
     ChapterCreate,
     ChapterDetail,
     ChapterRead,
     ChapterUpdate,
+    PageCreate,
     PageRead,
 )
 
@@ -129,8 +131,23 @@ async def delete_chapter(
     if not chapter:
         raise HTTPException(status_code=404, detail="Chapter not found")
 
+    # Collect R2 keys from page URLs before deleting from DB
+    r2_keys = []
+    for page in (chapter.pages or []):
+        if page.image_url:
+            # Extract key from public URL: https://pub-xxx.r2.dev/<key>
+            parts = page.image_url.split(".r2.dev/", 1)
+            if len(parts) == 2:
+                r2_keys.append(parts[1])
+
     await session.delete(chapter)
     await session.commit()
+
+    # Delete from R2 after DB commit (best-effort)
+    try:
+        delete_objects(r2_keys)
+    except Exception:
+        pass
 
 
 # ── Pages (Admin batch create) ───────────────────
@@ -143,7 +160,7 @@ async def delete_chapter(
 )
 async def add_pages(
     chapter_id: str,
-    pages: List[PageRead],
+    pages: List[PageCreate],
     session: DBSession,
     admin: AdminUser,
 ):

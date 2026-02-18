@@ -11,6 +11,13 @@ from app.models.manga import MangaCategory, MangaStatus
 # ── Page ─────────────────────────────────────────
 
 
+class PageCreate(BaseModel):
+    number: int
+    image_url: str
+    width: int = 0
+    height: int = 0
+
+
 class PageRead(BaseModel):
     id: str
     number: int

@@ -9,6 +9,7 @@ from sqlmodel import col, select
 
 from app.api.deps import AdminUser, CurrentUser, DBSession
 from app.models.manga import Chapter, Manga, MangaCategory, MangaStatus
+from app.services.storage import delete_objects
 from app.schemas.manga import (
     MangaCreate,
     MangaDetail,
@@ -148,5 +149,30 @@ async def delete_manga(
     if not manga:
         raise HTTPException(status_code=404, detail="Manga not found")
 
+    # Collect all R2 keys: cover + every page of every chapter
+    r2_keys = []
+
+    def _extract_key(url: str) -> str | None:
+        parts = url.split(".r2.dev/", 1)
+        return parts[1] if len(parts) == 2 else None
+
+    if manga.cover_url:
+        key = _extract_key(manga.cover_url)
+        if key:
+            r2_keys.append(key)
+
+    for chapter in (manga.chapters or []):
+        for page in (chapter.pages or []):
+            if page.image_url:
+                key = _extract_key(page.image_url)
+                if key:
+                    r2_keys.append(key)
+
     await session.delete(manga)
     await session.commit()
+
+    # Delete from R2 after DB commit (best-effort)
+    try:
+        delete_objects(r2_keys)
+    except Exception:
+        pass
