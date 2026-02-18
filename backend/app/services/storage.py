@@ -27,6 +27,7 @@ def _get_r2_client():
     """Lazy-init a thread-safe boto3 S3 client pointed at Cloudflare R2."""
     global _client
     if _client is None:
+        settings.validate_r2_config()
         _client = boto3.client(
             "s3",
             endpoint_url=settings.R2_ENDPOINT_URL,
