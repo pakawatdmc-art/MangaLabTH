@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
+import Image from "next/image";
 import { getMe, getMyTransactions } from "@/lib/api";
 import type { User, Transaction } from "@/lib/types";
 import { formatNumber, formatDate } from "@/lib/utils";
@@ -73,9 +74,12 @@ export default function ProfilePage() {
             <section className="mb-8 rounded-2xl bg-surface-100/70 p-6 ring-1 ring-white/10">
                 <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
                     {user.avatar_url ? (
-                        <img
+                        <Image
                             src={user.avatar_url}
-                            alt={user.display_name}
+                            alt={user.display_name || "user avatar"}
+                            width={80}
+                            height={80}
+                            unoptimized
                             className="h-20 w-20 rounded-full ring-2 ring-gold/30"
                         />
                     ) : (

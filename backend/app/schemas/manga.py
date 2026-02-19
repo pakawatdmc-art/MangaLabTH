@@ -46,6 +46,8 @@ class ChapterRead(BaseModel):
 
 
 class ChapterDetail(ChapterRead):
+    can_read: bool = True
+    requires_login: bool = False
     pages: List[PageRead] = []
 
 

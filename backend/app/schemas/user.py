@@ -11,10 +11,12 @@ from app.models.user import UserRole
 class UserRead(BaseModel):
     id: str
     clerk_id: str
+    username: Optional[str] = None
     email: str
     display_name: str
     avatar_url: str
     role: UserRole
+    is_primary_admin: bool = False
     coin_balance: int
     created_at: datetime
 

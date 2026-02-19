@@ -1,6 +1,15 @@
+"use client";
+
 import { BookOpen } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 export default function Footer() {
+  const pathname = usePathname();
+
+  if (pathname.startsWith("/read/")) {
+    return null;
+  }
+
   return (
     <footer className="border-t border-white/5 bg-surface-300 pb-20 md:pb-0">
       <div className="mx-auto flex max-w-7xl flex-col items-center gap-3 px-4 py-8 sm:flex-row sm:justify-between sm:px-6">

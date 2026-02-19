@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { BookOpen, Edit, Loader2, Plus, Trash2 } from "lucide-react";
+import Image from "next/image";
+import { BookOpen, Loader2, Plus, Trash2 } from "lucide-react";
 import { CATEGORY_LABELS, STATUS_LABELS } from "@/lib/types";
 import type { Manga, MangaCategory, MangaStatus } from "@/lib/types";
 import { getMangaList, createManga, deleteManga } from "@/lib/api";
-
-// ... existing imports
-import { uploadCoverImage } from "@/lib/api"; // Add this import
+import { uploadCoverImage } from "@/lib/api";
 
 export default function AdminMangaPage() {
   const { getToken } = useAuth();
@@ -43,18 +42,26 @@ export default function AdminMangaPage() {
   }, [showForm]);
 
   useEffect(() => {
+    return () => {
+      if (previewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
+  useEffect(() => {
     fetchMangas();
   }, []);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (previewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(previewUrl);
+      }
       setSelectedFile(file);
       const objectUrl = URL.createObjectURL(file);
       setPreviewUrl(objectUrl);
-
-      // Cleanup object URL when component unmounts or file changes
-      return () => URL.revokeObjectURL(objectUrl);
     }
   };
 
@@ -89,7 +96,7 @@ export default function AdminMangaPage() {
       setShowForm(false);
       await fetchMangas();
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "สร้างมังงะล้มเหลว");
+      setError(err instanceof Error ? err.message : "สร้างมังงะล้มเหลว");
     } finally {
       setSaving(false);
     }
@@ -105,7 +112,7 @@ export default function AdminMangaPage() {
       await deleteManga(manga.id, token);
       await fetchMangas();
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "ลบมังงะล้มเหลว");
+      setError(err instanceof Error ? err.message : "ลบมังงะล้มเหลว");
     }
   };
 
@@ -118,25 +125,34 @@ export default function AdminMangaPage() {
   }
 
   return (
-    <div>
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white">จัดการมังงะ</h1>
-          <p className="text-sm text-gray-500">
-            เพิ่ม แก้ไข หรือลบมังงะ — {mangas.length} เรื่อง
-          </p>
+    <div className="space-y-5">
+      <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(135deg,#1a1f31_0%,#131929_50%,#111826_100%)] p-5 sm:p-6">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(212,168,67,0.18),transparent_42%),radial-gradient(circle_at_bottom_left,rgba(59,130,246,0.14),transparent_45%)]" />
+        <div className="relative flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-white">
+              <BookOpen className="mr-2 inline-block h-6 w-6 text-gold" />
+              จัดการมังงะ
+            </h1>
+            <p className="mt-1 text-sm text-gray-300">
+              เพิ่ม ลบ และดูรายการมังงะทั้งหมดในระบบ — {mangas.length} เรื่อง
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              setError("");
+              setShowForm(!showForm);
+            }}
+            className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black transition hover:bg-gold-light"
+          >
+            <Plus className="h-4 w-4" />
+            {showForm ? "ปิดฟอร์ม" : "เพิ่มมังงะ"}
+          </button>
         </div>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black transition hover:bg-gold-light"
-        >
-          <Plus className="h-4 w-4" />
-          เพิ่มมังงะ
-        </button>
-      </div>
+      </section>
 
       {error && (
-        <div className="mb-4 rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-400">
+        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">
           {error}
         </div>
       )}
@@ -222,10 +238,23 @@ export default function AdminMangaPage() {
                 <div className="flex-1">
                   {previewUrl ? (
                     <div className="relative aspect-[2/3] w-32 rounded overflow-hidden border border-white/10 mb-2">
-                      <img src={previewUrl} alt="Preview" className="object-cover w-full h-full" />
+                      <Image
+                        src={previewUrl}
+                        alt="Preview"
+                        fill
+                        unoptimized
+                        sizes="128px"
+                        className="object-cover"
+                      />
                       <button
                         type="button"
-                        onClick={() => { setSelectedFile(null); setPreviewUrl(""); }}
+                        onClick={() => {
+                          if (previewUrl.startsWith("blob:")) {
+                            URL.revokeObjectURL(previewUrl);
+                          }
+                          setSelectedFile(null);
+                          setPreviewUrl("");
+                        }}
                         className="absolute top-1 right-1 bg-black/50 p-1 rounded-full hover:bg-red-500/80 transition"
                       >
                         <Trash2 className="w-3 h-3" />
@@ -291,7 +320,14 @@ export default function AdminMangaPage() {
                   <td className="px-4 py-2">
                     <div className="h-12 w-8 overflow-hidden rounded bg-surface-200">
                       {m.cover_url && (
-                        <img src={m.cover_url} alt="" className="h-full w-full object-cover" />
+                        <Image
+                          src={m.cover_url}
+                          alt={`ปก ${m.title}`}
+                          width={32}
+                          height={48}
+                          unoptimized
+                          className="h-full w-full object-cover"
+                        />
                       )}
                     </div>
                   </td>

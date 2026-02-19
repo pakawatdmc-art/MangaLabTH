@@ -33,7 +33,17 @@ async function fetcher<T>(
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     const detail = Array.isArray(body.detail)
-      ? body.detail.map((d: any) => d.msg || JSON.stringify(d)).join(", ")
+      ? body.detail
+          .map((d: unknown) => {
+            if (typeof d === "object" && d !== null && "msg" in d) {
+              const msg = (d as { msg?: unknown }).msg;
+              if (typeof msg === "string") {
+                return msg;
+              }
+            }
+            return JSON.stringify(d);
+          })
+          .join(", ")
       : body.detail;
     throw new Error(detail || `API error ${res.status}`);
   }
@@ -77,8 +87,8 @@ export async function getChapters(mangaId: string) {
   return fetcher<Chapter[]>(`/chapters/manga/${mangaId}`);
 }
 
-export async function getChapter(chapterId: string) {
-  return fetcher<ChapterDetail>(`/chapters/${chapterId}`);
+export async function getChapter(chapterId: string, token?: string) {
+  return fetcher<ChapterDetail>(`/chapters/${chapterId}`, token ? { token } : undefined);
 }
 
 // ── User ────────────────────────────────────────
@@ -126,8 +136,32 @@ export async function createChapter(
   });
 }
 
+export async function replacePages(
+  chapterId: string,
+  pages: { number: number; image_url: string; width: number; height: number }[],
+  token: string
+) {
+  return fetcher(`/chapters/${chapterId}/pages`, {
+    method: "PUT",
+    body: JSON.stringify(pages),
+    token,
+  });
+}
+
 export async function deleteChapter(id: string, token: string) {
   return fetcher<void>(`/chapters/${id}`, { method: "DELETE", token });
+}
+
+export async function updateChapter(
+  chapterId: string,
+  data: { number?: number; title?: string; coin_price?: number; is_free?: boolean },
+  token: string
+) {
+  return fetcher<Chapter>(`/chapters/${chapterId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+    token,
+  });
 }
 
 export async function addPages(
@@ -183,6 +217,24 @@ export async function createCheckoutSession(packageId: string, token: string) {
     method: "POST",
     token,
   });
+}
+
+export async function createCustomCheckout(amountThb: number, token: string) {
+  return fetcher<{ url: string; coins: number }>("/payments/checkout/custom", {
+    method: "POST",
+    body: JSON.stringify({ amount_thb: amountThb }),
+    token,
+  });
+}
+
+export async function confirmCheckoutPayment(checkoutSessionId: string, token: string) {
+  return fetcher<{ status: string; new_balance?: number; coins?: number }>(
+    `/payments/confirm?checkout_session_id=${encodeURIComponent(checkoutSessionId)}`,
+    {
+      method: "POST",
+      token,
+    }
+  );
 }
 
 // ── Upload (R2 via Backend Proxy) ────────────────

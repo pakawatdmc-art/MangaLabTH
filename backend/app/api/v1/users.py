@@ -1,21 +1,45 @@
 """User endpoints."""
 
+import asyncio
 from typing import List
 
 from fastapi import APIRouter, HTTPException
 from sqlmodel import select
 
-from app.api.deps import AdminUser, CurrentUser, DBSession
-from app.models.user import User
+from app.api.deps import AdminUser, CurrentUser, DBSession, get_clerk_profile
+from app.config import get_settings
+from app.models.user import User, UserRole
 from app.schemas.user import UserAdminUpdate, UserRead, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["Users"])
+settings = get_settings()
+
+
+def _normalize_email(email: str) -> str:
+    return email.strip().lower()
+
+
+def _is_primary_admin_email(email: str) -> bool:
+    primary = _normalize_email(settings.PRIMARY_ADMIN_EMAIL)
+    return bool(primary) and _normalize_email(email) == primary
+
+
+def _to_user_read(user: User, profile: dict[str, str] | None = None) -> UserRead:
+    profile = profile or {}
+    effective_email = profile.get("email") or user.email
+
+    data = UserRead.model_validate(user)
+    data.username = profile.get("username") or None
+    data.email = effective_email
+    data.is_primary_admin = _is_primary_admin_email(effective_email)
+    return data
 
 
 @router.get("/me", response_model=UserRead)
 async def get_me(user: CurrentUser):
     """Return the authenticated user's profile."""
-    return UserRead.model_validate(user)
+    profile = await get_clerk_profile(user.clerk_id)
+    return _to_user_read(user, profile)
 
 
 @router.patch("/me", response_model=UserRead)
@@ -31,7 +55,7 @@ async def update_me(
     session.add(user)
     await session.commit()
     await session.refresh(user)
-    return UserRead.model_validate(user)
+    return _to_user_read(user)
 
 
 # ── Admin ────────────────────────────────────────
@@ -45,7 +69,14 @@ async def list_users(
     """Admin: list all users."""
     stmt = select(User).order_by(User.role, User.created_at.desc())
     results = (await session.execute(stmt)).scalars().all()
-    return [UserRead.model_validate(u) for u in results]
+    profiles = await asyncio.gather(
+        *[get_clerk_profile(u.clerk_id) for u in results]
+    )
+
+    items: List[UserRead] = []
+    for u, profile in zip(results, profiles):
+        items.append(_to_user_read(u, profile))
+    return items
 
 
 @router.patch("/{user_id}", response_model=UserRead)
@@ -60,13 +91,27 @@ async def admin_update_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    for key, value in body.model_dump(exclude_unset=True).items():
+    updates = body.model_dump(exclude_unset=True)
+    profile = await get_clerk_profile(user.clerk_id)
+    effective_email = profile.get("email") or user.email
+
+    if (
+        "role" in updates
+        and updates["role"] != UserRole.ADMIN
+        and _is_primary_admin_email(effective_email)
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Primary admin account cannot be demoted",
+        )
+
+    for key, value in updates.items():
         setattr(user, key, value)
 
     session.add(user)
     await session.commit()
     await session.refresh(user)
-    return UserRead.model_validate(user)
+    return _to_user_read(user, profile)
 
 
 @router.get("/stats")

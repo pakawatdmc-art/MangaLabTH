@@ -35,10 +35,12 @@ export const STATUS_LABELS: Record<MangaStatus, string> = {
 export interface User {
   id: string;
   clerk_id: string;
+  username?: string;
   email: string;
   display_name: string;
   avatar_url: string;
   role: UserRole;
+  is_primary_admin?: boolean;
   coin_balance: number;
   created_at: string;
 }
@@ -80,6 +82,8 @@ export interface Page {
 }
 
 export interface ChapterDetail extends Chapter {
+  can_read?: boolean;
+  requires_login?: boolean;
   pages: Page[];
 }
 

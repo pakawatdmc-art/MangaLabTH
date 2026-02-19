@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     CLERK_PUBLISHABLE_KEY: str = ""
     CLERK_SECRET_KEY: str = ""
     CLERK_JWKS_URL: str = ""
+    PRIMARY_ADMIN_EMAIL: str = "pakawat.dmc@gmail.com"
 
     # ── Cloudflare R2 ────────────────────────────
     R2_ENDPOINT_URL: str = ""
