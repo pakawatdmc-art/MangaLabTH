@@ -106,7 +106,7 @@ export default function AdminDashboard() {
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(212,168,67,0.18),transparent_40%),radial-gradient(circle_at_bottom_left,rgba(59,130,246,0.16),transparent_48%)]" />
         <div className="relative">
           <h1 className="text-2xl font-bold text-white">แดชบอร์ดผู้ดูแลระบบ</h1>
-          <p className="mt-1 text-sm text-gray-300">ภาพรวมระบบ mangaFactory และทางลัดการจัดการหลัก</p>
+          <p className="mt-1 text-sm text-gray-300">ภาพรวมระบบ MangaLabTH และทางลัดการจัดการหลัก</p>
           <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs text-gold">
             <Sparkles className="h-3.5 w-3.5" />
             ทุกฟีเจอร์พร้อมใช้งานในแผงเดียว

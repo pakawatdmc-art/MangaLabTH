@@ -1,4 +1,4 @@
-# mangaFactory
+# MangaLabTH
 
 แพลตฟอร์มอ่านมังงะออนไลน์ระดับพรีเมียม พร้อมระบบ Coin Economy
 

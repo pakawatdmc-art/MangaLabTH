@@ -27,7 +27,7 @@ export default function SignInPage() {
 
           <h1 className="text-3xl font-bold leading-tight text-white">
             ยินดีต้อนรับกลับสู่
-            <span className="block text-gold">mangaFactory</span>
+            <span className="block text-gold">MangaLabTH</span>
           </h1>
           <p className="mt-3 max-w-md text-sm leading-relaxed text-gray-300">
             เข้าสู่ระบบเพื่อซิงก์คลังมังงะ, ประวัติการอ่าน และการปลดล็อคตอนพิเศษให้ต่อเนื่องทุกอุปกรณ์

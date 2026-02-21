@@ -16,8 +16,16 @@ const notoThai = Noto_Sans_Thai({
 });
 
 export const metadata: Metadata = {
-  title: "mangaFactory — อ่านมังงะออนไลน์",
-  description: "แพลตฟอร์มอ่านมังงะออนไลน์ระดับพรีเมียม",
+  title: "MangaLabTH — อ่านมังงะออนไลน์",
+  description: "แพลตฟอร์มอ่านมังงะออนไลน์ระดับพรีเมียม สนุกกับการอ่านมังงะแปลไทย ภาพคมชัด อัปเดตตอนใหม่ล่าสุด",
+  keywords: ["มังงะ", "อ่านมังงะ", "มังงะแปลไทย", "manga", "MangaLabTH", "เว็บอ่านมังงะ"],
+  openGraph: {
+    title: "MangaLabTH — อ่านมังงะออนไลน์",
+    description: "แพลตฟอร์มอ่านมังงะออนไลน์ระดับพรีเมียม สนุกกับการอ่านมังงะแปลไทย ภาพคมชัด",
+    siteName: "MangaLabTH",
+    locale: "th_TH",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

@@ -16,11 +16,11 @@ export default function Footer() {
         <div className="flex items-center gap-2 text-sm text-gray-500">
           <BookOpen className="h-4 w-4 text-gold/50" />
           <span>
-            manga<span className="text-gold/50">Factory</span>
+            MangaLab<span className="text-gold/50">TH</span>
           </span>
         </div>
         <p className="text-xs text-gray-600">
-          © {new Date().getFullYear()} mangaFactory — สร้างด้วย ❤️ สำหรับคนรักมังงะ
+          © {new Date().getFullYear()} MangaLabTH — สร้างด้วย ❤️ สำหรับคนรักมังงะ
         </p>
       </div>
     </footer>

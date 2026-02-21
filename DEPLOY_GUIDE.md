@@ -1,4 +1,4 @@
-# mangaFactory — คู่มือ Deploy Production
+# MangaLabTH — คู่มือ Deploy Production
 
 ## สถาปัตยกรรม
 

@@ -1,4 +1,4 @@
-"""mangaFactory — FastAPI application entry point."""
+"""MangaLabTH — FastAPI application entry point."""
 
 from contextlib import asynccontextmanager
 
@@ -28,7 +28,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="mangaFactory API",
+    title="MangaLabTH API",
     version="1.0.0",
     lifespan=lifespan,
     docs_url=None if settings.is_production else "/docs",

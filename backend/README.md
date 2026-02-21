@@ -1,4 +1,4 @@
-# mangaFactory Backend
+# MangaLabTH Backend
 
 High-performance manga platform API built with **FastAPI**, **SQLModel**, and **Neon PostgreSQL**.
 

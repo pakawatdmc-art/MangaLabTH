@@ -115,7 +115,7 @@ export default function AdminLayout({
               <BookOpen className="h-5 w-5 text-gold" />
               <div>
                 <span className="text-sm font-bold text-white">
-                  manga<span className="text-gold">Factory</span>
+                  MangaLab<span className="text-gold">TH</span>
                 </span>
                 <p className="text-[10px] text-gray-500">Control Center</p>
               </div>
@@ -208,7 +208,7 @@ export default function AdminLayout({
                 </button>
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-white">{activeSection}</p>
-                  <p className="truncate text-xs text-gray-500">Admin workspace · mangaFactory</p>
+                  <p className="truncate text-xs text-gray-500">Admin workspace · MangaLabTH</p>
                 </div>
               </div>
 

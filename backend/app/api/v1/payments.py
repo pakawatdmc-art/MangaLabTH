@@ -180,7 +180,7 @@ async def create_custom_checkout(
             user_id=user.id,
             coins_to_grant=coins,
             amount_thb=amount_satang,
-            name=f"{coins} เหรียญ mangaFactory",
+            name=f"{coins} เหรียญ MangaLabTH",
             success_url=f"{settings.cors_origin_list[0]}/coins?success=true&session_id={{CHECKOUT_SESSION_ID}}",
             cancel_url=f"{settings.cors_origin_list[0]}/coins?canceled=true",
         )
