@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { getMe } from "@/lib/api";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 
 const SIDEBAR_LINKS = [
   { href: "/admin", label: "แดชบอร์ด", icon: LayoutDashboard },
@@ -39,6 +40,8 @@ export default function AdminLayout({
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [isPrimaryAdmin, setIsPrimaryAdmin] = useState(false);
+  const [adminToken, setAdminToken] = useState("");
   const activeSection =
     SIDEBAR_LINKS.find(({ href }) =>
       href === "/admin" ? pathname === "/admin" : pathname.startsWith(href)
@@ -64,6 +67,8 @@ export default function AdminLayout({
         if (user.role !== "admin") {
           router.replace("/");
         } else {
+          setIsPrimaryAdmin(!!user.is_primary_admin);
+          setAdminToken(token);
           setChecking(false);
         }
       } catch (err) {
@@ -176,6 +181,10 @@ export default function AdminLayout({
               );
             })}
           </nav>
+
+          {isPrimaryAdmin && adminToken && (
+            <ThemeSwitcher token={adminToken} isPrimaryAdmin={isPrimaryAdmin} />
+          )}
 
           <div className="space-y-2 border-t border-white/10 p-3">
             <Link

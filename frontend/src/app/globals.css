@@ -54,3 +54,79 @@ div:where(.cl-internal-b3fm6y) {
 .cl-development-badge {
   display: none !important;
 }
+
+/* ── Festive Theme Variables ────────────────────── */
+:root {
+  --theme-glow: rgba(212, 175, 55, 0.1);
+  --theme-glow-2: rgba(212, 175, 55, 0.06);
+  --theme-accent: var(--color-gold);
+}
+
+/* New Year — red & gold */
+body.theme-newyear {
+  --theme-glow: rgba(220, 38, 38, 0.12);
+  --theme-glow-2: rgba(234, 179, 8, 0.08);
+  --theme-accent: #ef4444;
+}
+
+/* Valentine — pink & rose */
+body.theme-valentine {
+  --theme-glow: rgba(236, 72, 153, 0.12);
+  --theme-glow-2: rgba(251, 113, 133, 0.08);
+  --theme-accent: #ec4899;
+}
+
+/* Songkran — sky blue */
+body.theme-songkran {
+  --theme-glow: rgba(14, 165, 233, 0.12);
+  --theme-glow-2: rgba(56, 189, 248, 0.08);
+  --theme-accent: #0ea5e9;
+}
+
+/* Mother's Day — light blue */
+body.theme-mother {
+  --theme-glow: rgba(59, 130, 246, 0.12);
+  --theme-glow-2: rgba(147, 197, 253, 0.06);
+  --theme-accent: #3b82f6;
+}
+
+/* Halloween — orange & purple */
+body.theme-halloween {
+  --theme-glow: rgba(249, 115, 22, 0.12);
+  --theme-glow-2: rgba(147, 51, 234, 0.08);
+  --theme-accent: #f97316;
+}
+
+/* Loy Krathong — warm green */
+body.theme-loykrathong {
+  --theme-glow: rgba(34, 197, 94, 0.1);
+  --theme-glow-2: rgba(234, 179, 8, 0.06);
+  --theme-accent: #22c55e;
+}
+
+/* Christmas — emerald & red */
+body.theme-christmas {
+  --theme-glow: rgba(16, 185, 129, 0.12);
+  --theme-glow-2: rgba(239, 68, 68, 0.06);
+  --theme-accent: #10b981;
+}
+
+/* Apply glow to hero sections */
+body:not(.theme-default) .hero-glow {
+  background: radial-gradient(ellipse at top right,
+      var(--theme-glow),
+      transparent 60%);
+}
+
+/* Subtle page-level atmospheric overlay (shows on themed pages) */
+body[class*="theme-"]:not(.theme-default)::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse at 20% 0%, var(--theme-glow), transparent 50%),
+    radial-gradient(ellipse at 80% 100%, var(--theme-glow-2), transparent 50%);
+  opacity: 0.5;
+}

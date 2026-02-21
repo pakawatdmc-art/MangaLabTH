@@ -298,3 +298,16 @@ export async function getChaptersForManga(mangaId: string, token?: string) {
   );
 }
 
+// ── Settings ────────────────────────────────────
+
+export async function getTheme() {
+  return fetcher<{ theme: string }>("/settings/theme");
+}
+
+export async function setTheme(theme: string, token: string) {
+  return fetcher<{ theme: string; success: boolean }>("/settings/theme", {
+    method: "POST",
+    body: JSON.stringify({ theme }),
+    token,
+  });
+}

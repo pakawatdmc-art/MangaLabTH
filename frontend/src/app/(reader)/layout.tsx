@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { FestiveEffect } from "@/components/FestiveEffect";
 
 export default function ReaderLayout({
   children,
@@ -11,6 +12,8 @@ export default function ReaderLayout({
       <Navbar />
       <main className="flex-1">{children}</main>
       <Footer />
+      <FestiveEffect />
     </div>
   );
 }
+
