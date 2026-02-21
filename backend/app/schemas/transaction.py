@@ -50,7 +50,7 @@ class PurchaseCoinsRequest(BaseModel):
 
 
 class CustomCheckoutRequest(BaseModel):
-    amount_thb: int = Field(ge=20, description="Amount in Thai Baht to top up (minimum 20)")
+    amount_thb: int = Field(ge=20, le=10000, description="Amount in Thai Baht to top up (20–10,000)")
 
 
 class AdminGrantRequest(BaseModel):

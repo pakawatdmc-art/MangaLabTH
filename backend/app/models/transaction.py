@@ -60,10 +60,16 @@ class Transaction(SQLModel, table=True):
         max_length=128,
         description="Stripe PI ID (for COIN_PURCHASE type)",
     )
+    stripe_session_id: Optional[str] = Field(
+        default=None,
+        max_length=128,
+        sa_column_kwargs={"unique": True, "nullable": True},
+        description="Stripe Checkout Session ID — unique to prevent double-credit",
+    )
     note: str = Field(default="", max_length=512)
 
     created_at: datetime = Field(
-        default_factory=lambda: datetime.utcnow(),
+        default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
         index=True,
     )
 
@@ -93,5 +99,5 @@ class CoinPackage(SQLModel, table=True):
     sort_order: int = Field(default=0)
 
     created_at: datetime = Field(
-        default_factory=lambda: datetime.utcnow(),
+        default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )

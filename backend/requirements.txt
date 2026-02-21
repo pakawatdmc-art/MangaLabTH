@@ -19,6 +19,9 @@ boto3==1.36.4
 # Payments
 stripe==11.4.1
 
+# Rate Limiting
+slowapi==0.1.9
+
 # Utilities
 pydantic[email]==2.10.4
 pydantic-settings==2.7.1

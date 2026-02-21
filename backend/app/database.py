@@ -12,7 +12,7 @@ settings = get_settings()
 
 engine = create_async_engine(
     settings.DATABASE_URL,
-    echo=not settings.is_production,
+    echo=settings.SQL_ECHO,
     future=True,
     pool_pre_ping=True,
     # Neon serverless: keep pool small, recycle aggressively

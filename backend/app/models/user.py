@@ -30,8 +30,10 @@ class User(SQLModel, table=True):
     )
     email: str = Field(max_length=255, index=True)
     display_name: str = Field(default="", max_length=128)
+    username: str = Field(default="", max_length=128)
     avatar_url: str = Field(default="", max_length=512)
     role: UserRole = Field(default=UserRole.READER, max_length=16)
+    is_primary_admin: bool = Field(default=False)
 
     # ── Coin Economy ─────────────────────────────
     coin_balance: int = Field(
@@ -42,11 +44,11 @@ class User(SQLModel, table=True):
 
     # ── Timestamps ───────────────────────────────
     created_at: datetime = Field(
-        default_factory=lambda: datetime.utcnow(),
+        default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
     updated_at: Optional[datetime] = Field(
         default=None,
-        sa_column_kwargs={"onupdate": lambda: datetime.utcnow()},
+        sa_column_kwargs={"onupdate": lambda: datetime.now(timezone.utc).replace(tzinfo=None)},
     )
 
     # ── Relationships ────────────────────────────

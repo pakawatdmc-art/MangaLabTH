@@ -51,10 +51,10 @@ def _decode_clerk_token(token: str) -> dict:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token expired",
         )
-    except jwt.InvalidTokenError as exc:
+    except jwt.InvalidTokenError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid token: {exc}",
+            detail="Invalid token",
         )
 
 
@@ -186,9 +186,11 @@ async def get_current_user(
         user = User(
             clerk_id=clerk_id,
             email=email,
+            username=username,
             display_name=display_name,
             avatar_url=avatar_url,
             role=UserRole.ADMIN if _is_primary_admin_email(email) else UserRole.READER,
+            is_primary_admin=_is_primary_admin_email(email),
         )
         session.add(user)
         await session.commit()
@@ -208,9 +210,17 @@ async def get_current_user(
             user.avatar_url = avatar_url
             changed = True
 
+        if username and not user.username:
+            user.username = username
+            changed = True
+
         effective_email = email or user.email
         if _is_primary_admin_email(effective_email) and user.role != UserRole.ADMIN:
             user.role = UserRole.ADMIN
+            changed = True
+
+        if _is_primary_admin_email(effective_email) and not user.is_primary_admin:
+            user.is_primary_admin = True
             changed = True
 
         if changed:

@@ -1,10 +1,11 @@
 """Manga, Chapter, and Page models."""
 
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from uuid import uuid4
 
+from sqlalchemy import UniqueConstraint
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -59,9 +60,12 @@ class Manga(SQLModel, table=True):
     total_views: int = Field(default=0, ge=0)
 
     created_at: datetime = Field(
-        default_factory=lambda: datetime.utcnow(),
+        default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
-    updated_at: Optional[datetime] = Field(default=None)
+    updated_at: Optional[datetime] = Field(
+        default=None,
+        sa_column_kwargs={"onupdate": lambda: datetime.now(timezone.utc).replace(tzinfo=None)},
+    )
 
     # ── Relationships ────────────────────────────
     chapters: List["Chapter"] = Relationship(
@@ -93,10 +97,10 @@ class Chapter(SQLModel, table=True):
     total_views: int = Field(default=0, ge=0)
 
     published_at: datetime = Field(
-        default_factory=lambda: datetime.utcnow(),
+        default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
     created_at: datetime = Field(
-        default_factory=lambda: datetime.utcnow(),
+        default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
 
     # ── Relationships ────────────────────────────
@@ -106,9 +110,9 @@ class Chapter(SQLModel, table=True):
         sa_relationship_kwargs={"cascade": "all, delete-orphan", "lazy": "selectin"},
     )
 
-    class Config:
-        # Ensure unique (manga_id, number) at the application layer too
-        pass
+    __table_args__ = (
+        UniqueConstraint("manga_id", "number", name="uq_chapter_manga_number"),
+    )
 
 
 # ── Page ─────────────────────────────────────────

@@ -41,6 +41,7 @@ class ChapterRead(BaseModel):
     total_views: int
     published_at: datetime
     page_count: Optional[int] = None
+    is_unlocked: bool = False
 
     model_config = {"from_attributes": True}
 

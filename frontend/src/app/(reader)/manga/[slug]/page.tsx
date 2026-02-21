@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import { getMangaBySlug } from "@/lib/api";
 import { CATEGORY_LABELS, STATUS_LABELS } from "@/lib/types";
 import { formatChapterNumber, formatDate, formatNumber } from "@/lib/utils";
@@ -19,10 +20,12 @@ interface Props {
 
 export default async function MangaDetailPage({ params }: Props) {
   const { slug } = await params;
+  const { getToken } = await auth();
+  const token = await getToken();
 
   let manga;
   try {
-    manga = await getMangaBySlug(slug);
+    manga = await getMangaBySlug(slug, token || undefined);
   } catch {
     notFound();
   }
@@ -38,7 +41,7 @@ export default async function MangaDetailPage({ params }: Props) {
   return (
     <div className="min-h-screen bg-background text-white">
       {/* Hero backdrop */}
-      <div className="relative h-72 sm:h-96">
+      <div className="relative h-64 sm:h-80">
         <Image
           src={manga.cover_url || "/placeholder.png"}
           alt=""
@@ -50,7 +53,7 @@ export default async function MangaDetailPage({ params }: Props) {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_30%,rgba(212,175,55,0.18),transparent_32%)]" />
       </div>
 
-      <div className="mx-auto -mt-44 max-w-5xl px-4 sm:px-6">
+      <div className="mx-auto -mt-32 max-w-5xl px-4 sm:px-6 sm:-mt-40">
         <div className="flex flex-col gap-6 rounded-2xl border border-white/10 bg-surface-200/85 p-4 shadow-2xl shadow-black/40 backdrop-blur-md sm:flex-row sm:gap-8 sm:p-6">
           {/* Cover */}
           <div className="relative mx-auto aspect-[2/3] w-44 flex-shrink-0 overflow-hidden rounded-xl ring-2 ring-gold/30 sm:mx-0 sm:w-52">
@@ -173,10 +176,16 @@ export default async function MangaDetailPage({ params }: Props) {
                 </div>
                 <div className="flex shrink-0 items-center gap-2 pt-0.5 sm:pt-0">
                   {!ch.is_free && ch.coin_price > 0 ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-gold/10 px-2 py-0.5 text-xs font-medium text-gold">
-                      <Lock className="h-3 w-3" />
-                      {ch.coin_price}
-                    </span>
+                    ch.is_unlocked ? (
+                      <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-400">
+                        ปลดล็อคแล้ว
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-gold/10 px-2 py-0.5 text-xs font-medium text-gold">
+                        <Lock className="h-3 w-3" />
+                        {ch.coin_price}
+                      </span>
+                    )
                   ) : (
                     <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-400">
                       ฟรี

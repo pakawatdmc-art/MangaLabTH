@@ -13,14 +13,10 @@ import {
   User,
   X,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatNumber } from "@/lib/utils";
 import { SignedIn, SignedOut, UserButton, useAuth } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import { getMe } from "@/lib/api";
-
-function formatNumber(n: number) {
-  return new Intl.NumberFormat("th-TH").format(n);
-}
 
 const NAV_LINKS = [
   { href: "/", label: "หน้าแรก", icon: Home },

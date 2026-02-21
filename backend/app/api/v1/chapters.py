@@ -44,7 +44,7 @@ async def list_all_chapters(
 
 
 @router.get("/manga/{manga_id}", response_model=List[ChapterRead])
-async def list_chapters(manga_id: str, session: DBSession):
+async def list_chapters(manga_id: str, session: DBSession, user: OptionalUser):
     """List all chapters for a manga, ordered by number."""
     stmt = (
         select(Chapter)
@@ -52,10 +52,22 @@ async def list_chapters(manga_id: str, session: DBSession):
         .order_by(Chapter.number)
     )
     results = (await session.execute(stmt)).scalars().all()
+    
+    unlocked_ids = set()
+    if user and results:
+        unlock_stmt = select(Transaction.chapter_id).where(
+            Transaction.user_id == user.id,
+            Transaction.type == TransactionType.CHAPTER_UNLOCK,
+            Transaction.chapter_id.in_([c.id for c in results])
+        )
+        unlocked_ids = set((await session.execute(unlock_stmt)).scalars().all())
+
     items = []
     for ch in results:
         data = ChapterRead.model_validate(ch)
         data.page_count = len(ch.pages) if ch.pages else 0
+        if ch.id in unlocked_ids:
+            data.is_unlocked = True
         items.append(data)
     return items
 
@@ -75,7 +87,7 @@ async def get_chapter(
     detail.page_count = len(chapter.pages)
 
     is_locked = (not chapter.is_free) and chapter.coin_price > 0
-    if is_locked:
+    if is_locked and (user is None or user.role != "admin"):
         if user is None:
             detail.can_read = False
             detail.requires_login = True

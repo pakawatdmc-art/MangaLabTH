@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { BookOpen, ImagePlus, Loader2, Pencil, Plus, Sparkles, Trash2 } from "lucide-react";
+import { BookOpen, ImagePlus, Loader2, Pencil, Plus, Sparkles, Trash2, Layers } from "lucide-react";
 import type { Chapter, Manga } from "@/lib/types";
 import { formatChapterNumber } from "@/lib/utils";
 import {
@@ -13,6 +13,7 @@ import {
   deleteChapter,
   updateChapter,
 } from "@/lib/api";
+import { ChapterImageManager } from "./ChapterImageManager";
 
 export default function AdminChaptersPage() {
   const { getToken } = useAuth();
@@ -26,12 +27,14 @@ export default function AdminChaptersPage() {
   const [saving, setSaving] = useState(false);
   const [editingChapter, setEditingChapter] = useState<Chapter | null>(null);
   const [updating, setUpdating] = useState(false);
+  const [managingChapter, setManagingChapter] = useState<Chapter | null>(null);
+  const [authToken, setAuthToken] = useState<string>("");
 
   const selectedManga = mangas.find((m) => m.id === selectedMangaId) || null;
   const filteredChapters = selectedMangaId
     ? chapters
-        .filter((ch) => ch.manga_id === selectedMangaId)
-        .sort((a, b) => b.number - a.number)
+      .filter((ch) => ch.manga_id === selectedMangaId)
+      .sort((a, b) => b.number - a.number)
     : [];
   const freeCount = filteredChapters.filter((ch) => ch.is_free).length;
   const paidCount = Math.max(filteredChapters.length - freeCount, 0);
@@ -40,6 +43,7 @@ export default function AdminChaptersPage() {
     try {
       const token = await getToken();
       if (!token) return;
+      setAuthToken(token);
       const [chapterData, mangaData] = await Promise.all([
         listAllChapters(token),
         getMangaList({ per_page: 100 }),
@@ -137,46 +141,28 @@ export default function AdminChaptersPage() {
 
   return (
     <div className="space-y-5">
+      {/* Header Banner */}
       <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(135deg,#1b2130_0%,#151c2d_52%,#10151f_100%)] p-5 sm:p-6">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(212,168,67,0.18),transparent_42%),radial-gradient(circle_at_bottom_left,rgba(59,130,246,0.14),transparent_46%)]" />
-        <div className="relative">
-          <h1 className="text-2xl font-bold text-white">
-            <BookOpen className="mr-2 inline-block h-6 w-6 text-gold" />
-            จัดการตอน
-          </h1>
-          <p className="mt-1 text-sm text-gray-300">
-            ลำดับงาน: เลือกเรื่องก่อน แล้วค่อยเพิ่ม/แก้ไขตอนของเรื่องนั้น — มีทั้งหมด {chapters.length} ตอนในระบบ
-          </p>
-          <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs text-gold">
-            <Sparkles className="h-3.5 w-3.5" />
-            จัดการชื่อ ราคา และลำดับภาพได้จากหน้าเดียว
+        <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="mb-2 text-2xl font-bold text-white">
+              <Layers className="mr-2 inline-block h-6 w-6 text-gold" />
+              ระบบจัดการตอน
+            </h1>
+            <p className="text-sm text-gray-300">
+              มีทั้งหมด {chapters.length} ตอนในระบบ
+            </p>
+            <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/10 px-3 py-1.5 text-xs text-gold">
+              <Sparkles className="h-3.5 w-3.5" />
+              จัดการชื่อ ราคา และรูปภาพจบในที่เดียว
+            </div>
           </div>
-        </div>
-      </section>
 
-      <section className="rounded-2xl border border-white/10 bg-surface-100/80 p-4 ring-1 ring-white/5 sm:p-5">
-        <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div className="rounded-xl border border-white/10 bg-surface-200/50 px-3 py-2.5">
-            <p className="text-[11px] uppercase tracking-wide text-gray-500">ตอนทั้งหมด</p>
-            <p className="text-lg font-semibold text-white">{chapters.length}</p>
-          </div>
-          <div className="rounded-xl border border-white/10 bg-surface-200/50 px-3 py-2.5">
-            <p className="text-[11px] uppercase tracking-wide text-gray-500">ตอนของเรื่องนี้</p>
-            <p className="text-lg font-semibold text-white">{filteredChapters.length}</p>
-          </div>
-          <div className="rounded-xl border border-white/10 bg-surface-200/50 px-3 py-2.5">
-            <p className="text-[11px] uppercase tracking-wide text-gray-500">ตอนฟรี</p>
-            <p className="text-lg font-semibold text-emerald-300">{freeCount}</p>
-          </div>
-          <div className="rounded-xl border border-white/10 bg-surface-200/50 px-3 py-2.5">
-            <p className="text-[11px] uppercase tracking-wide text-gray-500">ตอนเสียเหรียญ</p>
-            <p className="text-lg font-semibold text-gold">{paidCount}</p>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-          <div className="flex-1">
-            <label className="mb-1 block text-xs text-gray-400">ขั้นตอนที่ 1: เลือกมังงะ</label>
+          <div className="w-full shrink-0 rounded-xl border border-white/5 bg-black/40 p-5 backdrop-blur-sm sm:w-[340px]">
+            <label className="mb-3 block text-sm font-medium tracking-wide text-gray-300">
+              เลือกเรื่องที่ต้องการจัดการ
+            </label>
             <select
               value={selectedMangaId}
               onChange={(e) => {
@@ -184,38 +170,70 @@ export default function AdminChaptersPage() {
                 setShowForm(false);
                 setError("");
               }}
-              className="h-10 w-full rounded-xl border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:outline-none"
+              className="h-11 w-full rounded-lg border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:ring-1 focus:ring-gold/60 focus:outline-none transition"
             >
-              <option value="">เลือกมังงะที่ต้องการจัดการตอน...</option>
+              <option value="">-- กรุณาเลือกมังงะ --</option>
               {mangas.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.title}
                 </option>
               ))}
             </select>
-            <p className="mt-2 text-xs text-gray-500">
-              {selectedManga
-                ? `กำลังจัดการ: ${selectedManga.title} (${filteredChapters.length} ตอน)`
-                : "เมื่อเลือกเรื่องแล้ว ตารางและฟอร์มเพิ่มตอนจะแสดงเฉพาะเรื่องนั้น"}
-            </p>
+            {selectedManga ? (
+              <div className="mt-3 flex items-start gap-3 rounded-lg border border-white/5 bg-white/5 p-2.5">
+                <div className="relative h-12 w-9 shrink-0 overflow-hidden rounded bg-surface-300 shadow-sm">
+                  <img
+                    src={selectedManga.cover_url || "/placeholder.png"}
+                    alt={selectedManga.title}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div className="flex flex-col justify-center">
+                  <p className="text-xs font-medium text-white line-clamp-1" title={selectedManga.title}>
+                    {selectedManga.title}
+                  </p>
+                  <p className="mt-0.5 text-[10px] text-gray-400">กำลังจัดการตอนของเรื่องนี้</p>
+                </div>
+              </div>
+            ) : (
+              <p className="mt-2.5 text-[11px] text-gray-500">
+                กรุณาเลือกมังงะก่อนที่จะสามารถเพิ่มตอนใหม่ได้
+              </p>
+            )}
           </div>
-
-          <button
-            onClick={() => {
-              if (!selectedMangaId) {
-                setError("กรุณาเลือกมังงะก่อนเพิ่มตอน");
-                return;
-              }
-              setShowForm(!showForm);
-            }}
-            disabled={!selectedMangaId}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-gold px-4 text-sm font-semibold text-black transition hover:bg-gold-light disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <Plus className="h-4 w-4" />
-            {showForm ? "ซ่อนฟอร์มเพิ่มตอน" : "ขั้นตอนที่ 2: เพิ่มตอน"}
-          </button>
         </div>
       </section>
+
+      {/* Stats and Add Button (Only show when selected) */}
+      {selectedMangaId ? (
+        <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="rounded-2xl border border-white/5 bg-surface-100/50 p-4 ring-1 ring-white/5 transition hover:bg-surface-200/50">
+            <p className="text-[11px] uppercase tracking-wide text-gray-500">ตอนทั้งหมดของเรื่องนี้</p>
+            <p className="mt-1.5 text-2xl font-semibold text-white">{filteredChapters.length}</p>
+          </div>
+          <div className="rounded-2xl border border-white/5 bg-surface-100/50 p-4 ring-1 ring-white/5 transition hover:bg-surface-200/50">
+            <p className="text-[11px] uppercase tracking-wide text-gray-500">ตอนฟรี</p>
+            <p className="mt-1.5 text-2xl font-semibold text-emerald-300">{freeCount}</p>
+          </div>
+          <div className="rounded-2xl border border-white/5 bg-surface-100/50 p-4 ring-1 ring-white/5 transition hover:bg-surface-200/50">
+            <p className="text-[11px] uppercase tracking-wide text-gray-500">ตอนเสียเหรียญ</p>
+            <p className="mt-1.5 text-2xl font-semibold text-gold">{paidCount}</p>
+          </div>
+          <div className="flex h-full items-center justify-center">
+            <button
+              onClick={() => setShowForm(!showForm)}
+              className="inline-flex h-full w-full items-center justify-center gap-2 rounded-2xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-lg shadow-gold/20 transition hover:bg-gold-light"
+            >
+              <Plus className="h-5 w-5" />
+              {showForm ? "ยกเลิกการเพิ่ม" : "เพิ่มตอนใหม่"}
+            </button>
+          </div>
+        </section>
+      ) : (
+        <div className="rounded-2xl border border-white/5 bg-surface-100/30 p-8 text-center ring-1 ring-white/5">
+          <p className="text-sm text-gray-400">กรุณาเลือกมังงะจากเมนูด้านบน เพื่อเรียกดูข้อมูลทั้งหมด</p>
+        </div>
+      )}
 
       {error && (
         <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">
@@ -409,11 +427,7 @@ export default function AdminChaptersPage() {
                       แก้ไข
                     </button>
                     <button
-                      onClick={() =>
-                        router.push(
-                          `/admin/upload?mangaId=${encodeURIComponent(ch.manga_id)}&chapterId=${encodeURIComponent(ch.id)}`
-                        )
-                      }
+                      onClick={() => setManagingChapter(ch)}
                       className="mr-2 rounded-md border border-gold/20 bg-gold/10 px-2.5 py-1 text-xs text-gold transition hover:bg-gold/20"
                     >
                       <ImagePlus className="mr-1 inline-block h-3 w-3" />
@@ -432,6 +446,18 @@ export default function AdminChaptersPage() {
           </tbody>
         </table>
       </div>
+
+      {managingChapter && selectedManga && (
+        <ChapterImageManager
+          manga={selectedManga}
+          chapter={managingChapter}
+          isOpen={true}
+          onClose={() => setManagingChapter(null)}
+          onSuccess={() => {
+            fetchData();
+          }}
+        />
+      )}
     </div>
   );
 }

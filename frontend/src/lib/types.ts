@@ -71,6 +71,7 @@ export interface Chapter {
   total_views: number;
   published_at: string;
   page_count?: number;
+  is_unlocked?: boolean;
 }
 
 export interface Page {

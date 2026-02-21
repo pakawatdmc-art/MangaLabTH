@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     # ── App ──────────────────────────────────────
     APP_ENV: str = "development"
     CORS_ORIGINS: str = "http://localhost:3000"
+    SQL_ECHO: bool = False
 
     # ── Database (Neon PostgreSQL) ───────────────
     DATABASE_URL: str

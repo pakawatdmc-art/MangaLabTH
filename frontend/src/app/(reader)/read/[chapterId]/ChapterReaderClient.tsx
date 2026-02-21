@@ -9,9 +9,12 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  Coins,
+  Home,
   Layers,
 } from "lucide-react";
-import { formatChapterNumber } from "@/lib/utils";
+import { formatChapterNumber, formatNumber } from "@/lib/utils";
 import type { ChapterDetail } from "@/lib/types";
 
 interface Props {
@@ -19,6 +22,8 @@ interface Props {
   manga: { id: string; title: string; slug: string };
   prevChapterId: string | null;
   nextChapterId: string | null;
+  coinBalance?: number;
+  allChapters: { id: string; number: number; title: string; is_unlocked?: boolean }[];
 }
 
 export default function ChapterReaderClient({
@@ -26,9 +31,12 @@ export default function ChapterReaderClient({
   manga,
   prevChapterId,
   nextChapterId,
+  coinBalance,
+  allChapters,
 }: Props) {
   const router = useRouter();
   const [showTopBar, setShowTopBar] = useState(true);
+  const [showChapterMenu, setShowChapterMenu] = useState(false);
   const [progress, setProgress] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const lastScrollY = useRef(0);
@@ -59,13 +67,22 @@ export default function ChapterReaderClient({
           updatedAt: new Date().toISOString(),
         })
       );
-    } catch {}
+    } catch { }
   }, [chapter.id, chapter.number, manga.id, manga.title, manga.slug]);
 
   useEffect(() => {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [handleScroll]);
+
+  // Click outside to close chapter menu
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (showChapterMenu) setShowChapterMenu(false);
+    }
+    window.addEventListener("click", handleClickOutside);
+    return () => window.removeEventListener("click", handleClickOutside);
+  }, [showChapterMenu]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -92,9 +109,8 @@ export default function ChapterReaderClient({
 
       {/* Floating top bar */}
       <header
-        className={`fixed left-0 right-0 top-0.5 z-40 transition-transform duration-300 ${
-          showTopBar ? "translate-y-0" : "-translate-y-full"
-        }`}
+        className={`fixed left-0 right-0 top-0.5 z-40 transition-transform duration-300 ${showTopBar ? "translate-y-0" : "-translate-y-full"
+          }`}
       >
         <div className="mx-auto flex h-12 max-w-4xl items-center justify-between bg-surface-300/92 px-2.5 backdrop-blur-xl sm:rounded-b-xl sm:px-4">
           <Link
@@ -107,42 +123,115 @@ export default function ChapterReaderClient({
             </span>
           </Link>
 
-          <div className="flex items-center gap-1 text-[11px] text-gray-400">
-            <Layers className="h-3.5 w-3.5" />
-            ตอนที่ {formatChapterNumber(chapter.number)}
-            <span className="ml-1 hidden text-gray-600 sm:inline">
-              · {pages.length} หน้า
-            </span>
+          {/* Chapter selector Dropdown */}
+          <div className="relative">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowChapterMenu(!showChapterMenu);
+              }}
+              className="flex items-center gap-1.5 rounded-lg border border-white/5 bg-surface-200/50 px-2.5 py-1 text-[11px] text-gray-300 transition hover:bg-surface-100 sm:px-3 sm:py-1.5 sm:text-xs"
+            >
+              <Layers className="h-3.5 w-3.5 text-gold" />
+              <span className="font-medium">ตอนที่ {formatChapterNumber(chapter.number)}</span>
+              <span className="hidden text-gray-500 sm:inline">
+                · {pages.length} หน้า
+              </span>
+              <ChevronDown className="ml-0.5 h-3.5 w-3.5 opacity-70" />
+            </button>
+
+            {/* Dropdown Menu */}
+            {showChapterMenu && (
+              <div
+                className="absolute left-0 top-full mt-2 max-h-[60vh] w-56 overflow-y-auto rounded-xl border border-white/10 bg-surface-200 p-1.5 shadow-2xl backdrop-blur-xl sm:w-64"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="mb-1 px-2 pb-1 pt-1.5 text-[10px] font-semibold tracking-wider text-gray-500">
+                  เลือกตอนอ่าน
+                </div>
+                {allChapters.map((c) => {
+                  const isCurrent = c.id === chapter.id;
+                  return (
+                    <Link
+                      key={c.id}
+                      href={`/read/${c.id}`}
+                      onClick={() => setShowChapterMenu(false)}
+                      className={`flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm transition ${isCurrent
+                        ? "bg-gold/15 text-gold"
+                        : "text-gray-300 hover:bg-white/5 hover:text-white"
+                        }`}
+                    >
+                      <span className="truncate pr-2">
+                        <span className="mr-2 opacity-60">
+                          ตอนที่ {formatChapterNumber(c.number)}
+                        </span>
+                        {c.title}
+                      </span>
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        {c.is_unlocked && (
+                          <span className="text-[9px] font-medium text-emerald-400">
+                            ปลดล็อคแล้ว
+                          </span>
+                        )}
+                        {isCurrent && <div className="h-1.5 w-1.5 rounded-full bg-gold" />}
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
-          {/* Chapter selector */}
-          <div className="flex items-center gap-1">
-            {prevChapterId ? (
+          {/* Actions & Chapter selector */}
+          <div className="flex items-center gap-2 sm:gap-4">
+            {coinBalance !== undefined && (
               <Link
-                href={`/read/${prevChapterId}`}
-                className="rounded-lg p-2 text-gray-400 transition hover:bg-white/10 hover:text-white"
-                title="ตอนก่อนหน้า (←)"
+                href="/coins"
+                className="flex items-center gap-1.5 rounded-full bg-gold/10 px-2.5 py-1 text-xs font-semibold text-gold ring-1 ring-gold/20 transition hover:bg-gold/20"
+                title="เติมเหรียญ"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <Coins className="h-3.5 w-3.5" />
+                <span>{formatNumber(coinBalance)} <span className="hidden sm:inline">เหรียญ</span></span>
               </Link>
-            ) : (
-              <span className="rounded-lg p-2 text-gray-700">
-                <ChevronLeft className="h-4 w-4" />
-              </span>
             )}
-            {nextChapterId ? (
-              <Link
-                href={`/read/${nextChapterId}`}
-                className="rounded-lg p-2 text-gray-400 transition hover:bg-white/10 hover:text-white"
-                title="ตอนถัดไป (→)"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Link>
-            ) : (
-              <span className="rounded-lg p-2 text-gray-700">
-                <ChevronRight className="h-4 w-4" />
-              </span>
-            )}
+
+            <Link
+              href="/"
+              className="flex items-center gap-1.5 text-gray-400 transition hover:text-white"
+              title="กลับหน้าแรก"
+            >
+              <Home className="h-4 w-4" />
+              <span className="hidden text-xs font-medium sm:inline">หน้าแรก</span>
+            </Link>
+
+            <div className="flex items-center gap-0.5 ml-1">
+              {prevChapterId ? (
+                <Link
+                  href={`/read/${prevChapterId}`}
+                  className="rounded-lg p-1.5 text-gray-400 transition hover:bg-white/10 hover:text-white"
+                  title="ตอนก่อนหน้า (←)"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </Link>
+              ) : (
+                <span className="rounded-lg p-1.5 text-gray-700">
+                  <ChevronLeft className="h-5 w-5" />
+                </span>
+              )}
+              {nextChapterId ? (
+                <Link
+                  href={`/read/${nextChapterId}`}
+                  className="rounded-lg p-1.5 text-gray-400 transition hover:bg-white/10 hover:text-white"
+                  title="ตอนถัดไป (→)"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </Link>
+              ) : (
+                <span className="rounded-lg p-1.5 text-gray-700">
+                  <ChevronRight className="h-5 w-5" />
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -200,40 +289,50 @@ export default function ChapterReaderClient({
 
       {/* Mobile dock */}
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-surface-300/95 px-3 pb-[max(env(safe-area-inset-bottom),0.6rem)] pt-2.5 backdrop-blur-xl md:hidden">
-        <div className="mx-auto grid max-w-sm grid-cols-3 gap-2">
+        <div className="mx-auto grid max-w-sm grid-cols-4 gap-1.5">
+          <Link
+            href="/"
+            className="flex flex-col items-center justify-center gap-1 rounded-xl text-gray-400 transition hover:text-white"
+          >
+            <Home className="h-5 w-5" />
+            <span className="text-[10px] font-medium">หน้าแรก</span>
+          </Link>
+
           {prevChapterId ? (
             <Link
               href={`/read/${prevChapterId}`}
-              className="inline-flex h-10 items-center justify-center gap-1 rounded-xl bg-surface-100 text-xs font-medium text-gray-200 ring-1 ring-white/10"
+              className="flex flex-col items-center justify-center gap-1 rounded-xl text-gray-300 transition hover:text-white"
             >
-              <ChevronLeft className="h-4 w-4" />
-              ก่อนหน้า
+              <ChevronLeft className="h-5 w-5" />
+              <span className="text-[10px] font-medium">ก่อนหน้า</span>
             </Link>
           ) : (
-            <span className="inline-flex h-10 items-center justify-center rounded-xl bg-surface-100/60 text-xs text-gray-600 ring-1 ring-white/5">
-              ก่อนหน้า
+            <span className="flex flex-col items-center justify-center gap-1 rounded-xl text-gray-600">
+              <ChevronLeft className="h-5 w-5" />
+              <span className="text-[10px] font-medium">ก่อนหน้า</span>
             </span>
           )}
 
           <Link
             href={`/manga/${manga.slug}`}
-            className="inline-flex h-10 items-center justify-center gap-1 rounded-xl bg-surface-100 text-xs font-medium text-gray-200 ring-1 ring-white/10"
+            className="flex flex-col items-center justify-center gap-1 rounded-xl text-gray-300 transition hover:text-white"
           >
-            <BookOpen className="h-4 w-4 text-gold" />
-            รายการตอน
+            <BookOpen className="h-5 w-5 text-gold" />
+            <span className="text-[10px] font-medium">หน้ารายละเอียด</span>
           </Link>
 
           {nextChapterId ? (
             <Link
               href={`/read/${nextChapterId}`}
-              className="inline-flex h-10 items-center justify-center gap-1 rounded-xl bg-gold text-xs font-semibold text-black"
+              className="flex flex-col items-center justify-center gap-1 rounded-xl text-gold transition hover:text-gold-light"
             >
-              ถัดไป
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-5 w-5" />
+              <span className="text-[10px] font-semibold">ถัดไป</span>
             </Link>
           ) : (
-            <span className="inline-flex h-10 items-center justify-center rounded-xl bg-gold/55 text-xs font-medium text-black/70">
-              จบตอน
+            <span className="flex flex-col items-center justify-center gap-1 rounded-xl text-gold/50">
+              <ChevronRight className="h-5 w-5" />
+              <span className="text-[10px] font-medium">จบตอน</span>
             </span>
           )}
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import {
@@ -49,7 +49,7 @@ const TX_LABEL: Record<string, string> = {
   refund: "คืนเงิน",
 };
 
-export default function CoinsPage() {
+function CoinsPageInner() {
   const searchParams = useSearchParams();
   const { getToken, isLoaded } = useAuth();
 
@@ -67,8 +67,8 @@ export default function CoinsPage() {
   const paymentStatus = searchParams.get("success")
     ? "success"
     : searchParams.get("canceled")
-    ? "canceled"
-    : null;
+      ? "canceled"
+      : null;
   const checkoutSessionId = searchParams.get("session_id");
 
   const fetchUserData = useCallback(async () => {
@@ -299,11 +299,10 @@ export default function CoinsPage() {
                   key={p.amountThb}
                   type="button"
                   onClick={() => handlePreset(p.amountThb)}
-                  className={`relative rounded-2xl border px-3 py-3 text-center transition ${
-                    active
-                      ? "border-gold bg-gold/15 text-white"
-                      : "border-white/10 bg-surface-200/70 text-gray-300 hover:border-gold/40 hover:bg-surface-50"
-                  }`}
+                  className={`relative rounded-2xl border px-3 py-3 text-center transition ${active
+                    ? "border-gold bg-gold/15 text-white"
+                    : "border-white/10 bg-surface-200/70 text-gray-300 hover:border-gold/40 hover:bg-surface-50"
+                    }`}
                 >
                   {p.recommended && (
                     <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-gold px-2 py-0.5 text-[10px] font-bold text-black">
@@ -397,19 +396,7 @@ export default function CoinsPage() {
           </p>
         </section>
 
-        {/* Bonus tier info */}
-        <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
-          {PRESETS.map((p) => (
-            <div
-              key={p.amountThb}
-              className="rounded-xl border border-white/5 bg-surface-200/40 py-2"
-            >
-              <p className="text-gray-500">฿{p.amountThb}</p>
-              <p className="font-medium text-emerald-400">+{p.bonusPct}% โบนัส</p>
-            </div>
-          ))}
-        </div>
-        <p className="mt-2 text-center text-xs text-gray-600">
+        <p className="mt-6 text-center text-xs text-gray-600">
           ราคาอื่น ๆ คิดเรท 1 บาท = 1 เหรียญ (ไม่มีโบนัส)
         </p>
 
@@ -428,14 +415,12 @@ export default function CoinsPage() {
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <div
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-                        tx.amount >= 0 ? "bg-emerald-500/10" : "bg-gold/10"
-                      }`}
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${tx.amount >= 0 ? "bg-emerald-500/10" : "bg-gold/10"
+                        }`}
                     >
                       <Coins
-                        className={`h-4 w-4 ${
-                          tx.amount >= 0 ? "text-emerald-400" : "text-gold"
-                        }`}
+                        className={`h-4 w-4 ${tx.amount >= 0 ? "text-emerald-400" : "text-gold"
+                          }`}
                       />
                     </div>
                     <div className="min-w-0">
@@ -449,9 +434,8 @@ export default function CoinsPage() {
                   </div>
                   <div className="ml-3 shrink-0 text-right">
                     <p
-                      className={`text-sm font-semibold ${
-                        tx.amount >= 0 ? "text-emerald-400" : "text-red-400"
-                      }`}
+                      className={`text-sm font-semibold ${tx.amount >= 0 ? "text-emerald-400" : "text-red-400"
+                        }`}
                     >
                       {tx.amount >= 0 ? "+" : ""}
                       {formatNumber(tx.amount)}
@@ -472,5 +456,19 @@ export default function CoinsPage() {
         </section>
       </div>
     </div>
+  );
+}
+
+export default function CoinsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-gold" />
+        </div>
+      }
+    >
+      <CoinsPageInner />
+    </Suspense>
   );
 }

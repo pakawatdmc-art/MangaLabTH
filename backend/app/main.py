@@ -2,14 +2,21 @@
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 from app.config import get_settings
 from app.database import init_db
 from app.api.v1 import router as v1_router
 
 settings = get_settings()
+
+# ── Rate Limiter ─────────────────────────────────
+limiter = Limiter(key_func=get_remote_address, default_limits=["120/minute"])
 
 
 @asynccontextmanager
@@ -24,14 +31,21 @@ app = FastAPI(
     title="mangaFactory API",
     version="1.0.0",
     lifespan=lifespan,
+    docs_url=None if settings.is_production else "/docs",
+    redoc_url=None if settings.is_production else "/redoc",
 )
 
+# ── Rate Limiter state ───────────────────────────
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# ── CORS (V8: restricted methods/headers) ────────
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept", "X-Requested-With"],
 )
 
 app.include_router(v1_router, prefix="/api")
@@ -39,4 +53,7 @@ app.include_router(v1_router, prefix="/api")
 
 @app.get("/health")
 async def health():
+    # V7: Don't leak environment name in production
+    if settings.is_production:
+        return {"status": "ok"}
     return {"status": "ok", "env": settings.APP_ENV}

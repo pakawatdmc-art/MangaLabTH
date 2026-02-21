@@ -1,9 +1,15 @@
 """Payment endpoints (Stripe)."""
 
+import logging
 from typing import Any, List
 
 from fastapi import APIRouter, HTTPException, Request
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
+
+logger = logging.getLogger(__name__)
 
 from app.api.deps import CurrentUser, DBSession
 from app.config import get_settings
@@ -18,6 +24,7 @@ from app.services.stripe_service import (
 
 router = APIRouter(prefix="/payments", tags=["Payments"])
 settings = get_settings()
+limiter = Limiter(key_func=get_remote_address)
 
 
 _BONUS_PRESETS: dict[int, int] = {50: 55, 100: 120, 150: 170}
@@ -60,12 +67,22 @@ async def _fulfill_checkout_session(
 
     payment_ref = _get_payment_reference(session_data)
 
-    # Idempotency: skip if already processed
-    existing = (
-        await session.execute(
-            select(Transaction).where(Transaction.stripe_payment_intent_id == payment_ref)
-        )
-    ).scalar_one_or_none()
+    # Idempotency: skip if already processed (check by stripe_session_id first)
+    checkout_session_id = session_data.get("id", "")
+    existing = None
+    if checkout_session_id:
+        existing = (
+            await session.execute(
+                select(Transaction).where(Transaction.stripe_session_id == checkout_session_id)
+            )
+        ).scalar_one_or_none()
+
+    if not existing:
+        existing = (
+            await session.execute(
+                select(Transaction).where(Transaction.stripe_payment_intent_id == payment_ref)
+            )
+        ).scalar_one_or_none()
 
     if existing:
         return {
@@ -101,13 +118,40 @@ async def _fulfill_checkout_session(
         amount=coins,
         balance_after=new_balance,
         stripe_payment_intent_id=payment_ref,
+        stripe_session_id=checkout_session_id or None,
         note=note,
     )
     session.add(user)
     session.add(tx)
-    await session.commit()
+
+    try:
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        # Another worker already fulfilled this session
+        existing = (
+            await session.execute(
+                select(Transaction).where(Transaction.stripe_session_id == checkout_session_id)
+            )
+        ).scalar_one_or_none()
+        return {
+            "status": "ignored",
+            "reason": "already processed (concurrent)",
+            "new_balance": existing.balance_after if existing else 0,
+        }
 
     return {"status": "success", "new_balance": new_balance, "coins": coins}
+
+
+@router.get("/coin-tiers")
+async def get_coin_tiers():
+    """Return bonus presets so the frontend can display accurate coin previews."""
+    return {
+        "presets": [
+            {"amount_thb": k, "coins": v} for k, v in _BONUS_PRESETS.items()
+        ],
+        "default_rate": 1,  # 1 THB = 1 coin for non-preset amounts
+    }
 
 
 @router.get("/packages", response_model=List[CoinPackageRead])
@@ -122,7 +166,9 @@ async def list_packages(session: DBSession):
 
 
 @router.post("/checkout/custom")
+@limiter.limit("10/minute")
 async def create_custom_checkout(
+    request: Request,
     body: CustomCheckoutRequest,
     user: CurrentUser,
 ):
@@ -140,11 +186,14 @@ async def create_custom_checkout(
         )
         return {"url": url, "coins": coins}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.error("Checkout custom error: %s", e)
+        raise HTTPException(status_code=400, detail="ไม่สามารถสร้างรายการชำระเงินได้")
 
 
 @router.post("/checkout")
+@limiter.limit("10/minute")
 async def create_checkout(
+    request: Request,
     package_id: str,
     user: CurrentUser,
     session: DBSession,
@@ -167,10 +216,12 @@ async def create_checkout(
         )
         return {"url": url}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.error("Checkout error: %s", e)
+        raise HTTPException(status_code=400, detail="ไม่สามารถสร้างรายการชำระเงินได้")
 
 
 @router.post("/webhook", include_in_schema=False)
+@limiter.limit("30/minute")
 async def stripe_webhook(request: Request, session: DBSession):
     """Handle Stripe webhooks to fulfill orders."""
     payload = await request.body()

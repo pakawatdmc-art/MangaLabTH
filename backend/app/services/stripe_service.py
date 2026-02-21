@@ -4,8 +4,12 @@ Handles checkout session creation and webhook processing
 for coin purchases.
 """
 
+import logging
+
 import stripe
 from fastapi import HTTPException
+
+logger = logging.getLogger(__name__)
 
 from app.config import get_settings
 
@@ -56,7 +60,8 @@ def create_checkout_session(
         )
         return session.url
     except stripe.StripeError as e:
-        raise HTTPException(status_code=502, detail=f"Stripe error: {e}")
+        logger.error("Stripe checkout error: %s", e)
+        raise HTTPException(status_code=502, detail="Payment service error")
 
 
 def retrieve_checkout_session(session_id: str) -> dict:
@@ -64,7 +69,8 @@ def retrieve_checkout_session(session_id: str) -> dict:
     try:
         return stripe.checkout.Session.retrieve(session_id)
     except stripe.StripeError as e:
-        raise HTTPException(status_code=502, detail=f"Stripe error: {e}")
+        logger.error("Stripe retrieve error: %s", e)
+        raise HTTPException(status_code=502, detail="Payment service error")
 
 
 def verify_webhook_signature(payload: bytes, sig_header: str) -> dict:

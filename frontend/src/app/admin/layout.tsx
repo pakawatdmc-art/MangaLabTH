@@ -25,7 +25,6 @@ const SIDEBAR_LINKS = [
   { href: "/admin", label: "แดชบอร์ด", icon: LayoutDashboard },
   { href: "/admin/manga", label: "จัดการมังงะ", icon: BookOpen },
   { href: "/admin/chapters", label: "จัดการตอน", icon: Layers },
-  { href: "/admin/upload", label: "อัปโหลดรูปภาพ", icon: Upload },
   { href: "/admin/users", label: "ผู้ใช้งาน", icon: Users },
   { href: "/admin/transactions", label: "รายการเหรียญ", icon: Coins },
 ];
@@ -159,8 +158,8 @@ export default function AdminLayout({
                   className={cn(
                     "group flex items-center justify-between rounded-xl border px-3 py-2.5 text-sm transition",
                     isActive
-                      ? "border-gold/35 bg-gold/15 text-gold shadow-[0_0_0_1px_rgba(212,168,67,0.22)]"
-                      : "border-transparent text-gray-400 hover:border-white/10 hover:bg-white/[0.03] hover:text-white"
+                      ? "border-gold/40 bg-gold/20 text-gold shadow-[0_0_0_1px_rgba(212,168,67,0.3)]"
+                      : "border-transparent text-gray-400 hover:border-white/10 hover:bg-white/[0.05] hover:text-white"
                   )}
                 >
                   <span className="flex items-center gap-2.5">
@@ -214,12 +213,6 @@ export default function AdminLayout({
               </div>
 
               <div className="hidden items-center gap-2 sm:flex">
-                <Link
-                  href="/admin/upload"
-                  className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-gray-300 transition hover:border-gold/30 hover:text-gold"
-                >
-                  อัปโหลดภาพ
-                </Link>
                 <Link
                   href="/admin/chapters"
                   className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-gray-300 transition hover:border-gold/30 hover:text-gold"

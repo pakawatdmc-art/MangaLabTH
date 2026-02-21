@@ -49,6 +49,7 @@ export default async function ChapterReadPage({ params }: Props) {
     <ChapterReaderClient
       chapter={chapter}
       manga={{ id: manga.id, title: manga.title, slug: manga.slug }}
+      allChapters={allChapters}
       prevChapterId={prevChapter?.id || null}
       nextChapterId={nextChapter?.id || null}
     />

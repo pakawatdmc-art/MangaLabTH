@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { ArrowDownCircle, ArrowUpCircle, Coins, History, Loader2, Search, Sparkles } from "lucide-react";
 import type { Transaction } from "@/lib/types";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatDateTime } from "@/lib/utils";
 import { listAllTransactions } from "@/lib/api";
 
 const TX_TYPE_LABELS: Record<string, { label: string; color: string }> = {
@@ -60,7 +60,7 @@ export default function AdminTransactionsPage() {
       tx.note || "",
       String(tx.amount),
       String(tx.balance_after),
-      formatDate(tx.created_at),
+      formatDateTime(tx.created_at),
     ]
       .join(" ")
       .toLowerCase();
@@ -197,7 +197,7 @@ export default function AdminTransactionsPage() {
                     <td className="max-w-[220px] truncate px-4 py-2.5 text-xs text-gray-500">
                       {tx.note || "—"}
                     </td>
-                    <td className="px-4 py-2.5 text-xs text-gray-500">{formatDate(tx.created_at)}</td>
+                    <td className="px-4 py-2.5 text-xs text-gray-500">{formatDateTime(tx.created_at)}</td>
                   </tr>
                 );
               })

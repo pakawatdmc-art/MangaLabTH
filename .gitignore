@@ -57,7 +57,12 @@ credentials*.json
 !package.json
 !package-lock.json
 !tsconfig.json
-# ── Project Specific ──────────────────────────────────────────
+
+# ── Env files (NEVER commit secrets) ──────────────
+backend/.env
+frontend/.env.local
+
+# ── Project Specific ──────────────────────────────
 stripe
 backend/users_log.txt
 stripe.log

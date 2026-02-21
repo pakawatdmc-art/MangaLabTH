@@ -35,10 +35,10 @@ export default async function HomePage({ searchParams }: Props) {
   return (
     <div className="min-h-screen">
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-surface-200 via-surface-100 to-surface-200 py-16 sm:py-24">
+      <section className="relative overflow-hidden bg-gradient-to-br from-surface-200 via-surface-100 to-surface-200 py-12 sm:py-20">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(212,175,55,0.1),transparent_60%)]" />
         <div className="relative mx-auto max-w-6xl px-4 text-center sm:px-6">
-          <h1 className="mb-4 text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
+          <h1 className="mb-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">
             manga<span className="text-gold">Factory</span>
           </h1>
           <p className="mx-auto mb-8 max-w-xl text-lg text-gray-400">
@@ -46,7 +46,8 @@ export default async function HomePage({ searchParams }: Props) {
           </p>
 
           {/* Search bar */}
-          <form action="/search" method="GET" className="mx-auto flex max-w-lg gap-2">
+          {/* Search bar */}
+          <form action="/search" method="GET" className="mx-auto flex max-w-xl gap-2">
             <input
               type="text"
               name="q"
@@ -69,11 +70,10 @@ export default async function HomePage({ searchParams }: Props) {
         <div className="mx-auto flex max-w-6xl flex-wrap gap-2 px-4 py-3 sm:px-6">
           <Link
             href="/"
-            className={`rounded-full px-3 py-1 text-xs font-medium transition ${
-              !params.category
+            className={`rounded-full px-3 py-1 text-xs font-medium transition ${!params.category
                 ? "bg-gold text-black"
                 : "bg-surface-100 text-gray-400 hover:text-white"
-            }`}
+              }`}
           >
             ทั้งหมด
           </Link>
@@ -81,11 +81,10 @@ export default async function HomePage({ searchParams }: Props) {
             <Link
               key={key}
               href={`/?category=${key}`}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition ${
-                params.category === key
+              className={`rounded-full px-3 py-1 text-xs font-medium transition ${params.category === key
                   ? "bg-gold text-black"
                   : "bg-surface-100 text-gray-400 hover:text-white"
-              }`}
+                }`}
             >
               {label}
             </Link>
@@ -100,8 +99,8 @@ export default async function HomePage({ searchParams }: Props) {
             {params.q
               ? `ผลการค้นหา "${params.q}"`
               : params.category
-              ? CATEGORY_LABELS[params.category] || "มังงะ"
-              : "มังงะทั้งหมด"}
+                ? CATEGORY_LABELS[params.category] || "มังงะ"
+                : "มังงะทั้งหมด"}
           </h2>
           <span className="text-xs text-gray-500">{manga.total} เรื่อง</span>
         </div>
@@ -130,14 +129,12 @@ export default async function HomePage({ searchParams }: Props) {
             {Array.from({ length: manga.pages }, (_, i) => i + 1).map((p) => (
               <Link
                 key={p}
-                href={`/?page=${p}${
-                  params.category ? `&category=${params.category}` : ""
-                }${params.q ? `&q=${params.q}` : ""}`}
-                className={`flex h-9 w-9 items-center justify-center rounded-lg text-sm font-medium transition ${
-                  p === page
+                href={`/?page=${p}${params.category ? `&category=${params.category}` : ""
+                  }${params.q ? `&q=${params.q}` : ""}`}
+                className={`flex h-9 w-9 items-center justify-center rounded-lg text-sm font-medium transition ${p === page
                     ? "bg-gold text-black"
                     : "bg-surface-100 text-gray-400 hover:bg-surface-50 hover:text-white"
-                }`}
+                  }`}
               >
                 {p}
               </Link>

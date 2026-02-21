@@ -34,16 +34,16 @@ async function fetcher<T>(
     const body = await res.json().catch(() => ({}));
     const detail = Array.isArray(body.detail)
       ? body.detail
-          .map((d: unknown) => {
-            if (typeof d === "object" && d !== null && "msg" in d) {
-              const msg = (d as { msg?: unknown }).msg;
-              if (typeof msg === "string") {
-                return msg;
-              }
+        .map((d: unknown) => {
+          if (typeof d === "object" && d !== null && "msg" in d) {
+            const msg = (d as { msg?: unknown }).msg;
+            if (typeof msg === "string") {
+              return msg;
             }
-            return JSON.stringify(d);
-          })
-          .join(", ")
+          }
+          return JSON.stringify(d);
+        })
+        .join(", ")
       : body.detail;
     throw new Error(detail || `API error ${res.status}`);
   }
@@ -73,12 +73,15 @@ export async function getMangaList(params?: {
   return fetcher<PaginatedResponse<Manga>>(`/manga${qs ? `?${qs}` : ""}`);
 }
 
-export async function getManga(id: string) {
-  return fetcher<MangaDetail>(`/manga/${id}`);
+export async function getManga(id: string, token?: string) {
+  return fetcher<MangaDetail>(
+    `/manga/${id}`,
+    token ? { token, cache: "no-store", next: { revalidate: 0 } } : undefined
+  );
 }
 
-export async function getMangaBySlug(slug: string) {
-  return fetcher<MangaDetail>(`/manga/slug/${slug}`);
+export async function getMangaBySlug(slug: string, token?: string) {
+  return fetcher<MangaDetail>(`/manga/slug/${slug}`, token ? { token } : undefined);
 }
 
 // ── Chapters ────────────────────────────────────
@@ -208,6 +211,23 @@ export async function listAllChapters(token: string) {
 
 // ── Payments ────────────────────────────────────
 
+export async function getStats(token: string) {
+  return fetcher<{
+    total_manga: number;
+    total_chapters: number;
+    total_users: number;
+    total_coins_in_circulation: number;
+    total_views: number;
+  }>("/users/stats", { token });
+}
+
+export async function getCoinTiers() {
+  return fetcher<{
+    presets: { amount_thb: number; coins: number }[];
+    default_rate: number;
+  }>("/payments/coin-tiers");
+}
+
 export async function getPackages() {
   return fetcher<CoinPackage[]>("/payments/packages");
 }
@@ -271,7 +291,10 @@ export async function getPresignedUploadUrls(
   );
 }
 
-export async function getChaptersForManga(mangaId: string) {
-  return fetcher<Chapter[]>(`/chapters/manga/${mangaId}`);
+export async function getChaptersForManga(mangaId: string, token?: string) {
+  return fetcher<Chapter[]>(
+    `/chapters/manga/${mangaId}`,
+    token ? { token, cache: "no-store", next: { revalidate: 0 } } : undefined
+  );
 }
 

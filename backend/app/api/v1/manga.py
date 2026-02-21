@@ -1,5 +1,6 @@
 """Manga CRUD endpoints."""
 
+import re
 from math import ceil
 from typing import Optional
 
@@ -19,6 +20,11 @@ from app.schemas.manga import (
 )
 
 router = APIRouter(prefix="/manga", tags=["Manga"])
+
+
+def _escape_like(value: str) -> str:
+    """Escape SQL LIKE wildcard characters to prevent injection."""
+    return re.sub(r"([%_\\])", r"\\\1", value)
 
 
 # ── Public ───────────────────────────────────────
@@ -42,8 +48,9 @@ async def list_manga(
     if status_filter:
         query = query.where(Manga.status == status_filter)
     if q:
+        safe_q = _escape_like(q)
         query = query.where(
-            col(Manga.title).ilike(f"%{q}%") | col(Manga.description).ilike(f"%{q}%")
+            col(Manga.title).ilike(f"%{safe_q}%") | col(Manga.description).ilike(f"%{safe_q}%")
         )
 
     # Count
@@ -149,30 +156,31 @@ async def delete_manga(
     if not manga:
         raise HTTPException(status_code=404, detail="Manga not found")
 
-    # Collect all R2 keys: cover + every page of every chapter
+    # Collect R2 keys for cleanup (cover + all chapter pages)
     r2_keys = []
 
-    def _extract_key(url: str) -> str | None:
+    def _to_key(url: str) -> str | None:
         parts = url.split(".r2.dev/", 1)
         return parts[1] if len(parts) == 2 else None
 
     if manga.cover_url:
-        key = _extract_key(manga.cover_url)
+        key = _to_key(manga.cover_url)
         if key:
             r2_keys.append(key)
 
     for chapter in (manga.chapters or []):
         for page in (chapter.pages or []):
             if page.image_url:
-                key = _extract_key(page.image_url)
+                key = _to_key(page.image_url)
                 if key:
                     r2_keys.append(key)
 
     await session.delete(manga)
     await session.commit()
 
-    # Delete from R2 after DB commit (best-effort)
-    try:
-        delete_objects(r2_keys)
-    except Exception:
-        pass
+    # Best-effort R2 cleanup after DB commit
+    if r2_keys:
+        try:
+            delete_objects(r2_keys)
+        except Exception:
+            pass

@@ -8,6 +8,7 @@ from typing import List
 
 from fastapi import APIRouter, HTTPException, Query, status
 from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
 from app.api.deps import AdminUser, CurrentUser, DBSession
@@ -130,7 +131,30 @@ async def unlock_chapter(
     )
     session.add(tx)
     session.add(locked_user)
-    await session.commit()
+
+    try:
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        # Race condition: another request already unlocked this chapter
+        existing = (
+            await session.execute(
+                select(Transaction).where(
+                    Transaction.user_id == user.id,
+                    Transaction.chapter_id == chapter.id,
+                    Transaction.type == TransactionType.CHAPTER_UNLOCK,
+                )
+            )
+        ).scalar_one_or_none()
+        if existing:
+            return UnlockChapterResponse(
+                success=True,
+                new_balance=existing.balance_after,
+                transaction_id=existing.id,
+                message="Already unlocked",
+            )
+        raise HTTPException(status_code=409, detail="Concurrent unlock conflict")
+
     await session.refresh(tx)
 
     return UnlockChapterResponse(
@@ -160,6 +184,11 @@ async def admin_grant_coins(
         raise HTTPException(status_code=404, detail="User not found")
 
     new_balance = locked_user.coin_balance + body.amount
+    if new_balance < 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Grant would result in negative balance",
+        )
     locked_user.coin_balance = new_balance
 
     tx = Transaction(

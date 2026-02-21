@@ -16,6 +16,16 @@ export function formatDate(dateStr: string): string {
   });
 }
 
+export function formatDateTime(dateStr: string): string {
+  return new Date(dateStr).toLocaleString("th-TH", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export function formatChapterNumber(n: number): string {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
 }

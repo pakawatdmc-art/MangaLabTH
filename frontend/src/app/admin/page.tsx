@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { formatNumber } from "@/lib/utils";
+import { getStats } from "@/lib/api";
 import {
   ArrowUpRight,
   BookOpen,
@@ -15,13 +16,11 @@ import {
   Users,
 } from "lucide-react";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
-
 interface Stats {
-  manga_count: number;
-  chapter_count: number;
-  user_count: number;
-  total_coins: number;
+  total_manga: number;
+  total_chapters: number;
+  total_users: number;
+  total_coins_in_circulation: number;
   total_views: number;
 }
 
@@ -36,11 +35,9 @@ export default function AdminDashboard() {
     (async () => {
       try {
         const token = await getToken();
-        const res = await fetch(`${API}/users/stats`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error("Failed to load stats");
-        setStats(await res.json());
+        if (!token) throw new Error("No token");
+        const data = await getStats(token);
+        setStats(data);
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "Error loading stats");
       } finally {
@@ -52,25 +49,25 @@ export default function AdminDashboard() {
   const STATS = [
     {
       label: "มังงะทั้งหมด",
-      value: stats ? formatNumber(stats.manga_count) : "—",
+      value: stats ? formatNumber(stats.total_manga) : "—",
       icon: BookOpen,
       color: "text-blue-400",
     },
     {
       label: "ตอนทั้งหมด",
-      value: stats ? formatNumber(stats.chapter_count) : "—",
+      value: stats ? formatNumber(stats.total_chapters) : "—",
       icon: Layers,
       color: "text-emerald-400",
     },
     {
       label: "ผู้ใช้งาน",
-      value: stats ? formatNumber(stats.user_count) : "—",
+      value: stats ? formatNumber(stats.total_users) : "—",
       icon: Users,
       color: "text-purple-400",
     },
     {
       label: "เหรียญหมุนเวียน",
-      value: stats ? formatNumber(stats.total_coins) : "—",
+      value: stats ? formatNumber(stats.total_coins_in_circulation) : "—",
       icon: Coins,
       color: "text-gold",
     },

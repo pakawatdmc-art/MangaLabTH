@@ -144,9 +144,9 @@ async def admin_stats(
     )).scalar_one()
 
     return {
-        "manga_count": manga_count,
-        "chapter_count": chapter_count,
-        "user_count": user_count,
-        "total_coins": total_coins,
+        "total_manga": manga_count,
+        "total_chapters": chapter_count,
+        "total_users": user_count,
+        "total_coins_in_circulation": total_coins,
         "total_views": total_views,
     }
