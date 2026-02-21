@@ -18,6 +18,34 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+export async function generateMetadata({ params }: Props): Promise<import("next").Metadata> {
+  const { slug } = await params;
+  try {
+    const manga = await getMangaBySlug(slug);
+    const desc = manga.description
+      ? manga.description.slice(0, 160)
+      : `อ่าน ${manga.title} มังงะแปลไทย ออนไลน์ฟรี ภาพคมชัด`;
+    return {
+      title: manga.title,
+      description: desc,
+      openGraph: {
+        title: `${manga.title} — MangaLabTH`,
+        description: desc,
+        images: manga.cover_url ? [{ url: manga.cover_url, width: 400, height: 600 }] : [],
+        type: "article",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: `${manga.title} — MangaLabTH`,
+        description: desc,
+        images: manga.cover_url ? [manga.cover_url] : [],
+      },
+    };
+  } catch {
+    return { title: "มังงะ — MangaLabTH" };
+  }
+}
+
 export default async function MangaDetailPage({ params }: Props) {
   const { slug } = await params;
   const { getToken } = await auth();

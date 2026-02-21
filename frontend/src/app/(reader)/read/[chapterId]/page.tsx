@@ -8,6 +8,24 @@ interface Props {
   params: Promise<{ chapterId: string }>;
 }
 
+export async function generateMetadata({ params }: Props): Promise<import("next").Metadata> {
+  const { chapterId } = await params;
+  try {
+    const chapter = await getChapter(chapterId);
+    const manga = await getManga(chapter.manga_id);
+    const chTitle = chapter.title
+      ? `ตอนที่ ${chapter.number} — ${chapter.title}`
+      : `ตอนที่ ${chapter.number}`;
+    return {
+      title: `${manga.title} ${chTitle}`,
+      description: `อ่าน ${manga.title} ${chTitle} แปลไทย ออนไลน์ฟรี ภาพคมชัด — MangaLabTH`,
+      robots: { index: false, follow: true }, // reading pages shouldn't pollute search
+    };
+  } catch {
+    return { title: "อ่านมังงะ — MangaLabTH" };
+  }
+}
+
 export default async function ChapterReadPage({ params }: Props) {
   const { chapterId } = await params;
   const { getToken } = await auth();

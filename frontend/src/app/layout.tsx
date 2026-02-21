@@ -16,15 +16,44 @@ const notoThai = Noto_Sans_Thai({
 });
 
 export const metadata: Metadata = {
-  title: "MangaLabTH — อ่านมังงะออนไลน์",
-  description: "แพลตฟอร์มอ่านมังงะออนไลน์ระดับพรีเมียม สนุกกับการอ่านมังงะแปลไทย ภาพคมชัด อัปเดตตอนใหม่ล่าสุด",
-  keywords: ["มังงะ", "อ่านมังงะ", "มังงะแปลไทย", "manga", "MangaLabTH", "เว็บอ่านมังงะ"],
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+  ),
+  title: {
+    template: "%s | MangaLabTH",
+    default: "MangaLabTH — อ่านมังงะแปลไทยออนไลน์ฟรี อัปเดตตอนใหม่ภาพคมชัด",
+  },
+  description:
+    "MangaLabTH ศูนย์รวมมังงะแปลไทย อ่านออนไลน์ฟรีทุกวัน ภาพคมชัด อัปเดตตอนใหม่ล่าสุด ทั้งแนวแอคชั่น โรแมนติก แฟนตาซี ซีรีส์เกาหลีและญี่ปุ่น",
+  keywords: [
+    "มังงะ", "อ่านมังงะ", "มังงะแปลไทย", "manga", "MangaLabTH",
+    "เว็บอ่านมังงะ", "มังงะฮิต", "อ่านการ์ตูน", "อ่านมังงะฟรี",
+    "มังงะเกาหลี", "มังงะญี่ปุ่น", "มังงะจีน",
+  ],
+  authors: [{ name: "MangaLabTH" }],
   openGraph: {
-    title: "MangaLabTH — อ่านมังงะออนไลน์",
-    description: "แพลตฟอร์มอ่านมังงะออนไลน์ระดับพรีเมียม สนุกกับการอ่านมังงะแปลไทย ภาพคมชัด",
+    title: "MangaLabTH — อ่านมังงะแปลไทยออนไลน์ฟรี",
+    description:
+      "MangaLabTH ศูนย์รวมมังงะแปลไทย อ่านออนไลน์ฟรีทุกวัน พร้อมรูปคมชัดสูง",
     siteName: "MangaLabTH",
     locale: "th_TH",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "MangaLabTH — อ่านมังงะออนไลน์",
+    description:
+      "แพลตฟอร์มอ่านมังงะออนไลน์ อัปเดตเร็ว ภาพคมชัดอ่านง่ายบนมือถือ",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
 };
 
