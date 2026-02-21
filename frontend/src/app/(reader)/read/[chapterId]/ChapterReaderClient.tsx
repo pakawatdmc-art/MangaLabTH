@@ -57,7 +57,7 @@ export default function ChapterReaderClient({
     // Save to localStorage
     try {
       localStorage.setItem(
-        `mangafactory:lastRead:${manga.id}`,
+        `mangalabth:lastRead:${manga.id}`,
         JSON.stringify({
           url: `/read/${chapter.id}`,
           mangaTitle: manga.title,

@@ -39,7 +39,7 @@ export default async function HomePage({ searchParams }: Props) {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(212,175,55,0.1),transparent_60%)]" />
         <div className="relative mx-auto max-w-6xl px-4 text-center sm:px-6">
           <h1 className="mb-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">
-            manga<span className="text-gold">Factory</span>
+            MangaLab<span className="text-gold">TH</span>
           </h1>
           <p className="mx-auto mb-8 max-w-xl text-lg text-gray-400">
             อ่านมังงะออนไลน์คุณภาพสูง อัปเดตทุกวัน พร้อมระบบเหรียญปลดล็อคตอนพิเศษ
@@ -71,8 +71,8 @@ export default async function HomePage({ searchParams }: Props) {
           <Link
             href="/"
             className={`rounded-full px-3 py-1 text-xs font-medium transition ${!params.category
-                ? "bg-gold text-black"
-                : "bg-surface-100 text-gray-400 hover:text-white"
+              ? "bg-gold text-black"
+              : "bg-surface-100 text-gray-400 hover:text-white"
               }`}
           >
             ทั้งหมด
@@ -82,8 +82,8 @@ export default async function HomePage({ searchParams }: Props) {
               key={key}
               href={`/?category=${key}`}
               className={`rounded-full px-3 py-1 text-xs font-medium transition ${params.category === key
-                  ? "bg-gold text-black"
-                  : "bg-surface-100 text-gray-400 hover:text-white"
+                ? "bg-gold text-black"
+                : "bg-surface-100 text-gray-400 hover:text-white"
                 }`}
             >
               {label}
@@ -132,8 +132,8 @@ export default async function HomePage({ searchParams }: Props) {
                 href={`/?page=${p}${params.category ? `&category=${params.category}` : ""
                   }${params.q ? `&q=${params.q}` : ""}`}
                 className={`flex h-9 w-9 items-center justify-center rounded-lg text-sm font-medium transition ${p === page
-                    ? "bg-gold text-black"
-                    : "bg-surface-100 text-gray-400 hover:bg-surface-50 hover:text-white"
+                  ? "bg-gold text-black"
+                  : "bg-surface-100 text-gray-400 hover:bg-surface-50 hover:text-white"
                   }`}
               >
                 {p}

@@ -59,7 +59,7 @@ export default function Navbar() {
         <Link href="/" className="flex items-center gap-2">
           <BookOpen className="h-5 w-5 text-gold" />
           <span className="text-lg font-bold text-white">
-            manga<span className="text-gold">Factory</span>
+            MangaLab<span className="text-gold">TH</span>
           </span>
         </Link>
 
