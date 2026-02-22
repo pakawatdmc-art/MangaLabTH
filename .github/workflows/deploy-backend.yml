@@ -5,7 +5,7 @@ on:
     branches: [main]      # ทำงานเมื่อมีการ push ไปที่ branch main
     paths:
       - 'backend/**'      # ทำงานเฉพาะเมื่อมีการแก้ไขไฟล์ในโฟลเดอร์ backend
-
+  workflow_dispatch:
 jobs:
   sync-to-hub:
     runs-on: ubuntu-latest
