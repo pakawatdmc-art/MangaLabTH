@@ -1,4 +1,4 @@
-name: Sync Backend to Hugging Face Hub
+name: Sync Backend to Hugging Face
 
 on:
   push:
