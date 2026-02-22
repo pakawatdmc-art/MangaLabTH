@@ -1,0 +1,38 @@
+name: Sync Backend to Hugging Face Hub
+
+on:
+  push:
+    branches: [main]      # ทำงานเมื่อมีการ push ไปที่ branch main
+    paths:
+      - 'backend/**'      # ทำงานเฉพาะเมื่อมีการแก้ไขไฟล์ในโฟลเดอร์ backend
+
+jobs:
+  sync-to-hub:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Push to Hugging Face Space
+        uses: nateraw/huggingface-sync-action@v1
+        with:
+          # ไม่ต้องแก้บรรทัดนี้ (มันจะดึงชื่อ GitHub Repo ของคุณอัตโนมัติ)
+          github_repo_id: ${{ github.repository }}
+          
+          # ชื่อ Space ปลายทางที่คุณระบุมา
+          huggingface_repo_id: Doilange/manga-api
+          
+          # ประเภทของ Repo ปลายทาง
+          repo_type: space
+          
+          # รูปแบบ SDK (Docker ตามที่คุณตั้งค่าไว้)
+          space_sdk: docker
+          
+          # Token ที่คุณต้องไปตั้งค่าใน GitHub Secrets (ชื่อ HF_TOKEN)
+          hf_token: ${{ secrets.HF_TOKEN }}
+          
+          # **สำคัญ** ระบุว่าโค้ด Backend ของเราอยู่ในโฟลเดอร์นี้
+          subdirectory: backend
