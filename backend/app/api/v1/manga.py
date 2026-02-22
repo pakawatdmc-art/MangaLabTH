@@ -215,7 +215,7 @@ async def delete_manga(
     # Collect R2 keys for cleanup (cover + all chapter pages)
     r2_keys = []
 
-    def _to_key(url: str) -> str | None:
+    def _to_key(url: str) -> Optional[str]:
         parts = url.split(".r2.dev/", 1)
         return parts[1] if len(parts) == 2 else None
 

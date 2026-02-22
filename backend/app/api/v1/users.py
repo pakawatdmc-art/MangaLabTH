@@ -1,7 +1,7 @@
 """User endpoints."""
 
 import asyncio
-from typing import List
+from typing import Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException
 from sqlmodel import select
@@ -24,7 +24,7 @@ def _is_primary_admin_email(email: str) -> bool:
     return bool(primary) and _normalize_email(email) == primary
 
 
-def _to_user_read(user: User, profile: dict[str, str] | None = None) -> UserRead:
+def _to_user_read(user: User, profile: Optional[Dict[str, str]] = None) -> UserRead:
     profile = profile or {}
     effective_email = profile.get("email") or user.email
 

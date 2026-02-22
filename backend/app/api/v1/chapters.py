@@ -1,6 +1,6 @@
 """Chapter & Page endpoints."""
 
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException, status
 from sqlmodel import select
@@ -230,7 +230,7 @@ async def replace_pages(
         await session.refresh(pg)
 
     # Cleanup old files that are no longer referenced by new pages (best-effort)
-    def _to_key(url: str) -> str | None:
+    def _to_key(url: str) -> Optional[str]:
         parts = url.split(".r2.dev/", 1)
         return parts[1] if len(parts) == 2 else None
 
