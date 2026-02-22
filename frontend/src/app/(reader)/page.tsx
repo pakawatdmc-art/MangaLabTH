@@ -4,6 +4,8 @@ import { getMangaList } from "@/lib/api";
 import { MangaCategory, MangaStatus, CATEGORY_LABELS, STATUS_LABELS } from "@/lib/types";
 import MangaCard from "@/components/MangaCard";
 
+export const dynamic = "force-dynamic";
+
 interface Props {
   searchParams: Promise<{
     page?: string;

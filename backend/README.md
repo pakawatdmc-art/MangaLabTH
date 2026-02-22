@@ -1,103 +1,27 @@
+---
+title: MangaLabTH Backend
+emoji: 📚
+colorFrom: indigo
+colorTo: purple
+sdk: docker
+app_port: 7860
+---
+
 # MangaLabTH Backend
 
-High-performance manga platform API built with **FastAPI**, **SQLModel**, and **Neon PostgreSQL**.
+This is the FastAPI backend for MangaLabTH, running in a Docker container on Hugging Face Spaces.
 
-## Tech Stack
+## Environment Variables Required
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | FastAPI 0.115 |
-| ORM | SQLModel 0.0.22 + SQLAlchemy 2.0 (async) |
-| Database | Neon PostgreSQL (serverless) via `asyncpg` |
-| Auth | Clerk JWT (RS256 via JWKS) |
-| Storage | Cloudflare R2 (S3-compatible) |
-| Payments | Stripe Checkout |
-| Migrations | Alembic (async) |
+When deploying this Space, you must configure the following Secrets (Settings > Variables and secrets > Secrets):
 
-## Directory Structure
-
-```
-backend/
-├── app/
-│   ├── main.py              # FastAPI entry point
-│   ├── config.py             # Pydantic Settings (.env)
-│   ├── database.py           # Async engine + session factory
-│   ├── models/               # SQLModel ORM models
-│   │   ├── user.py           # User (linked to Clerk)
-│   │   ├── manga.py          # Manga → Chapter → Page
-│   │   └── transaction.py    # Coin Economy ledger
-│   ├── schemas/              # Pydantic v2 request/response
-│   ├── api/
-│   │   ├── deps.py           # Auth (Clerk JWT) + RBAC
-│   │   └── v1/               # Versioned API routes
-│   └── services/             # R2, Stripe integrations
-├── alembic/                  # DB migrations
-├── requirements.txt
-└── .env.example
-```
-
-## Quick Start
-
-```bash
-# 1. Create virtual environment
-cd backend
-python -m venv .venv
-source .venv/bin/activate
-
-# 2. Install dependencies
-pip install -r requirements.txt
-
-# 3. Configure environment
-cp .env.example .env
-# Edit .env with your Neon DB URL, Clerk keys, R2 credentials, etc.
-
-# 4. Run initial migration
-alembic revision --autogenerate -m "initial"
-alembic upgrade head
-
-# 5. Start dev server
-uvicorn app.main:app --reload --port 8080
-```
-
-API docs available at: `http://localhost:8080/docs`
-
-## Database Schema
-
-### Coin Economy Design
-
-- **Transactions** are **immutable** append-only ledger entries
-- `User.coin_balance` is the cached total (source of truth = transaction ledger)
-- All balance mutations use `SELECT ... FOR UPDATE` to prevent race conditions
-- Chapter unlock checks for existing unlock before deducting coins
-
-### Tables
-
-- `users` — Clerk-linked accounts with coin balance + RBAC role
-- `mangas` — Manga metadata with slug, category, status
-- `chapters` — Ordered by number (supports .5 specials), coin pricing
-- `pages` — Ordered images with R2 URLs + dimensions
-- `transactions` — Immutable coin movement log
-- `coin_packages` — Predefined Stripe purchase options
-
-## API Endpoints
-
-### Public
-- `GET /api/v1/manga` — List manga (filter, search, paginate)
-- `GET /api/v1/manga/{id}` — Manga detail with chapters
-- `GET /api/v1/manga/slug/{slug}` — Manga by slug
-- `GET /api/v1/chapters/{id}` — Chapter detail with pages
-
-### Authenticated (Reader)
-- `GET /api/v1/users/me` — My profile
-- `PATCH /api/v1/users/me` — Update profile
-- `POST /api/v1/transactions/unlock` — Unlock chapter with coins
-- `GET /api/v1/transactions/me` — My transaction history
-
-### Admin Only
-- `POST /api/v1/manga` — Create manga
-- `PATCH /api/v1/manga/{id}` — Update manga
-- `DELETE /api/v1/manga/{id}` — Delete manga
-- `POST /api/v1/chapters/manga/{id}` — Create chapter
-- `POST /api/v1/chapters/{id}/pages` — Batch add pages
-- `POST /api/v1/transactions/admin/grant` — Grant coins
-- `GET /api/v1/users` — List all users
+*   `DATABASE_URL`: Your PostgreSQL connection string (e.g., Neon).
+*   `CORS_ORIGINS`: The URL of your Vercel frontend (e.g., `https://your-frontend.vercel.app`). You can also use `*` for testing, but it is less secure.
+*   `CLERK_PUBLISHABLE_KEY`: Your Clerk publishable key.
+*   `CLERK_SECRET_KEY`: Your Clerk secret key.
+*   `CLERK_JWKS_URL`: Your Clerk JWKS URL.
+*   `R2_ENDPOINT_URL`: Cloudflare R2 endpoint.
+*   `R2_ACCESS_KEY_ID`: Cloudflare R2 access key.
+*   `R2_SECRET_ACCESS_KEY`: Cloudflare R2 secret key.
+*   `R2_BUCKET_NAME`: Cloudflare R2 bucket name.
+*   `R2_PUBLIC_URL`: Cloudflare R2 public URL.

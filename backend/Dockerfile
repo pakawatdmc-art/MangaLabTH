@@ -1,24 +1,35 @@
-FROM python:3.10-slim
+FROM python:3.11-slim
 
-# Prevent Python from writing .pyc files and enable unbuffered output
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+# Set up a new user named "user" with user ID 1000
+RUN useradd -m -u 1000 user
 
-WORKDIR /app
+# Switch to the "user" user
+USER user
 
-# Install system deps (for asyncpg)
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends gcc libpq-dev && \
-    rm -rf /var/lib/apt/lists/*
+# Set home to the user's home directory
+ENV HOME=/home/user \
+	PATH=/home/user/.local/bin:$PATH
 
-# Install Python deps
-COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Set the working directory to the user's home directory
+WORKDIR $HOME/app
 
-# Copy application code
-COPY . .
+# Copy the current directory contents into the container at $HOME/app setting the owner to the user
+COPY --chown=user . $HOME/app
 
-EXPOSE 8000
+# Disable pip cache to shrink the image size
+ENV PIP_NO_CACHE_DIR=1
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+# Install requirements
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Create a directory for sqlite db if needed
+RUN mkdir -p /home/user/app/data
+
+# Give write access to the complete app directory
+# This allows SQLModel/SQLite to write the local database file if not using a cloud DB
+USER root
+RUN chown -R user:user /home/user/app
+USER user
+
+# Start the FastAPI app on port 7860, the default port expected by Hugging Face Spaces
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7860"]

@@ -114,8 +114,17 @@ export default function ChapterReaderClient({
       } catch { }
     };
 
-    window.addEventListener("balance-update", fetchBalance);
-    return () => window.removeEventListener("balance-update", fetchBalance);
+    const handleBalanceUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail && typeof customEvent.detail.newBalance === "number") {
+        setCurrentBalance(customEvent.detail.newBalance);
+      } else {
+        fetchBalance(); // Fallback
+      }
+    };
+
+    window.addEventListener("balance-update", handleBalanceUpdate);
+    return () => window.removeEventListener("balance-update", handleBalanceUpdate);
   }, [isLoaded, isSignedIn, getToken]);
 
   return (

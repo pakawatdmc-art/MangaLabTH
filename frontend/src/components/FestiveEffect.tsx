@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { useTheme, type ThemeType } from "./ThemeProvider";
+
 
 // ─────────────────────────────────────────────────────────────────
 // Shared particle base
@@ -278,11 +280,16 @@ const THEME_CONFIG: Partial<Record<ThemeType, ThemeConfig>> = {
 // ─────────────────────────────────────────────────────────────────
 export function FestiveEffect() {
     const { theme } = useTheme();
+    const pathname = usePathname();
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const animRef = useRef<number | null>(null);
     const particlesRef = useRef<Particle[]>([]);
 
     const config = THEME_CONFIG[theme];
+
+    // Disable effect on reader pages (starts with /read/)
+    const isReaderPage = pathname?.startsWith("/read/");
+
 
     useEffect(() => {
         if (!config) {
@@ -339,7 +346,8 @@ export function FestiveEffect() {
         };
     }, [config]);
 
-    if (!config) return null;
+    if (!config || isReaderPage) return null;
+
 
     return (
         <canvas

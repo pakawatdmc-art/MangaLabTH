@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { cn, formatNumber } from "@/lib/utils";
 import { SignedIn, SignedOut, UserButton, useAuth } from "@clerk/nextjs";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getMe } from "@/lib/api";
 
 const NAV_LINKS = [
@@ -30,7 +30,7 @@ export default function Navbar() {
   const [user, setUser] = useState<{ coin_balance: number } | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     try {
       const token = await getToken();
       if (!token) return;
@@ -41,7 +41,7 @@ export default function Navbar() {
       setUser(null);
       setIsAdmin(false);
     }
-  };
+  }, [getToken]);
 
   useEffect(() => {
     if (!isLoaded || !isSignedIn) {
