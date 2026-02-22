@@ -130,16 +130,16 @@ export default function ChapterReaderClient({
 
       {/* Floating top bar */}
       <header
-        className={`fixed left-0 right-0 top-0.5 z-40 transition-transform duration-300 ${showTopBar ? "translate-y-0" : "-translate-y-full"
+        className={`fixed left-0 right-0 top-0 z-40 transition-transform duration-300 ${showTopBar ? "translate-y-0" : "-translate-y-full"
           }`}
       >
-        <div className="mx-auto flex h-12 max-w-4xl items-center justify-between bg-surface-300/92 px-2.5 backdrop-blur-xl sm:rounded-b-xl sm:px-4">
+        <div className="mx-auto flex h-14 max-w-4xl items-center justify-between bg-surface-300/80 px-3 backdrop-blur-xl shadow-lg shadow-black/20 sm:rounded-b-2xl sm:px-5">
           <Link
             href={`/manga/${manga.slug}`}
-            className="flex items-center gap-2 text-sm text-gray-300 transition hover:text-white"
+            className="flex items-center gap-2 text-sm font-medium text-gray-300 transition hover:text-white"
           >
-            <BookOpen className="h-4 w-4 text-gold" />
-            <span className="max-w-[120px] truncate sm:max-w-[240px]">
+            <BookOpen className="h-[18px] w-[18px] text-gold shrink-0" />
+            <span className="max-w-[100px] truncate sm:max-w-[280px]">
               {manga.title}
             </span>
           </Link>
@@ -151,20 +151,20 @@ export default function ChapterReaderClient({
                 e.stopPropagation();
                 setShowChapterMenu(!showChapterMenu);
               }}
-              className="flex items-center gap-1.5 rounded-lg border border-white/5 bg-surface-200/50 px-2.5 py-1 text-[11px] text-gray-300 transition hover:bg-surface-100 sm:px-3 sm:py-1.5 sm:text-xs"
+              className="flex items-center gap-1.5 rounded-lg border border-white/5 bg-surface-200/50 px-3 py-1.5 text-[11px] text-gray-200 shadow-inner transition hover:bg-surface-100 sm:px-4 sm:py-2 sm:text-xs"
             >
               <Layers className="h-3.5 w-3.5 text-gold" />
-              <span className="font-medium">ตอนที่ {formatChapterNumber(chapter.number)}</span>
+              <span className="font-semibold">ตอนที่ {formatChapterNumber(chapter.number)}</span>
               <span className="hidden text-gray-500 sm:inline">
                 · {pages.length} หน้า
               </span>
-              <ChevronDown className="ml-0.5 h-3.5 w-3.5 opacity-70" />
+              <ChevronDown className="ml-1 h-3.5 w-3.5 opacity-70" />
             </button>
 
             {/* Dropdown Menu */}
             {showChapterMenu && (
               <div
-                className="absolute left-0 top-full mt-2 max-h-[60vh] w-56 overflow-y-auto rounded-xl border border-white/10 bg-surface-200 p-1.5 shadow-2xl backdrop-blur-xl sm:w-64"
+                className="absolute left-1/2 mt-2 max-h-[60vh] w-56 -translate-x-1/2 overflow-y-auto rounded-xl border border-white/10 bg-surface-200 p-1.5 shadow-2xl backdrop-blur-xl sm:w-64"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="mb-1 px-2 pb-1 pt-1.5 text-[10px] font-semibold tracking-wider text-gray-500">
@@ -190,7 +190,7 @@ export default function ChapterReaderClient({
                       </span>
                       <div className="flex shrink-0 items-center gap-1.5">
                         {c.is_unlocked && (
-                          <span className="text-[9px] font-medium text-emerald-400">
+                          <span className="text-[10px] font-medium text-emerald-400">
                             ปลดล็อคแล้ว
                           </span>
                         )}
@@ -203,29 +203,29 @@ export default function ChapterReaderClient({
             )}
           </div>
 
-          {/* Actions & Chapter selector */}
+          {/* Actions */}
           <div className="flex items-center gap-2 sm:gap-4">
             {currentBalance !== undefined && (
               <Link
                 href="/coins"
-                className="flex items-center gap-1.5 rounded-full bg-gold/10 px-2.5 py-1 text-xs font-semibold text-gold ring-1 ring-gold/20 transition hover:bg-gold/20"
+                className="flex items-center gap-1.5 rounded-full bg-surface-200/80 px-3 py-1.5 text-[11px] font-semibold text-gold ring-1 ring-gold/30 backdrop-blur-md transition hover:bg-gold/10 sm:text-xs"
                 title="เติมเหรียญ"
               >
                 <Coins className="h-3.5 w-3.5" />
-                <span>{formatNumber(currentBalance)} <span className="hidden sm:inline">เหรียญ</span></span>
+                <span>{formatNumber(currentBalance)} <span className="hidden ml-0.5 tracking-wide sm:inline">เหรียญ</span></span>
               </Link>
             )}
 
             <Link
               href="/"
-              className="flex items-center gap-1.5 text-gray-400 transition hover:text-white"
+              className="hidden items-center gap-1.5 text-gray-400 transition hover:text-white sm:flex"
               title="กลับหน้าแรก"
             >
               <Home className="h-4 w-4" />
-              <span className="hidden text-xs font-medium sm:inline">หน้าแรก</span>
+              <span className="text-xs font-medium">หน้าแรก</span>
             </Link>
 
-            <div className="flex items-center gap-0.5 ml-1">
+            <div className="hidden items-center gap-0.5 ml-1 sm:flex">
               {prevChapterId ? (
                 <Link
                   href={`/read/${prevChapterId}`}
@@ -309,51 +309,51 @@ export default function ChapterReaderClient({
       </footer>
 
       {/* Mobile dock */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-surface-300/95 px-3 pb-[max(env(safe-area-inset-bottom),0.6rem)] pt-2.5 backdrop-blur-xl md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/5 bg-surface-300/85 px-2 pb-[max(env(safe-area-inset-bottom),0.8rem)] pt-2 backdrop-blur-2xl shadow-[0_-8px_30px_rgba(0,0,0,0.5)] md:hidden">
         <div className="mx-auto grid max-w-[100%] grid-cols-5 gap-1">
           <Link
             href="/"
-            className="flex flex-col items-center justify-center gap-1 rounded-xl text-gray-400 transition hover:text-white"
+            className="flex flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-gray-400 transition hover:bg-white/5 hover:text-white"
           >
             <Home className="h-5 w-5" />
-            <span className="text-[10px] font-medium">หน้าแรก</span>
+            <span className="text-[10px] font-medium tracking-wide">หน้าแรก</span>
           </Link>
 
           {prevChapterId ? (
             <Link
               href={`/read/${prevChapterId}`}
-              className="flex flex-col items-center justify-center gap-1 rounded-xl text-gray-300 transition hover:text-white"
+              className="flex flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-gray-300 transition hover:bg-white/5 hover:text-white"
             >
               <ChevronLeft className="h-5 w-5" />
-              <span className="text-[10px] font-medium">ก่อนหน้า</span>
+              <span className="text-[10px] font-medium tracking-wide">ก่อนหน้า</span>
             </Link>
           ) : (
-            <span className="flex flex-col items-center justify-center gap-1 rounded-xl text-gray-600">
+            <span className="flex flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-gray-600">
               <ChevronLeft className="h-5 w-5" />
-              <span className="text-[10px] font-medium">ก่อนหน้า</span>
+              <span className="text-[10px] font-medium tracking-wide">ก่อนหน้า</span>
             </span>
           )}
 
           <Link
             href={`/manga/${manga.slug}`}
-            className="flex flex-col items-center justify-center gap-1 rounded-xl text-gray-300 transition hover:text-white"
+            className="flex flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-gray-300 transition hover:bg-white/5 hover:text-white"
           >
             <BookOpen className="h-5 w-5 text-gold" />
-            <span className="text-[10px] font-medium">หน้ารายละเอียด</span>
+            <span className="text-[10px] font-medium tracking-wide">รายละเอียด</span>
           </Link>
 
           {nextChapterId ? (
             <Link
               href={`/read/${nextChapterId}`}
-              className="flex flex-col items-center justify-center gap-1 rounded-xl text-gold transition hover:text-gold-light"
+              className="flex flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-gold transition hover:bg-white/5 hover:text-gold-light"
             >
               <ChevronRight className="h-5 w-5" />
-              <span className="text-[10px] font-semibold">ถัดไป</span>
+              <span className="text-[10px] font-semibold tracking-wide">ถัดไป</span>
             </Link>
           ) : (
-            <span className="flex flex-col items-center justify-center gap-1 rounded-xl text-gold/50">
+            <span className="flex flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-gold/50">
               <ChevronRight className="h-5 w-5" />
-              <span className="text-[10px] font-medium">จบตอน</span>
+              <span className="text-[10px] font-medium tracking-wide">จบตอน</span>
             </span>
           )}
 
@@ -361,10 +361,10 @@ export default function ChapterReaderClient({
           {currentBalance !== undefined ? (
             <Link
               href="/coins"
-              className="flex flex-col items-center justify-center gap-1 rounded-xl text-gold transition hover:text-gold-light"
+              className="flex flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-gold transition hover:bg-white/5 hover:text-gold-light"
             >
-              <Coins className="h-5 w-5" />
-              <span className="text-[10px] font-semibold">{formatNumber(currentBalance)}</span>
+              <Coins className="h-[18px] w-[18px] drop-shadow-sm" />
+              <span className="text-[11px] font-semibold tracking-wide leading-none">{formatNumber(currentBalance)}</span>
             </Link>
           ) : (
             <span className="flex flex-col items-center justify-center gap-1 rounded-xl text-transparent">
@@ -384,10 +384,6 @@ export default function ChapterReaderClient({
         </button>
       )}
 
-      {/* Progress badge */}
-      <div className="fixed bottom-24 left-4 z-40 rounded-full bg-gold/20 px-2.5 py-1 text-xs font-medium text-gold ring-1 ring-gold/30 md:bottom-6">
-        {progress}%
-      </div>
     </div>
   );
 }
