@@ -50,6 +50,7 @@ class Manga(SQLModel, table=True):
     author: str = Field(default="", max_length=255)
     artist: str = Field(default="", max_length=255)
     category: MangaCategory = Field(default=MangaCategory.OTHER, max_length=24)
+    sub_category: MangaCategory = Field(default=MangaCategory.OTHER, max_length=24)
     status: MangaStatus = Field(default=MangaStatus.ONGOING, max_length=16)
     cover_url: str = Field(
         default="",

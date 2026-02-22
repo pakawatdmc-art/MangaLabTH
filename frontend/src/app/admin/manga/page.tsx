@@ -91,6 +91,7 @@ export default function AdminMangaPage() {
         author: (form.get("author") as string) || "",
         artist: (form.get("artist") as string) || "",
         category: (form.get("category") as string) as MangaCategory || "action",
+        sub_category: (form.get("sub_category") as string) as MangaCategory || "action",
         status: (form.get("status") as string) as MangaStatus || "ongoing",
         description: (form.get("description") as string) || "",
         is_visible: form.get("is_visible") === "on",
@@ -247,6 +248,20 @@ export default function AdminMangaPage() {
               </select>
             </div>
             <div>
+              <label className="mb-1 block text-xs text-gray-400">หมวดหมู่ย่อย</label>
+              <select
+                name="sub_category"
+                defaultValue={editingManga?.sub_category || "action"}
+                className="h-10 w-full rounded-lg border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:outline-none"
+              >
+                {(Object.entries(CATEGORY_LABELS) as [MangaCategory, string][]).map(
+                  ([v, l]) => (
+                    <option key={v} value={v}>{l}</option>
+                  )
+                )}
+              </select>
+            </div>
+            <div>
               <label className="mb-1 block text-xs text-gray-400">สถานะ</label>
               <select
                 name="status"
@@ -379,7 +394,12 @@ export default function AdminMangaPage() {
                   </td>
                   <td className="px-4 py-2 font-medium text-white">{m.title}</td>
                   <td className="px-4 py-2 text-gray-400">
-                    {CATEGORY_LABELS[m.category]}
+                    <div className="flex flex-col">
+                      <span>{CATEGORY_LABELS[m.category]}</span>
+                      <span className="text-xs text-gray-500">
+                        {CATEGORY_LABELS[m.sub_category] || "-"}
+                      </span>
+                    </div>
                   </td>
                   <td className="px-4 py-2 text-gray-400">
                     {STATUS_LABELS[m.status]}

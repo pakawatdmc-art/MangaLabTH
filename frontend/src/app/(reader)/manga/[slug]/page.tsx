@@ -105,6 +105,12 @@ export default async function MangaDetailPage({ params }: Props) {
                 <Tag className="h-3 w-3" />
                 {CATEGORY_LABELS[manga.category]}
               </span>
+              {manga.sub_category && manga.sub_category !== manga.category && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-gold/10 px-2.5 py-1 text-[10px] text-gold/80 ring-1 ring-gold/20">
+                  <Tag className="h-2.5 w-2.5" />
+                  {CATEGORY_LABELS[manga.sub_category]}
+                </span>
+              )}
               <span className="inline-flex items-center gap-1 rounded-full bg-surface-100 px-2.5 py-1 text-gray-300 ring-1 ring-white/10">
                 <Layers className="h-3 w-3" />
                 {STATUS_LABELS[manga.status]}

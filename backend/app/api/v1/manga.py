@@ -51,7 +51,7 @@ async def list_manga(
         query = query.where(Manga.is_visible == True)
 
     if category:
-        query = query.where(Manga.category == category)
+        query = query.where((Manga.category == category) | (Manga.sub_category == category))
     if status_filter:
         query = query.where(Manga.status == status_filter)
     if q:

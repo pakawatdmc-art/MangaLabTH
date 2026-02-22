@@ -74,9 +74,9 @@ class MangaRead(BaseModel):
     title: str
     slug: str
     description: str
-    author: str
     artist: str
     category: MangaCategory
+    sub_category: MangaCategory
     status: MangaStatus
     cover_url: str
     is_featured: bool
@@ -99,6 +99,7 @@ class MangaCreate(BaseModel):
     author: str = Field("", max_length=255)
     artist: str = Field("", max_length=255)
     category: MangaCategory = MangaCategory.OTHER
+    sub_category: MangaCategory = MangaCategory.OTHER
     status: MangaStatus = MangaStatus.ONGOING
     cover_url: str = Field("", max_length=512)
     is_featured: bool = False
@@ -112,6 +113,7 @@ class MangaUpdate(BaseModel):
     author: Optional[str] = Field(None, max_length=255)
     artist: Optional[str] = Field(None, max_length=255)
     category: Optional[MangaCategory] = None
+    sub_category: Optional[MangaCategory] = None
     status: Optional[MangaStatus] = None
     cover_url: Optional[str] = Field(None, max_length=512)
     is_featured: Optional[bool] = None

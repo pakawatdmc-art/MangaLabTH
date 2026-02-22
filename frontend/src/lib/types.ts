@@ -53,6 +53,7 @@ export interface Manga {
   author: string;
   artist: string;
   category: MangaCategory;
+  sub_category: MangaCategory;
   status: MangaStatus;
   cover_url: string;
   is_featured: boolean;
