@@ -81,7 +81,10 @@ export async function getManga(id: string, token?: string) {
 }
 
 export async function getMangaBySlug(slug: string, token?: string) {
-  return fetcher<MangaDetail>(`/manga/slug/${slug}`, token ? { token } : undefined);
+  return fetcher<MangaDetail>(
+    `/manga/slug/${slug}`,
+    token ? { token, cache: "no-store", next: { revalidate: 0 } } : undefined
+  );
 }
 
 // ── Chapters ────────────────────────────────────
@@ -91,7 +94,10 @@ export async function getChapters(mangaId: string) {
 }
 
 export async function getChapter(chapterId: string, token?: string) {
-  return fetcher<ChapterDetail>(`/chapters/${chapterId}`, token ? { token } : undefined);
+  return fetcher<ChapterDetail>(
+    `/chapters/${chapterId}`,
+    token ? { token, cache: "no-store", next: { revalidate: 0 } } : undefined
+  );
 }
 
 // ── User ────────────────────────────────────────
