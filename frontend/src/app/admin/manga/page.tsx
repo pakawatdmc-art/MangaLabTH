@@ -1,12 +1,13 @@
 "use client";
 
+import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import Image from "next/image";
-import { BookOpen, Loader2, Plus, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Edit2, BookOpen, Loader2, Plus, Trash2 } from "lucide-react";
 import { CATEGORY_LABELS, STATUS_LABELS } from "@/lib/types";
 import type { Manga, MangaCategory, MangaStatus } from "@/lib/types";
-import { getMangaList, createManga, deleteManga } from "@/lib/api";
+import { getMangaList, createManga, updateManga, deleteManga } from "@/lib/api";
 import { uploadCoverImage } from "@/lib/api";
 
 export default function AdminMangaPage() {
@@ -15,6 +16,7 @@ export default function AdminMangaPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [editingManga, setEditingManga] = useState<Manga | null>(null);
   const [saving, setSaving] = useState(false);
 
   // New state for file upload
@@ -23,7 +25,8 @@ export default function AdminMangaPage() {
 
   const fetchMangas = async () => {
     try {
-      const res = await getMangaList({ per_page: 100 });
+      const token = await getToken();
+      const res = await getMangaList({ per_page: 100 }, token || undefined);
       setMangas(res.items);
       setError("");
     } catch (err: unknown) {
@@ -38,6 +41,7 @@ export default function AdminMangaPage() {
     if (!showForm) {
       setSelectedFile(null);
       setPreviewUrl("");
+      setEditingManga(null);
     }
   }, [showForm]);
 
@@ -65,7 +69,7 @@ export default function AdminMangaPage() {
     }
   };
 
-  const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSaving(true);
     const form = new FormData(e.currentTarget);
@@ -81,7 +85,7 @@ export default function AdminMangaPage() {
         coverUrl = await uploadCoverImage(selectedFile, token);
       }
 
-      const data = {
+      const data: Partial<Manga> = {
         title: form.get("title") as string,
         slug: form.get("slug") as string,
         author: (form.get("author") as string) || "",
@@ -89,16 +93,42 @@ export default function AdminMangaPage() {
         category: (form.get("category") as string) as MangaCategory || "action",
         status: (form.get("status") as string) as MangaStatus || "ongoing",
         description: (form.get("description") as string) || "",
-        cover_url: coverUrl,
+        is_visible: form.get("is_visible") === "on",
       };
 
-      await createManga(data, token);
+      if (coverUrl) {
+        data.cover_url = coverUrl;
+      }
+
+      if (editingManga) {
+        await updateManga(editingManga.id, data, token);
+      } else {
+        await createManga(data as Manga, token);
+      }
       setShowForm(false);
       await fetchMangas();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "สร้างมังงะล้มเหลว");
+      setError(err instanceof Error ? err.message : "บันทึกข้อมูลมังงะล้มเหลว");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleEdit = (manga: Manga) => {
+    setEditingManga(manga);
+    setPreviewUrl(manga.cover_url);
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleToggleVisibility = async (manga: Manga) => {
+    try {
+      const token = await getToken();
+      if (!token) return;
+      await updateManga(manga.id, { is_visible: !manga.is_visible }, token);
+      await fetchMangas();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "เปลี่ยนสถานะการมองเห็นล้มเหลว");
     }
   };
 
@@ -157,17 +187,20 @@ export default function AdminMangaPage() {
         </div>
       )}
 
-      {/* Create form */}
+      {/* Create/Edit form */}
       {showForm && (
         <div className="mb-6 rounded-xl bg-surface-100 p-5 ring-1 ring-white/10">
-          <h3 className="mb-4 text-sm font-semibold text-white">เพิ่มมังงะใหม่</h3>
-          <form onSubmit={handleCreate} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <h3 className="mb-4 text-sm font-semibold text-white">
+            {editingManga ? `แก้ไขมังงะ: ${editingManga.title}` : "เพิ่มมังงะใหม่"}
+          </h3>
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-xs text-gray-400">ชื่อเรื่อง *</label>
               <input
                 type="text"
                 name="title"
                 required
+                defaultValue={editingManga?.title || ""}
                 className="h-10 w-full rounded-lg border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:outline-none"
                 placeholder="ชื่อมังงะ"
               />
@@ -178,6 +211,7 @@ export default function AdminMangaPage() {
                 type="text"
                 name="slug"
                 required
+                defaultValue={editingManga?.slug || ""}
                 className="h-10 w-full rounded-lg border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:outline-none"
                 placeholder="my-manga-slug"
               />
@@ -186,7 +220,7 @@ export default function AdminMangaPage() {
               <label className="mb-1 block text-xs text-gray-400">ผู้แต่ง</label>
               <input
                 type="text"
-                name="author"
+                defaultValue={editingManga?.author || ""}
                 className="h-10 w-full rounded-lg border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:outline-none"
               />
             </div>
@@ -194,7 +228,7 @@ export default function AdminMangaPage() {
               <label className="mb-1 block text-xs text-gray-400">ผู้วาด</label>
               <input
                 type="text"
-                name="artist"
+                defaultValue={editingManga?.artist || ""}
                 className="h-10 w-full rounded-lg border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:outline-none"
               />
             </div>
@@ -202,6 +236,7 @@ export default function AdminMangaPage() {
               <label className="mb-1 block text-xs text-gray-400">หมวดหมู่</label>
               <select
                 name="category"
+                defaultValue={editingManga?.category || "action"}
                 className="h-10 w-full rounded-lg border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:outline-none"
               >
                 {(Object.entries(CATEGORY_LABELS) as [MangaCategory, string][]).map(
@@ -215,6 +250,7 @@ export default function AdminMangaPage() {
               <label className="mb-1 block text-xs text-gray-400">สถานะ</label>
               <select
                 name="status"
+                defaultValue={editingManga?.status || "ongoing"}
                 className="h-10 w-full rounded-lg border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:outline-none"
               >
                 {(Object.entries(STATUS_LABELS) as [MangaStatus, string][]).map(
@@ -228,9 +264,19 @@ export default function AdminMangaPage() {
               <label className="mb-1 block text-xs text-gray-400">เรื่องย่อ</label>
               <textarea
                 name="description"
-                rows={3}
+                defaultValue={editingManga?.description || ""}
                 className="w-full rounded-lg border border-white/10 bg-surface-200 px-3 py-2 text-sm text-white focus:border-gold/60 focus:outline-none"
               />
+            </div>
+            <div className="sm:col-span-2 flex items-center gap-2">
+              <input
+                type="checkbox"
+                name="is_visible"
+                id="is_visible"
+                defaultChecked={editingManga ? editingManga.is_visible : true}
+                className="h-4 w-4 accent-gold"
+              />
+              <label htmlFor="is_visible" className="text-sm text-gray-300">แสดงให้ผู้อ่านเห็น (เปิดการใช้งานสาธารณะ)</label>
             </div>
             <div className="sm:col-span-2">
               <label className="mb-1 block text-xs text-gray-400">รูปภาพปก (R2)</label>
@@ -340,12 +386,32 @@ export default function AdminMangaPage() {
                   </td>
                   <td className="px-4 py-2 text-gray-400">{m.chapter_count ?? 0}</td>
                   <td className="px-4 py-2 text-right">
-                    <button
-                      onClick={() => handleDelete(m)}
-                      className="rounded p-1 text-gray-500 hover:text-red-400"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    <div className="flex justify-end gap-1">
+                      <button
+                        onClick={() => handleToggleVisibility(m)}
+                        title={m.is_visible ? "ซ่อน" : "แสดง"}
+                        className={cn(
+                          "rounded p-1.5 transition",
+                          m.is_visible ? "text-gold hover:bg-gold/10" : "text-gray-500 hover:bg-white/5"
+                        )}
+                      >
+                        {m.is_visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                      </button>
+                      <button
+                        onClick={() => handleEdit(m)}
+                        title="แก้ไข"
+                        className="rounded p-1.5 text-gray-400 transition hover:bg-white/5 hover:text-white"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(m)}
+                        title="ลบ"
+                        className="rounded p-1.5 text-gray-500 transition hover:bg-red-500/10 hover:text-red-400"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))

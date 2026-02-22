@@ -57,6 +57,7 @@ class Manga(SQLModel, table=True):
         description="Public URL on Cloudflare R2",
     )
     is_featured: bool = Field(default=False, index=True)
+    is_visible: bool = Field(default=True, index=True)
     total_views: int = Field(default=0, ge=0)
 
     created_at: datetime = Field(

@@ -61,7 +61,7 @@ export async function getMangaList(params?: {
   status?: MangaStatus;
   q?: string;
   sort?: string;
-}) {
+}, token?: string) {
   const sp = new URLSearchParams();
   if (params?.page) sp.set("page", String(params.page));
   if (params?.per_page) sp.set("per_page", String(params.per_page));
@@ -70,7 +70,7 @@ export async function getMangaList(params?: {
   if (params?.q) sp.set("q", params.q);
   if (params?.sort) sp.set("sort", params.sort);
   const qs = sp.toString();
-  return fetcher<PaginatedResponse<Manga>>(`/manga${qs ? `?${qs}` : ""}`);
+  return fetcher<PaginatedResponse<Manga>>(`/manga${qs ? `?${qs}` : ""}`, { token });
 }
 
 export async function getManga(id: string, token?: string) {

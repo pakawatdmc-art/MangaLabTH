@@ -11,7 +11,7 @@ from sqlmodel import col, select
 from app.api.deps import AdminUser, CurrentUser, DBSession, OptionalUser
 from app.models.manga import Chapter, Manga, MangaCategory, MangaStatus
 from app.models.transaction import Transaction, TransactionType
-from app.services.storage import delete_objects
+from app.services.storage import delete_object, delete_objects
 from app.schemas.manga import (
     MangaCreate,
     MangaDetail,
@@ -40,9 +40,15 @@ async def list_manga(
     status_filter: Optional[MangaStatus] = Query(None, alias="status"),
     q: Optional[str] = None,
     sort: str = "latest",
+    current_user: OptionalUser = None,
 ):
     """Public listing with filtering, search, and pagination."""
     query = select(Manga)
+
+    # Filtering for visibility (Admins see everything)
+    is_admin = current_user and current_user.role == "admin"
+    if not is_admin:
+        query = query.where(Manga.is_visible == True)
 
     if category:
         query = query.where(Manga.category == category)
@@ -90,6 +96,11 @@ async def get_manga(manga_id: str, session: DBSession, user: OptionalUser):
     if not manga:
         raise HTTPException(status_code=404, detail="Manga not found")
 
+    # Visibility Check
+    is_admin = user and user.role == "admin"
+    if not manga.is_visible and not is_admin:
+        raise HTTPException(status_code=404, detail="Manga not found")
+
     detail = MangaDetail.model_validate(manga)
     detail.chapter_count = len(manga.chapters)
     detail.chapters.sort(key=lambda c: c.number)
@@ -116,6 +127,11 @@ async def get_manga_by_slug(slug: str, session: DBSession, user: OptionalUser):
     result = await session.execute(stmt)
     manga = result.scalar_one_or_none()
     if not manga:
+        raise HTTPException(status_code=404, detail="Manga not found")
+
+    # Visibility Check
+    is_admin = user and user.role == "admin"
+    if not manga.is_visible and not is_admin:
         raise HTTPException(status_code=404, detail="Manga not found")
 
     detail = MangaDetail.model_validate(manga)
@@ -164,7 +180,20 @@ async def update_manga(
     if not manga:
         raise HTTPException(status_code=404, detail="Manga not found")
 
-    for key, value in body.model_dump(exclude_unset=True).items():
+    update_data = body.model_dump(exclude_unset=True)
+    
+    # Check if cover_url is being updated to a new URL
+    if "cover_url" in update_data and update_data["cover_url"] != manga.cover_url:
+        old_cover_url = manga.cover_url
+        if old_cover_url and ".r2.dev/" in old_cover_url:
+            old_key = old_cover_url.split(".r2.dev/", 1)[1]
+            try:
+                # Synchronously delete the old object from R2 (boto3 is thread-safe here)
+                delete_object(old_key)
+            except Exception as e:
+                print(f"Failed to delete old cover {old_key} from R2: {e}")
+
+    for key, value in update_data.items():
         setattr(manga, key, value)
 
     session.add(manga)

@@ -80,6 +80,7 @@ class MangaRead(BaseModel):
     status: MangaStatus
     cover_url: str
     is_featured: bool
+    is_visible: bool
     total_views: int
     chapter_count: Optional[int] = None
     created_at: datetime
@@ -101,6 +102,7 @@ class MangaCreate(BaseModel):
     status: MangaStatus = MangaStatus.ONGOING
     cover_url: str = Field("", max_length=512)
     is_featured: bool = False
+    is_visible: bool = True
 
 
 class MangaUpdate(BaseModel):
@@ -113,6 +115,7 @@ class MangaUpdate(BaseModel):
     status: Optional[MangaStatus] = None
     cover_url: Optional[str] = Field(None, max_length=512)
     is_featured: Optional[bool] = None
+    is_visible: Optional[bool] = None
 
 
 # ── List / Pagination ────────────────────────────

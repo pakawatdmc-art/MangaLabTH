@@ -56,6 +56,7 @@ export interface Manga {
   status: MangaStatus;
   cover_url: string;
   is_featured: boolean;
+  is_visible: boolean;
   total_views: number;
   chapter_count?: number;
   created_at: string;
