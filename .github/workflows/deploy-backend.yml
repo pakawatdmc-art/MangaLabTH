@@ -1,11 +1,15 @@
-name: Deploy Backend to HF Space (Official CLI)
+name: Deploy Backend to Hugging Face (Official CLI)
 
 on:
   push:
     branches: [main]
     paths:
-      - 'backend/**'
-  workflow_dispatch:
+      - 'backend/**'        # ทำงานเมื่อแก้ไฟล์ใน backend
+  workflow_dispatch:        # ปุ่มกดรันเอง
+
+env:
+  # ⚠️ แก้ชื่อ Space ของคุณตรงนี้ (User/SpaceName)
+  HF_SPACE_ID: Doilange/manga-api
 
 jobs:
   deploy:
@@ -13,18 +17,23 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
-      - name: Install Python
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-          
+
       - name: Install Hugging Face CLI
         run: pip install -U "huggingface_hub[cli]"
 
-      - name: Upload to Space
+      - name: Deploy to Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        # คำสั่งนี้จะอัปโหลดไฟล์จากโฟลเดอร์ backend ไปที่ Root ของ Space โดยตรง
+        # คำสั่งนี้จะเอาไฟล์ในโฟลเดอร์ 'backend' ไปวางที่ 'root' ของ Space
+        # แก้ปัญหาหา Dockerfile ไม่เจอได้ 100%
         run: |
-          huggingface-cli upload Doilange/manga-api ./backend . --repo-type space --token $HF_TOKEN --commit-message "Deploy from GitHub Actions"
+          echo "Deploying to Space: $HF_SPACE_ID"
+          huggingface-cli upload $HF_SPACE_ID ./backend . --repo-type space --token $HF_TOKEN --commit-message "Deploy from GitHub Actions"
