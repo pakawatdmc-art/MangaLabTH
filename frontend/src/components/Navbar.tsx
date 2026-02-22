@@ -30,22 +30,30 @@ export default function Navbar() {
   const [user, setUser] = useState<{ coin_balance: number } | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const fetchUser = async () => {
+    try {
+      const token = await getToken();
+      if (!token) return;
+      const me = await getMe(token);
+      setUser(me);
+      setIsAdmin(me.role === "admin");
+    } catch {
+      setUser(null);
+      setIsAdmin(false);
+    }
+  };
+
   useEffect(() => {
     if (!isLoaded || !isSignedIn) {
+      setUser(null);
+      setIsAdmin(false);
       return;
     }
-    (async () => {
-      try {
-        const token = await getToken();
-        if (!token) return;
-        const me = await getMe(token);
-        setUser(me);
-        setIsAdmin(me.role === "admin");
-      } catch {
-        setUser(null);
-        setIsAdmin(false);
-      }
-    })();
+    fetchUser();
+
+    // Listen for manual balance updates
+    window.addEventListener("balance-update", fetchUser);
+    return () => window.removeEventListener("balance-update", fetchUser);
   }, [isLoaded, isSignedIn, getToken]);
 
   if (pathname.startsWith("/read/")) {

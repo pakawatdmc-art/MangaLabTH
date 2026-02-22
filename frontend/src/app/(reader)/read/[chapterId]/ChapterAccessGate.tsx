@@ -45,9 +45,20 @@ export default function ChapterAccessGate({
         return;
       }
       await unlockChapter(chapterId, token);
+
+      // Notify Navbar to update balance
+      window.dispatchEvent(new Event("balance-update"));
+
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "ไม่สามารถปลดล็อกตอนได้");
+      const msg = err instanceof Error ? err.message : "ไม่สามารถปลดล็อกตอนได้";
+      if (msg.includes("402") || msg.toLowerCase().includes("insufficient")) {
+        setError("ยอดเหรียญของคุณไม่พอสำหรับปลดล็อกตอนนี้ครับ");
+      } else if (msg.includes("401") || msg.toLowerCase().includes("login")) {
+        setError("กรุณาเข้าสู่ระบบใหม่อีกครั้งครับ");
+      } else {
+        setError(msg);
+      }
     } finally {
       setUnlocking(false);
     }
