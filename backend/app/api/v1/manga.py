@@ -8,8 +8,9 @@ from fastapi import APIRouter, HTTPException, Query, status
 from sqlalchemy import func
 from sqlmodel import col, select
 
-from app.api.deps import AdminUser, CurrentUser, DBSession
+from app.api.deps import AdminUser, CurrentUser, DBSession, OptionalUser
 from app.models.manga import Chapter, Manga, MangaCategory, MangaStatus
+from app.models.transaction import Transaction, TransactionType
 from app.services.storage import delete_objects
 from app.schemas.manga import (
     MangaCreate,
@@ -83,7 +84,7 @@ async def list_manga(
 
 
 @router.get("/{manga_id}", response_model=MangaDetail)
-async def get_manga(manga_id: str, session: DBSession):
+async def get_manga(manga_id: str, session: DBSession, user: OptionalUser):
     """Public manga detail with chapters list."""
     manga = await session.get(Manga, manga_id)
     if not manga:
@@ -92,11 +93,24 @@ async def get_manga(manga_id: str, session: DBSession):
     detail = MangaDetail.model_validate(manga)
     detail.chapter_count = len(manga.chapters)
     detail.chapters.sort(key=lambda c: c.number)
+
+    if user and detail.chapters:
+        chapter_ids = [c.id for c in detail.chapters]
+        unlock_stmt = select(Transaction.chapter_id).where(
+            Transaction.user_id == user.id,
+            Transaction.type == TransactionType.CHAPTER_UNLOCK,
+            Transaction.chapter_id.in_(chapter_ids)
+        )
+        unlocked_ids = set((await session.execute(unlock_stmt)).scalars().all())
+        for ch in detail.chapters:
+            if ch.id in unlocked_ids:
+                ch.is_unlocked = True
+
     return detail
 
 
 @router.get("/slug/{slug}", response_model=MangaDetail)
-async def get_manga_by_slug(slug: str, session: DBSession):
+async def get_manga_by_slug(slug: str, session: DBSession, user: OptionalUser):
     """Public manga detail by slug."""
     stmt = select(Manga).where(Manga.slug == slug)
     result = await session.execute(stmt)
@@ -107,6 +121,19 @@ async def get_manga_by_slug(slug: str, session: DBSession):
     detail = MangaDetail.model_validate(manga)
     detail.chapter_count = len(manga.chapters)
     detail.chapters.sort(key=lambda c: c.number)
+
+    if user and detail.chapters:
+        chapter_ids = [c.id for c in detail.chapters]
+        unlock_stmt = select(Transaction.chapter_id).where(
+            Transaction.user_id == user.id,
+            Transaction.type == TransactionType.CHAPTER_UNLOCK,
+            Transaction.chapter_id.in_(chapter_ids)
+        )
+        unlocked_ids = set((await session.execute(unlock_stmt)).scalars().all())
+        for ch in detail.chapters:
+            if ch.id in unlocked_ids:
+                ch.is_unlocked = True
+
     return detail
 
 
