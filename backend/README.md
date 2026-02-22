@@ -25,4 +25,4 @@ When deploying this Space, you must configure the following Secrets (Settings > 
 *   `R2_SECRET_ACCESS_KEY`: Cloudflare R2 secret key.
 *   `R2_BUCKET_NAME`: Cloudflare R2 bucket name.
 *   `R2_PUBLIC_URL`: Cloudflare R2 public URL.
--
+
