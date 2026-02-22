@@ -174,13 +174,9 @@ export default function AdminLayoutClient({ children, isPrimaryAdmin, adminToken
                             </div>
 
                             <div className="hidden items-center gap-2 sm:flex">
-                                <Link
-                                    href="/admin/chapters"
-                                    className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-gray-300 transition hover:border-gold/30 hover:text-gold"
-                                >
-                                    จัดการตอน
-                                </Link>
+                                {/* ปุ่มจัดการตอนเดิมถูกนำออกตามความต้องการของผู้ใช้ */}
                             </div>
+
                         </div>
                     </header>
 

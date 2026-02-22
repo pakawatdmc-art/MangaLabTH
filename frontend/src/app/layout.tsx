@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Noto_Sans_Thai } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import { dark } from "@clerk/themes";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 
@@ -64,8 +65,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      appearance={{
+        baseTheme: dark,
+        variables: {
+          colorPrimary: "#d4a843", // สีทองตามธีมเว็บ (--color-gold)
+        },
+      }}
+    >
       <html lang="th">
+
         <body
           className={`${inter.variable} ${notoThai.variable} font-sans antialiased`}
         >
