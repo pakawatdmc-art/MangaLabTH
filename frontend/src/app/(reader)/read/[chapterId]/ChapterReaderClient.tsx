@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { getMe } from "@/lib/api";
+import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import {
   ArrowUp,
@@ -35,10 +37,12 @@ export default function ChapterReaderClient({
   allChapters,
 }: Props) {
   const router = useRouter();
+  const { getToken, isLoaded, isSignedIn } = useAuth();
   const [showTopBar, setShowTopBar] = useState(true);
   const [showChapterMenu, setShowChapterMenu] = useState(false);
   const [progress, setProgress] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [currentBalance, setCurrentBalance] = useState<number | undefined>(coinBalance);
   const lastScrollY = useRef(0);
 
   const pages = [...chapter.pages].sort((a, b) => a.number - b.number);
@@ -96,6 +100,23 @@ export default function ChapterReaderClient({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [prevChapterId, nextChapterId, router]);
+
+  // Balance update listener
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
+
+    const fetchBalance = async () => {
+      try {
+        const token = await getToken();
+        if (!token) return;
+        const me = await getMe(token);
+        setCurrentBalance(me.coin_balance);
+      } catch { }
+    };
+
+    window.addEventListener("balance-update", fetchBalance);
+    return () => window.removeEventListener("balance-update", fetchBalance);
+  }, [isLoaded, isSignedIn, getToken]);
 
   return (
     <div className="min-h-screen bg-black">
@@ -184,14 +205,14 @@ export default function ChapterReaderClient({
 
           {/* Actions & Chapter selector */}
           <div className="flex items-center gap-2 sm:gap-4">
-            {coinBalance !== undefined && (
+            {currentBalance !== undefined && (
               <Link
                 href="/coins"
                 className="flex items-center gap-1.5 rounded-full bg-gold/10 px-2.5 py-1 text-xs font-semibold text-gold ring-1 ring-gold/20 transition hover:bg-gold/20"
                 title="เติมเหรียญ"
               >
                 <Coins className="h-3.5 w-3.5" />
-                <span>{formatNumber(coinBalance)} <span className="hidden sm:inline">เหรียญ</span></span>
+                <span>{formatNumber(currentBalance)} <span className="hidden sm:inline">เหรียญ</span></span>
               </Link>
             )}
 
@@ -289,7 +310,7 @@ export default function ChapterReaderClient({
 
       {/* Mobile dock */}
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-surface-300/95 px-3 pb-[max(env(safe-area-inset-bottom),0.6rem)] pt-2.5 backdrop-blur-xl md:hidden">
-        <div className="mx-auto grid max-w-sm grid-cols-4 gap-1.5">
+        <div className="mx-auto grid max-w-[100%] grid-cols-5 gap-1">
           <Link
             href="/"
             className="flex flex-col items-center justify-center gap-1 rounded-xl text-gray-400 transition hover:text-white"
@@ -333,6 +354,21 @@ export default function ChapterReaderClient({
             <span className="flex flex-col items-center justify-center gap-1 rounded-xl text-gold/50">
               <ChevronRight className="h-5 w-5" />
               <span className="text-[10px] font-medium">จบตอน</span>
+            </span>
+          )}
+
+          {/* Coin Mobile Menu */}
+          {currentBalance !== undefined ? (
+            <Link
+              href="/coins"
+              className="flex flex-col items-center justify-center gap-1 rounded-xl text-gold transition hover:text-gold-light"
+            >
+              <Coins className="h-5 w-5" />
+              <span className="text-[10px] font-semibold">{formatNumber(currentBalance)}</span>
+            </Link>
+          ) : (
+            <span className="flex flex-col items-center justify-center gap-1 rounded-xl text-transparent">
+              {/* Spacer */}
             </span>
           )}
         </div>

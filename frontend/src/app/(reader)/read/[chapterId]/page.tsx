@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-import { getChapter, getManga } from "@/lib/api";
+import { getChapter, getManga, getMe } from "@/lib/api";
 import { notFound } from "next/navigation";
 import ChapterReaderClient from "./ChapterReaderClient";
 import ChapterAccessGate from "./ChapterAccessGate";
@@ -50,6 +50,14 @@ export default async function ChapterReadPage({ params }: Props) {
   const prevChapter = currentIdx > 0 ? allChapters[currentIdx - 1] : null;
   const nextChapter = currentIdx < allChapters.length - 1 ? allChapters[currentIdx + 1] : null;
 
+  let coinBalance: number | undefined;
+  if (token) {
+    try {
+      const me = await getMe(token);
+      coinBalance = me.coin_balance;
+    } catch { }
+  }
+
   if (chapter.can_read === false) {
     return (
       <ChapterAccessGate
@@ -70,6 +78,7 @@ export default async function ChapterReadPage({ params }: Props) {
       allChapters={allChapters}
       prevChapterId={prevChapter?.id || null}
       nextChapterId={nextChapter?.id || null}
+      coinBalance={coinBalance}
     />
   );
 }
