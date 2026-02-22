@@ -81,6 +81,10 @@ function CoinsPageInner() {
       ]);
       setUser(me);
       setTransactions(txs);
+
+      // Notify Navbar to update balance (e.g., after a successful poll)
+      window.dispatchEvent(new Event("balance-update"));
+
       return me;
     } catch (err) {
       console.error("Failed to load coins page:", err);
