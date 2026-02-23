@@ -13,6 +13,7 @@ import {
   Layers,
   Tag,
 } from "lucide-react";
+import { ChapterListClient } from "@/components/ChapterListClient";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -175,61 +176,7 @@ export default async function MangaDetailPage({ params }: Props) {
           </div>
         </div>
 
-        {/* Chapter list */}
-        <section className="mt-8 rounded-2xl border border-white/10 bg-surface-200/70 p-3.5 pb-4 shadow-lg shadow-black/30 sm:p-6 sm:pb-7">
-          <div className="mb-4 flex items-center justify-between gap-2">
-            <h2 className="text-lg font-semibold text-white">
-              รายการตอน ({manga.chapters.length})
-            </h2>
-            <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] text-emerald-400">
-              อ่านฟรี {freeChapterCount}
-            </span>
-          </div>
-          <div className="space-y-1.5">
-            {sortedChapters.map((ch) => (
-              <Link
-                key={ch.id}
-                href={`/read/${ch.id}`}
-                className="flex items-start justify-between gap-3 rounded-xl bg-black/25 px-3 py-3 ring-1 ring-white/10 transition hover:bg-surface-50 hover:ring-gold/30 sm:items-center sm:px-4"
-              >
-                <div className="flex min-w-0 items-center gap-3">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gold/10 text-xs font-bold text-gold">
-                    {formatChapterNumber(ch.number)}
-                  </span>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-white">
-                      ตอนที่ {formatChapterNumber(ch.number)}
-                      {ch.title ? ` — ${ch.title}` : ""}
-                    </p>
-                    <p className="text-[11px] text-gray-400">
-                      <Clock className="mr-0.5 inline-block h-3 w-3" />
-                      {formatDate(ch.published_at)}
-                      {ch.page_count ? ` · ${ch.page_count} หน้า` : ""}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex shrink-0 items-center gap-2 pt-0.5 sm:pt-0">
-                  {!ch.is_free && ch.coin_price > 0 ? (
-                    ch.is_unlocked ? (
-                      <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-400">
-                        ปลดล็อคแล้ว
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-gold/10 px-2 py-0.5 text-xs font-medium text-gold">
-                        <Lock className="h-3 w-3" />
-                        {ch.coin_price}
-                      </span>
-                    )
-                  ) : (
-                    <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-400">
-                      ฟรี
-                    </span>
-                  )}
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
+        <ChapterListClient chapters={sortedChapters} freeChapterCount={freeChapterCount} />
       </div>
     </div>
   );

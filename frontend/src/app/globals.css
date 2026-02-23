@@ -154,3 +154,11 @@ body[class*="theme-"]:not(.theme-default)::after {
     radial-gradient(ellipse at 80% 100%, var(--theme-glow-2), transparent 50%);
   opacity: 0.5;
 }
+/* Hide Apple Login for non-Apple devices */
+body.not-apple-device button.cl-socialButtonsBlockButton[data-provider="apple"],
+body.not-apple-device button.cl-socialButtonsBlockButton__apple,
+body.not-apple-device button.cl-socialButtonsIconButton[data-provider="apple"],
+body.not-apple-device button.cl-socialButtonsIconButton__apple {
+  display: none !important;
+}
+

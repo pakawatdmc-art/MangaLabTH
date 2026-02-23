@@ -3,6 +3,7 @@ import { Inter, Noto_Sans_Thai } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { DeviceDetector } from "@/components/DeviceDetector";
 import "./globals.css";
 
 const inter = Inter({
@@ -78,6 +79,7 @@ export default function RootLayout({
         <body
           className={`${inter.variable} ${notoThai.variable} font-sans antialiased`}
         >
+          <DeviceDetector />
           <ThemeProvider>
             {children}
           </ThemeProvider>

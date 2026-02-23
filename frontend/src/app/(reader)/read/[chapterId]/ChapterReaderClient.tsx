@@ -127,6 +127,19 @@ export default function ChapterReaderClient({
     return () => window.removeEventListener("balance-update", handleBalanceUpdate);
   }, [isLoaded, isSignedIn, getToken]);
 
+  // Save read status for the chapter list UI
+  useEffect(() => {
+    try {
+      const readChapKey = "read_chapters";
+      const stored = localStorage.getItem(readChapKey);
+      const readChapters: string[] = stored ? JSON.parse(stored) : [];
+      if (!readChapters.includes(chapter.id)) {
+        readChapters.push(chapter.id);
+        localStorage.setItem(readChapKey, JSON.stringify(readChapters));
+      }
+    } catch { }
+  }, [chapter.id]);
+
   return (
     <div className="min-h-screen bg-black">
       {/* Progress bar */}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useTheme, type ThemeType } from "./ThemeProvider";
 
@@ -284,15 +284,25 @@ export function FestiveEffect() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const animRef = useRef<number | null>(null);
     const particlesRef = useRef<Particle[]>([]);
+    const [shouldShow, setShouldShow] = useState(false);
 
     const config = THEME_CONFIG[theme];
 
-    // Disable effect on reader pages (starts with /read/)
-    const isReaderPage = pathname?.startsWith("/read/");
+    useEffect(() => {
+        // Only show on home page precisely
+        if (pathname !== "/") return;
 
+        // Check if we already showed it in this session
+        const hasSeen = sessionStorage.getItem("hasSeenFestiveEffect");
+        if (!hasSeen) {
+            setShouldShow(true);
+            sessionStorage.setItem("hasSeenFestiveEffect", "true");
+        }
+    }, [pathname]);
 
     useEffect(() => {
-        if (!config) {
+        // Do nothing if effect is disabled or we shouldn't show it
+        if (!config || !shouldShow) {
             if (animRef.current !== null) cancelAnimationFrame(animRef.current);
             particlesRef.current = [];
             return;
@@ -344,9 +354,9 @@ export function FestiveEffect() {
             window.removeEventListener("resize", resize);
             if (animRef.current !== null) cancelAnimationFrame(animRef.current);
         };
-    }, [config]);
+    }, [config, shouldShow]);
 
-    if (!config || isReaderPage) return null;
+    if (!config || !shouldShow) return null;
 
 
     return (
