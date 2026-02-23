@@ -22,21 +22,14 @@ ENV PIP_NO_CACHE_DIR=1
 # Install requirements
 RUN pip install --no-cache-dir -r requirements.txt
 
-# ---------------------------------------------------
-# ✅ จุดสำคัญที่ต้องมี: สลับเป็น Root ก่อนสร้างโฟลเดอร์
-# ---------------------------------------------------
-USER root
-
 # Create a directory for sqlite db if needed
 RUN mkdir -p /home/user/app/data
 
 # Give write access to the complete app directory
 # This allows SQLModel/SQLite to write the local database file if not using a cloud DB
+USER root
 RUN chown -R user:user /home/user/app
-
-# Switch back to the "user" user
 USER user
-# ---------------------------------------------------
 
 # Cloud Run provides the PORT environment variable. Default to 8000 for local dev.
 ENV PORT=8000
