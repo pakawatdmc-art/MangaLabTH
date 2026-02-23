@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
-import { BookOpen, ImagePlus, Loader2, Pencil, Plus, Sparkles, Trash2, Layers } from "lucide-react";
+import { ImagePlus, Loader2, Pencil, Plus, Sparkles, Trash2, Layers } from "lucide-react";
 import type { Chapter, Manga } from "@/lib/types";
 import { formatChapterNumber } from "@/lib/utils";
 import {
@@ -14,10 +13,10 @@ import {
   updateChapter,
 } from "@/lib/api";
 import { ChapterImageManager } from "./ChapterImageManager";
+import Image from "next/image";
 
 export default function AdminChaptersPage() {
   const { getToken } = useAuth();
-  const router = useRouter();
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [mangas, setMangas] = useState<Manga[]>([]);
   const [selectedMangaId, setSelectedMangaId] = useState("");
@@ -28,7 +27,6 @@ export default function AdminChaptersPage() {
   const [editingChapter, setEditingChapter] = useState<Chapter | null>(null);
   const [updating, setUpdating] = useState(false);
   const [managingChapter, setManagingChapter] = useState<Chapter | null>(null);
-  const [authToken, setAuthToken] = useState<string>("");
 
   const selectedManga = mangas.find((m) => m.id === selectedMangaId) || null;
   const filteredChapters = selectedMangaId
@@ -43,7 +41,6 @@ export default function AdminChaptersPage() {
     try {
       const token = await getToken();
       if (!token) return;
-      setAuthToken(token);
       const [chapterData, mangaData] = await Promise.all([
         listAllChapters(token),
         getMangaList({ per_page: 100 }),
@@ -182,10 +179,12 @@ export default function AdminChaptersPage() {
             {selectedManga ? (
               <div className="mt-3 flex items-start gap-3 rounded-lg border border-white/5 bg-white/5 p-2.5">
                 <div className="relative h-12 w-9 shrink-0 overflow-hidden rounded bg-surface-300 shadow-sm">
-                  <img
+                  <Image
                     src={selectedManga.cover_url || "/placeholder.png"}
                     alt={selectedManga.title}
-                    className="h-full w-full object-cover"
+                    fill
+                    unoptimized
+                    className="object-cover"
                   />
                 </div>
                 <div className="flex flex-col justify-center">

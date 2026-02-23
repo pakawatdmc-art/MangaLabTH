@@ -1,15 +1,13 @@
 import { auth } from "@clerk/nextjs/server";
 import { getMangaBySlug } from "@/lib/api";
 import { CATEGORY_LABELS, STATUS_LABELS } from "@/lib/types";
-import { formatChapterNumber, formatDate, formatNumber } from "@/lib/utils";
+import { formatNumber } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   BookOpen,
-  Clock,
   Eye,
-  Lock,
   Layers,
   Tag,
 } from "lucide-react";

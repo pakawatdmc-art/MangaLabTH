@@ -1,7 +1,6 @@
 import Link from "next/link";
-import Image from "next/image";
 import { getMangaList } from "@/lib/api";
-import { MangaCategory, MangaStatus, CATEGORY_LABELS, STATUS_LABELS } from "@/lib/types";
+import { MangaCategory, MangaStatus, CATEGORY_LABELS, Manga } from "@/lib/types";
 import MangaCard from "@/components/MangaCard";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +19,7 @@ export default async function HomePage({ searchParams }: Props) {
   const params = await searchParams;
   const page = Number(params.page) || 1;
 
-  let manga: any = { items: [], total: 0, page: 1, per_page: 24, pages: 1 };
+  let manga = { items: [] as Manga[], total: 0, page: 1, per_page: 24, pages: 1 };
   try {
     manga = await getMangaList({
       page,
@@ -109,7 +108,7 @@ export default async function HomePage({ searchParams }: Props) {
 
         {manga.items.length > 0 ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-            {manga.items.map((m: any) => (
+            {manga.items.map((m: Manga) => (
               <MangaCard key={m.id} manga={m} />
             ))}
           </div>

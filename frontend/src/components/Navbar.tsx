@@ -45,6 +45,7 @@ export default function Navbar() {
 
   useEffect(() => {
     if (!isLoaded || !isSignedIn) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setUser(null);
       setIsAdmin(false);
       return;
@@ -54,7 +55,7 @@ export default function Navbar() {
     // Listen for manual balance updates
     window.addEventListener("balance-update", fetchUser);
     return () => window.removeEventListener("balance-update", fetchUser);
-  }, [isLoaded, isSignedIn, getToken]);
+  }, [isLoaded, isSignedIn, fetchUser]);
 
   if (pathname.startsWith("/read/")) {
     return null;

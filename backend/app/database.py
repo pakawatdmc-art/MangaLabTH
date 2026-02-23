@@ -28,7 +28,6 @@ async_session_factory = sessionmaker(
 )
 
 
-
 async def seed_coin_packages(session: AsyncSession):
     """Seed initial coin packages if table is empty."""
     from sqlmodel import select
@@ -41,10 +40,14 @@ async def seed_coin_packages(session: AsyncSession):
     # 1 THB = 1 Coin
     packages = [
         CoinPackage(name="50 Coins", coins=50, price_thb=5000, sort_order=1),
-        CoinPackage(name="100 Coins", coins=100, price_thb=10000, sort_order=2),
-        CoinPackage(name="300 Coins", coins=300, price_thb=30000, sort_order=3),
-        CoinPackage(name="500 Coins", coins=500, price_thb=50000, sort_order=4),
-        CoinPackage(name="1,000 Coins", coins=1000, price_thb=100000, sort_order=5),
+        CoinPackage(name="100 Coins", coins=100,
+                    price_thb=10000, sort_order=2),
+        CoinPackage(name="300 Coins", coins=300,
+                    price_thb=30000, sort_order=3),
+        CoinPackage(name="500 Coins", coins=500,
+                    price_thb=50000, sort_order=4),
+        CoinPackage(name="1,000 Coins", coins=1000,
+                    price_thb=100000, sort_order=5),
     ]
     for p in packages:
         session.add(p)
@@ -55,7 +58,7 @@ async def init_db() -> None:
     """Create all tables. Use Alembic for production migrations."""
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
-    
+
     # Seed data
     async with async_session_factory() as session:
         await seed_coin_packages(session)

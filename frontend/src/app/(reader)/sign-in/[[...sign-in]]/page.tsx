@@ -2,15 +2,8 @@
 
 import Link from "next/link";
 import { SignIn } from "@clerk/nextjs";
-import { BookOpen, ShieldCheck, Sparkles } from "lucide-react";
 import { HAS_CLERK } from "@/lib/clerk";
 import { clerkAuthElements } from "@/lib/clerkAppearance";
-
-const AUTH_HIGHLIGHTS = [
-  "ระบบอ่านลื่นบนมือถือและเดสก์ท็อป",
-  "ปลดล็อคตอนพิเศษได้ทันทีด้วยเหรียญ",
-  "เก็บประวัติการอ่านข้ามอุปกรณ์อัตโนมัติ",
-];
 
 export default function SignInPage() {
   return (

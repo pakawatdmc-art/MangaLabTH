@@ -38,7 +38,8 @@ class Settings(BaseSettings):
 
     @property
     def cors_origin_list(self) -> List[str]:
-        origins = [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
+        origins = [o.strip()
+                   for o in self.CORS_ORIGINS.split(",") if o.strip()]
         for origin in origins:
             if not origin.startswith(("http://", "https://")):
                 raise ValueError(

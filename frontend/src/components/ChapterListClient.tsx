@@ -28,6 +28,7 @@ export function ChapterListClient({ chapters, freeChapterCount }: ChapterListCli
         try {
             const stored = localStorage.getItem("read_chapters");
             if (stored) {
+                // eslint-disable-next-line react-hooks/set-state-in-effect
                 setReadChapters(JSON.parse(stored));
             }
         } catch (e) {

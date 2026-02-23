@@ -6,8 +6,7 @@ to guarantee atomicity under concurrent requests.
 
 from typing import List
 
-from fastapi import APIRouter, HTTPException, Query, status
-from sqlalchemy import text
+from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
@@ -115,7 +114,8 @@ async def unlock_chapter(
     if locked_user.coin_balance < chapter.coin_price:
         raise HTTPException(
             status_code=402,
-            detail=f"Insufficient coins. Need {chapter.coin_price}, have {locked_user.coin_balance}",
+            detail=("Insufficient coins. Need {}, "
+                    "have {}").format(chapter.coin_price, locked_user.coin_balance),
         )
 
     new_balance = locked_user.coin_balance - chapter.coin_price
@@ -153,7 +153,8 @@ async def unlock_chapter(
                 transaction_id=existing.id,
                 message="Already unlocked",
             )
-        raise HTTPException(status_code=409, detail="Concurrent unlock conflict")
+        raise HTTPException(
+            status_code=409, detail="Concurrent unlock conflict")
 
     await session.refresh(tx)
 

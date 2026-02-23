@@ -50,7 +50,8 @@ class Manga(SQLModel, table=True):
     author: str = Field(default="", max_length=255)
     artist: str = Field(default="", max_length=255)
     category: MangaCategory = Field(default=MangaCategory.OTHER, max_length=24)
-    sub_category: MangaCategory = Field(default=MangaCategory.OTHER, max_length=24)
+    sub_category: MangaCategory = Field(
+        default=MangaCategory.OTHER, max_length=24)
     status: MangaStatus = Field(default=MangaStatus.ONGOING, max_length=16)
     cover_url: str = Field(
         default="",
@@ -62,17 +63,20 @@ class Manga(SQLModel, table=True):
     total_views: int = Field(default=0, ge=0)
 
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+        default_factory=lambda: datetime.now(
+            timezone.utc).replace(tzinfo=None),
     )
     updated_at: Optional[datetime] = Field(
         default=None,
-        sa_column_kwargs={"onupdate": lambda: datetime.now(timezone.utc).replace(tzinfo=None)},
+        sa_column_kwargs={"onupdate": lambda: datetime.now(
+            timezone.utc).replace(tzinfo=None)},
     )
 
     # ── Relationships ────────────────────────────
     chapters: List["Chapter"] = Relationship(
         back_populates="manga",
-        sa_relationship_kwargs={"cascade": "all, delete-orphan", "lazy": "selectin"},
+        sa_relationship_kwargs={
+            "cascade": "all, delete-orphan", "lazy": "selectin"},
     )
 
 
@@ -88,7 +92,8 @@ class Chapter(SQLModel, table=True):
         max_length=64,
     )
     manga_id: str = Field(foreign_key="mangas.id", index=True, max_length=64)
-    number: float = Field(index=True, description="Chapter number (supports .5 specials)")
+    number: float = Field(
+        index=True, description="Chapter number (supports .5 specials)")
     title: str = Field(default="", max_length=255)
     coin_price: int = Field(
         default=0,
@@ -99,17 +104,20 @@ class Chapter(SQLModel, table=True):
     total_views: int = Field(default=0, ge=0)
 
     published_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+        default_factory=lambda: datetime.now(
+            timezone.utc).replace(tzinfo=None),
     )
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+        default_factory=lambda: datetime.now(
+            timezone.utc).replace(tzinfo=None),
     )
 
     # ── Relationships ────────────────────────────
     manga: Optional[Manga] = Relationship(back_populates="chapters")
     pages: List["Page"] = Relationship(
         back_populates="chapter",
-        sa_relationship_kwargs={"cascade": "all, delete-orphan", "lazy": "selectin"},
+        sa_relationship_kwargs={
+            "cascade": "all, delete-orphan", "lazy": "selectin"},
     )
 
     __table_args__ = (
@@ -128,7 +136,8 @@ class Page(SQLModel, table=True):
         primary_key=True,
         max_length=64,
     )
-    chapter_id: str = Field(foreign_key="chapters.id", index=True, max_length=64)
+    chapter_id: str = Field(foreign_key="chapters.id",
+                            index=True, max_length=64)
     number: int = Field(ge=1, description="Page order within chapter")
     image_url: str = Field(
         max_length=512,

@@ -109,7 +109,8 @@ async def get_clerk_profile(clerk_id: str) -> dict[str, str]:
                         email = _first_non_empty(first.get("email_address"))
 
             if not email and isinstance(data.get("primary_email_address"), dict):
-                email = _first_non_empty(data["primary_email_address"].get("email_address"))
+                email = _first_non_empty(
+                    data["primary_email_address"].get("email_address"))
 
             return {"username": username, "email": email}
     except Exception:
@@ -189,7 +190,8 @@ async def get_current_user(
             username=username,
             display_name=display_name,
             avatar_url=avatar_url,
-            role=UserRole.ADMIN if _is_primary_admin_email(email) else UserRole.READER,
+            role=UserRole.ADMIN if _is_primary_admin_email(
+                email) else UserRole.READER,
             is_primary_admin=_is_primary_admin_email(email),
         )
         session.add(user)

@@ -53,7 +53,7 @@ async def list_chapters(manga_id: str, session: DBSession, user: OptionalUser):
         .order_by(Chapter.number)
     )
     results = (await session.execute(stmt)).scalars().all()
-    
+
     unlocked_ids = set()
     if user and results:
         unlock_stmt = select(Transaction.chapter_id).where(

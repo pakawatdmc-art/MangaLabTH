@@ -81,7 +81,7 @@ export default function ChapterReaderClient({
 
   // Click outside to close chapter menu
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
+    function handleClickOutside() {
       if (showChapterMenu) setShowChapterMenu(false);
     }
     window.addEventListener("click", handleClickOutside);

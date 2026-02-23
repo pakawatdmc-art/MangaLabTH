@@ -10,10 +10,13 @@ Design principles:
 
 import enum
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from uuid import uuid4
 
 from sqlmodel import Field, Relationship, SQLModel
+
+if TYPE_CHECKING:
+    from app.models.user import User
 
 
 class TransactionType(str, enum.Enum):
@@ -69,12 +72,13 @@ class Transaction(SQLModel, table=True):
     note: str = Field(default="", max_length=512)
 
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+        default_factory=lambda: datetime.now(
+            timezone.utc).replace(tzinfo=None),
         index=True,
     )
 
     # ── Relationships ────────────────────────────
-    user: Optional["User"] = Relationship(back_populates="transactions")  # type: ignore[name-defined]
+    user: Optional["User"] = Relationship(back_populates="transactions")
 
 
 class CoinPackage(SQLModel, table=True):
@@ -89,7 +93,8 @@ class CoinPackage(SQLModel, table=True):
     )
     name: str = Field(max_length=128)
     coins: int = Field(gt=0, description="Number of coins granted")
-    price_thb: int = Field(gt=0, description="Price in Thai Baht satang (smallest unit)")
+    price_thb: int = Field(
+        gt=0, description="Price in Thai Baht satang (smallest unit)")
     stripe_price_id: str = Field(
         default="",
         max_length=128,
@@ -99,5 +104,6 @@ class CoinPackage(SQLModel, table=True):
     sort_order: int = Field(default=0)
 
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+        default_factory=lambda: datetime.now(
+            timezone.utc).replace(tzinfo=None),
     )

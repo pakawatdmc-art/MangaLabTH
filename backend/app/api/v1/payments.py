@@ -1,5 +1,15 @@
 """Payment endpoints (Stripe)."""
 
+from app.services.stripe_service import (
+    create_checkout_session,
+    retrieve_checkout_session,
+    verify_webhook_signature,
+)
+from app.schemas.transaction import CoinPackageRead, CustomCheckoutRequest
+from app.models.user import User
+from app.models.transaction import CoinPackage, Transaction, TransactionType
+from app.config import get_settings
+from app.api.deps import CurrentUser, DBSession
 import logging
 from typing import Any, List
 
@@ -11,16 +21,6 @@ from sqlmodel import select
 
 logger = logging.getLogger(__name__)
 
-from app.api.deps import CurrentUser, DBSession
-from app.config import get_settings
-from app.models.transaction import CoinPackage, Transaction, TransactionType
-from app.models.user import User
-from app.schemas.transaction import CoinPackageRead, CustomCheckoutRequest
-from app.services.stripe_service import (
-    create_checkout_session,
-    retrieve_checkout_session,
-    verify_webhook_signature,
-)
 
 router = APIRouter(prefix="/payments", tags=["Payments"])
 settings = get_settings()
@@ -45,7 +45,8 @@ def _get_payment_reference(session_data: dict[str, Any]) -> str:
     if isinstance(checkout_session_id, str) and checkout_session_id:
         return f"cs_{checkout_session_id}"
 
-    raise HTTPException(status_code=400, detail="Missing Stripe payment reference")
+    raise HTTPException(
+        status_code=400, detail="Missing Stripe payment reference")
 
 
 async def _fulfill_checkout_session(
@@ -73,14 +74,16 @@ async def _fulfill_checkout_session(
     if checkout_session_id:
         existing = (
             await session.execute(
-                select(Transaction).where(Transaction.stripe_session_id == checkout_session_id)
+                select(Transaction).where(
+                    Transaction.stripe_session_id == checkout_session_id)
             )
         ).scalar_one_or_none()
 
     if not existing:
         existing = (
             await session.execute(
-                select(Transaction).where(Transaction.stripe_payment_intent_id == payment_ref)
+                select(Transaction).where(
+                    Transaction.stripe_payment_intent_id == payment_ref)
             )
         ).scalar_one_or_none()
 
@@ -131,7 +134,8 @@ async def _fulfill_checkout_session(
         # Another worker already fulfilled this session
         existing = (
             await session.execute(
-                select(Transaction).where(Transaction.stripe_session_id == checkout_session_id)
+                select(Transaction).where(
+                    Transaction.stripe_session_id == checkout_session_id)
             )
         ).scalar_one_or_none()
         return {
@@ -159,7 +163,7 @@ async def list_packages(session: DBSession):
     """List available coin packages."""
     stmt = (
         select(CoinPackage)
-        .where(CoinPackage.is_active == True)
+        .where(CoinPackage.is_active.is_(True))
         .order_by(CoinPackage.sort_order)
     )
     return (await session.execute(stmt)).scalars().all()
@@ -181,13 +185,17 @@ async def create_custom_checkout(
             coins_to_grant=coins,
             amount_thb=amount_satang,
             name=f"{coins} เหรียญ MangaLabTH",
-            success_url=f"{settings.cors_origin_list[0]}/coins?success=true&session_id={{CHECKOUT_SESSION_ID}}",
+            success_url=(
+                f"{settings.cors_origin_list[0]}/coins"
+                "?success=true&session_id={CHECKOUT_SESSION_ID}"
+            ),
             cancel_url=f"{settings.cors_origin_list[0]}/coins?canceled=true",
         )
         return {"url": url, "coins": coins}
     except Exception as e:
         logger.error("Checkout custom error: %s", e)
-        raise HTTPException(status_code=400, detail="ไม่สามารถสร้างรายการชำระเงินได้")
+        raise HTTPException(
+            status_code=400, detail="ไม่สามารถสร้างรายการชำระเงินได้")
 
 
 @router.post("/checkout")
@@ -211,13 +219,17 @@ async def create_checkout(
             name=package.name,
             user_id=user.id,
             package_id=package.id,
-            success_url=f"{settings.cors_origin_list[0]}/coins?success=true&session_id={{CHECKOUT_SESSION_ID}}",
+            success_url=(
+                f"{settings.cors_origin_list[0]}/coins"
+                "?success=true&session_id={CHECKOUT_SESSION_ID}"
+            ),
             cancel_url=f"{settings.cors_origin_list[0]}/coins?canceled=true",
         )
         return {"url": url}
     except Exception as e:
         logger.error("Checkout error: %s", e)
-        raise HTTPException(status_code=400, detail="ไม่สามารถสร้างรายการชำระเงินได้")
+        raise HTTPException(
+            status_code=400, detail="ไม่สามารถสร้างรายการชำระเงินได้")
 
 
 @router.post("/webhook", include_in_schema=False)
@@ -254,6 +266,7 @@ async def confirm_checkout_payment(
 
     # Prevent users from confirming someone else's checkout session.
     if metadata.get("user_id") and metadata.get("user_id") != user.id:
-        raise HTTPException(status_code=403, detail="Checkout session does not belong to this user")
+        raise HTTPException(
+            status_code=403, detail="Checkout session does not belong to this user")
 
     return await _fulfill_checkout_session(session=session, session_data=stripe_session)

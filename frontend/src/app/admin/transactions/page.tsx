@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { ArrowDownCircle, ArrowUpCircle, Coins, History, Loader2, Search, Sparkles } from "lucide-react";
 import type { Transaction } from "@/lib/types";
-import { formatDate, formatDateTime } from "@/lib/utils";
+import { formatDateTime } from "@/lib/utils";
 import { listAllTransactions } from "@/lib/api";
 
 const TX_TYPE_LABELS: Record<string, { label: string; color: string }> = {

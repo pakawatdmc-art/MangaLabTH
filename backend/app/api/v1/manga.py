@@ -8,8 +8,8 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, status
 from sqlalchemy import func
 from sqlmodel import col, select
 
-from app.api.deps import AdminUser, CurrentUser, DBSession, OptionalUser
-from app.models.manga import Chapter, Manga, MangaCategory, MangaStatus
+from app.api.deps import AdminUser, DBSession, OptionalUser
+from app.models.manga import Manga, MangaCategory, MangaStatus
 from app.models.transaction import Transaction, TransactionType
 from app.services.storage import delete_object, delete_objects
 from app.services.revalidate import revalidate_paths
@@ -49,16 +49,18 @@ async def list_manga(
     # Filtering for visibility (Admins see everything)
     is_admin = current_user and current_user.role == "admin"
     if not is_admin:
-        query = query.where(Manga.is_visible == True)
+        query = query.where(Manga.is_visible.is_(True))
 
     if category:
-        query = query.where((Manga.category == category) | (Manga.sub_category == category))
+        query = query.where((Manga.category == category) |
+                            (Manga.sub_category == category))
     if status_filter:
         query = query.where(Manga.status == status_filter)
     if q:
         safe_q = _escape_like(q)
         query = query.where(
-            col(Manga.title).ilike(f"%{safe_q}%") | col(Manga.description).ilike(f"%{safe_q}%")
+            col(Manga.title).ilike(f"%{safe_q}%") | col(
+                Manga.description).ilike(f"%{safe_q}%")
         )
 
     # Count
@@ -185,7 +187,7 @@ async def update_manga(
         raise HTTPException(status_code=404, detail="Manga not found")
 
     update_data = body.model_dump(exclude_unset=True)
-    
+
     # Check if cover_url is being updated to a new URL
     if "cover_url" in update_data and update_data["cover_url"] != manga.cover_url:
         old_cover_url = manga.cover_url
@@ -246,5 +248,5 @@ async def delete_manga(
             delete_objects(r2_keys)
         except Exception:
             pass
-            
+
     background_tasks.add_task(revalidate_paths, ["/"])

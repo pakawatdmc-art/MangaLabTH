@@ -45,11 +45,14 @@ def _validate_storage_key(key: str) -> None:
     if not key or "\x00" in key:
         raise HTTPException(status_code=400, detail="Invalid storage key")
     if ".." in key:
-        raise HTTPException(status_code=400, detail="Path traversal not allowed")
+        raise HTTPException(
+            status_code=400, detail="Path traversal not allowed")
     if key.startswith("/") or key.startswith("\\"):
-        raise HTTPException(status_code=400, detail="Absolute paths not allowed")
+        raise HTTPException(
+            status_code=400, detail="Absolute paths not allowed")
     if not _SAFE_KEY_PATTERN.match(key):
-        raise HTTPException(status_code=400, detail="Invalid characters in storage key")
+        raise HTTPException(
+            status_code=400, detail="Invalid characters in storage key")
 
 
 _ALLOWED_IMAGE_TYPES = {"image/png", "image/jpeg", "image/webp", "image/gif"}
@@ -70,7 +73,8 @@ class PresignedRequest(BaseModel):
     @classmethod
     def validate_content_type(cls, v: str) -> str:
         if v not in _ALLOWED_IMAGE_TYPES:
-            raise ValueError(f"Content type must be one of: {_ALLOWED_IMAGE_TYPES}")
+            raise ValueError(
+                f"Content type must be one of: {_ALLOWED_IMAGE_TYPES}")
         return v
 
 
@@ -104,7 +108,8 @@ async def get_presigned_urls(
     for f in body.files:
         # V5: Validate each key
         _validate_storage_key(f.key)
-        data = generate_presigned_upload_url(key=f.key, content_type=f.content_type)
+        data = generate_presigned_upload_url(
+            key=f.key, content_type=f.content_type)
         results.append(PresignedResponse(**data))
     return results
 
@@ -118,16 +123,19 @@ async def upload_cover(
 ):
     """Admin: upload a cover image via backend proxy (avoids browser CORS)."""
     if not file.content_type or not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="ไฟล์ต้องเป็นรูปภาพเท่านั้น")
+        raise HTTPException(
+            status_code=400, detail="ไฟล์ต้องเป็นรูปภาพเท่านั้น")
 
     # Read file content (limit 10 MB)
     contents = await file.read()
     if len(contents) > 10 * 1024 * 1024:
-        raise HTTPException(status_code=400, detail="ไฟล์ขนาดใหญ่เกินไป (สูงสุด 10 MB)")
+        raise HTTPException(
+            status_code=400, detail="ไฟล์ขนาดใหญ่เกินไป (สูงสุด 10 MB)")
 
     # V10: Validate file is actually an image by magic bytes
     if not _validate_image_bytes(contents):
-        raise HTTPException(status_code=400, detail="ไฟล์ไม่ใช่รูปภาพที่ถูกต้อง")
+        raise HTTPException(
+            status_code=400, detail="ไฟล์ไม่ใช่รูปภาพที่ถูกต้อง")
 
     # Generate unique key
     safe_name = re.sub(r"[^a-zA-Z0-9._-]", "_", file.filename or "cover.png")

@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
 
         revalidatePath(path);
         return NextResponse.json({ revalidated: true, path, now: Date.now() });
-    } catch (err) {
+    } catch {
         return NextResponse.json({ message: "Error revalidating" }, { status: 500 });
     }
 }

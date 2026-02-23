@@ -4,6 +4,7 @@ Handles checkout session creation and webhook processing
 for coin purchases.
 """
 
+from app.config import get_settings
 import logging
 
 import stripe
@@ -11,7 +12,6 @@ from fastapi import HTTPException
 
 logger = logging.getLogger(__name__)
 
-from app.config import get_settings
 
 settings = get_settings()
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -43,7 +43,8 @@ def create_checkout_session(
                 "quantity": 1,
             }
         else:
-            raise ValueError("Either stripe_price_id or amount_thb is required")
+            raise ValueError(
+                "Either stripe_price_id or amount_thb is required")
 
         metadata: dict = {"user_id": user_id}
         if package_id:
@@ -83,4 +84,5 @@ def verify_webhook_signature(payload: bytes, sig_header: str) -> dict:
         )
         return event
     except stripe.SignatureVerificationError:
-        raise HTTPException(status_code=400, detail="Invalid webhook signature")
+        raise HTTPException(
+            status_code=400, detail="Invalid webhook signature")

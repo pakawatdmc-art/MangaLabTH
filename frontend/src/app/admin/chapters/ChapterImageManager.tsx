@@ -16,9 +16,9 @@ import {
     X,
 } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
-import type { Chapter, Manga, Page } from "@/lib/types";
+import type { Chapter, Manga } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { getChapter, getPresignedUploadUrls, addPages, replacePages } from "@/lib/api";
+import { getChapter, getPresignedUploadUrls, replacePages } from "@/lib/api";
 
 interface FileItem {
     id: string; // Unique ID for tracking mapping
@@ -55,8 +55,6 @@ export function ChapterImageManager({
     const [error, setError] = useState("");
     const [successMsg, setSuccessMsg] = useState("");
 
-    const hasChanges = files.some((f) => f.status !== "existing");
-    const isReplaceMode = (chapter?.page_count || 0) > 0;
     const canUpload = files.length > 0 && !uploading;
 
     useEffect(() => {

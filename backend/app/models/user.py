@@ -2,10 +2,13 @@
 
 import enum
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 from uuid import uuid4
 
 from sqlmodel import Field, SQLModel, Relationship
+
+if TYPE_CHECKING:
+    from app.models.transaction import Transaction
 
 
 class UserRole(str, enum.Enum):
@@ -44,12 +47,14 @@ class User(SQLModel, table=True):
 
     # ── Timestamps ───────────────────────────────
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+        default_factory=lambda: datetime.now(
+            timezone.utc).replace(tzinfo=None),
     )
     updated_at: Optional[datetime] = Field(
         default=None,
-        sa_column_kwargs={"onupdate": lambda: datetime.now(timezone.utc).replace(tzinfo=None)},
+        sa_column_kwargs={"onupdate": lambda: datetime.now(
+            timezone.utc).replace(tzinfo=None)},
     )
 
     # ── Relationships ────────────────────────────
-    transactions: List["Transaction"] = Relationship(back_populates="user")  # type: ignore[name-defined]
+    transactions: List["Transaction"] = Relationship(back_populates="user")

@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@clerk/nextjs";
 import Image from "next/image";
 import { Eye, EyeOff, Edit2, BookOpen, Loader2, Plus, Trash2 } from "lucide-react";
@@ -23,7 +23,7 @@ export default function AdminMangaPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>("");
 
-  const fetchMangas = async () => {
+  const fetchMangas = useCallback(async () => {
     try {
       const token = await getToken();
       const res = await getMangaList({ per_page: 100 }, token || undefined);
@@ -34,7 +34,7 @@ export default function AdminMangaPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getToken]);
 
   // Reset form when opening/closing
   useEffect(() => {
@@ -55,7 +55,7 @@ export default function AdminMangaPage() {
 
   useEffect(() => {
     fetchMangas();
-  }, []);
+  }, [fetchMangas]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
