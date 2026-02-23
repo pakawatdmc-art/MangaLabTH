@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     # ── App ──────────────────────────────────────
     APP_ENV: str = "development"
     CORS_ORIGINS: str = "http://localhost:3000"
+    FRONTEND_URL: str = "http://localhost:3000"
+    REVALIDATION_SECRET: str = "super-secret-mangalabth"
     SQL_ECHO: bool = False
 
     # ── Database (Neon PostgreSQL) ───────────────

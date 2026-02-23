@@ -2,13 +2,14 @@
 
 from typing import List, Optional
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, HTTPException, status
 from sqlmodel import select
 
 from app.api.deps import AdminUser, DBSession, OptionalUser
 from app.models.manga import Chapter, Manga, Page
 from app.models.transaction import Transaction, TransactionType
 from app.services.storage import delete_objects
+from app.services.revalidate import revalidate_paths
 from app.schemas.manga import (
     ChapterCreate,
     ChapterDetail,
@@ -123,6 +124,7 @@ async def create_chapter(
     body: ChapterCreate,
     session: DBSession,
     admin: AdminUser,
+    background_tasks: BackgroundTasks,
 ):
     manga = await session.get(Manga, manga_id)
     if not manga:
@@ -134,6 +136,7 @@ async def create_chapter(
     await session.refresh(chapter)
     data = ChapterRead.model_validate(chapter)
     data.page_count = 0
+    background_tasks.add_task(revalidate_paths, ["/"])
     return data
 
 
@@ -143,6 +146,7 @@ async def update_chapter(
     body: ChapterUpdate,
     session: DBSession,
     admin: AdminUser,
+    background_tasks: BackgroundTasks,
 ):
     chapter = await session.get(Chapter, chapter_id)
     if not chapter:
@@ -156,6 +160,7 @@ async def update_chapter(
     await session.refresh(chapter)
     data = ChapterRead.model_validate(chapter)
     data.page_count = len(chapter.pages) if chapter.pages else 0
+    background_tasks.add_task(revalidate_paths, ["/"])
     return data
 
 
@@ -164,6 +169,7 @@ async def delete_chapter(
     chapter_id: str,
     session: DBSession,
     admin: AdminUser,
+    background_tasks: BackgroundTasks,
 ):
     chapter = await session.get(Chapter, chapter_id)
     if not chapter:
@@ -187,6 +193,8 @@ async def delete_chapter(
     except Exception:
         pass
 
+    background_tasks.add_task(revalidate_paths, ["/"])
+
 
 # ── Pages (Admin batch create) ───────────────────
 
@@ -200,6 +208,7 @@ async def replace_pages(
     pages: List[PageCreate],
     session: DBSession,
     admin: AdminUser,
+    background_tasks: BackgroundTasks,
 ):
     """Replace all pages in a chapter (used for reordering/re-upload)."""
     chapter = await session.get(Chapter, chapter_id)
@@ -248,6 +257,7 @@ async def replace_pages(
     except Exception:
         pass
 
+    background_tasks.add_task(revalidate_paths, ["/"])
     return [PageRead.model_validate(pg) for pg in created]
 
 
@@ -261,6 +271,7 @@ async def add_pages(
     pages: List[PageCreate],
     session: DBSession,
     admin: AdminUser,
+    background_tasks: BackgroundTasks,
 ):
     """Batch-add pages to a chapter (after R2 upload from frontend)."""
     chapter = await session.get(Chapter, chapter_id)
@@ -283,4 +294,5 @@ async def add_pages(
     for pg in created:
         await session.refresh(pg)
 
+    background_tasks.add_task(revalidate_paths, ["/"])
     return [PageRead.model_validate(pg) for pg in created]

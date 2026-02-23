@@ -208,33 +208,43 @@ export function ChapterImageManager({
 
                 const presigned = await getPresignedUploadUrls(fileInfos, currentToken);
 
-                for (let i = 0; i < pendingUploads.length; i++) {
-                    const pendingItem = pendingUploads[i];
-                    const globalIdx = updatedFiles.findIndex(f => f.id === pendingItem.id);
+                const CONCURRENCY_LIMIT = 5;
+                for (let i = 0; i < pendingUploads.length; i += CONCURRENCY_LIMIT) {
+                    const batch = pendingUploads.slice(i, i + CONCURRENCY_LIMIT);
 
-                    updatedFiles[globalIdx] = { ...updatedFiles[globalIdx], status: "uploading" };
+                    // Mark as uploading
+                    batch.forEach(pendingItem => {
+                        const globalIdx = updatedFiles.findIndex(f => f.id === pendingItem.id);
+                        updatedFiles[globalIdx] = { ...updatedFiles[globalIdx], status: "uploading" };
+                    });
                     setFiles([...updatedFiles]);
 
-                    try {
-                        const res = await fetch(presigned[i].upload_url, {
-                            method: "PUT",
-                            body: pendingItem.file,
-                            headers: { "Content-Type": pendingItem.file!.type || "image/webp" },
-                        });
+                    // Upload in parallel
+                    await Promise.all(batch.map(async (pendingItem, batchIdx) => {
+                        const globalIdx = updatedFiles.findIndex(f => f.id === pendingItem.id);
+                        const presignedIdx = i + batchIdx;
 
-                        if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
+                        try {
+                            const res = await fetch(presigned[presignedIdx].upload_url, {
+                                method: "PUT",
+                                body: pendingItem.file,
+                                headers: { "Content-Type": pendingItem.file!.type || "image/webp" },
+                            });
 
-                        updatedFiles[globalIdx] = {
-                            ...updatedFiles[globalIdx],
-                            status: "done",
-                            publicUrl: presigned[i].public_url,
-                        };
-                    } catch {
-                        updatedFiles[globalIdx] = { ...updatedFiles[globalIdx], status: "error" };
-                    }
+                            if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
+
+                            updatedFiles[globalIdx] = {
+                                ...updatedFiles[globalIdx],
+                                status: "done",
+                                publicUrl: presigned[presignedIdx].public_url,
+                            };
+                        } catch {
+                            updatedFiles[globalIdx] = { ...updatedFiles[globalIdx], status: "error" };
+                        }
+                    }));
 
                     setFiles([...updatedFiles]);
-                    setUploadProgress({ done: i + 1, total: pendingUploads.length });
+                    setUploadProgress({ done: Math.min(i + CONCURRENCY_LIMIT, pendingUploads.length), total: pendingUploads.length });
                 }
             }
 

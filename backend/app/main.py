@@ -9,6 +9,8 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
+
 from app.config import get_settings
 from app.database import init_db
 from app.api.v1 import router as v1_router
@@ -38,6 +40,9 @@ app = FastAPI(
 # ── Rate Limiter state ───────────────────────────
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# ── Proxy Headers (for Cloud Run rate limiting) ────
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
 
 # ── CORS (V8: restricted methods/headers) ────────
 app.add_middleware(

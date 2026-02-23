@@ -12,8 +12,13 @@ const nextConfig: NextConfig = {
         hostname: R2_PUBLIC_HOST,
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "img.clerk.com",
+        pathname: "/**",
+      },
     ],
-    unoptimized: true,
+    unoptimized: false, // Enable Vercel Image Optimization
   },
 };
 

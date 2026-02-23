@@ -31,5 +31,8 @@ USER root
 RUN chown -R user:user /home/user/app
 USER user
 
-# Start the FastAPI app on port 7860, the default port expected by Hugging Face Spaces
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7860"]
+# Cloud Run provides the PORT environment variable. Default to 8000 for local dev.
+ENV PORT=8000
+
+# Start the FastAPI app
+CMD uvicorn app.main:app --host 0.0.0.0 --port $PORT

@@ -4,7 +4,7 @@ import re
 from math import ceil
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, status
 from sqlalchemy import func
 from sqlmodel import col, select
 
@@ -12,6 +12,7 @@ from app.api.deps import AdminUser, CurrentUser, DBSession, OptionalUser
 from app.models.manga import Chapter, Manga, MangaCategory, MangaStatus
 from app.models.transaction import Transaction, TransactionType
 from app.services.storage import delete_object, delete_objects
+from app.services.revalidate import revalidate_paths
 from app.schemas.manga import (
     MangaCreate,
     MangaDetail,
@@ -161,11 +162,13 @@ async def create_manga(
     body: MangaCreate,
     session: DBSession,
     admin: AdminUser,
+    background_tasks: BackgroundTasks,
 ):
     manga = Manga(**body.model_dump())
     session.add(manga)
     await session.commit()
     await session.refresh(manga)
+    background_tasks.add_task(revalidate_paths, ["/"])
     return MangaRead.model_validate(manga)
 
 
@@ -175,6 +178,7 @@ async def update_manga(
     body: MangaUpdate,
     session: DBSession,
     admin: AdminUser,
+    background_tasks: BackgroundTasks,
 ):
     manga = await session.get(Manga, manga_id)
     if not manga:
@@ -199,6 +203,7 @@ async def update_manga(
     session.add(manga)
     await session.commit()
     await session.refresh(manga)
+    background_tasks.add_task(revalidate_paths, ["/"])
     return MangaRead.model_validate(manga)
 
 
@@ -207,6 +212,7 @@ async def delete_manga(
     manga_id: str,
     session: DBSession,
     admin: AdminUser,
+    background_tasks: BackgroundTasks,
 ):
     manga = await session.get(Manga, manga_id)
     if not manga:
@@ -240,3 +246,5 @@ async def delete_manga(
             delete_objects(r2_keys)
         except Exception:
             pass
+            
+    background_tasks.add_task(revalidate_paths, ["/"])

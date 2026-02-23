@@ -6,16 +6,16 @@
 
 ```
 mangaFactory/
-├── frontend/     # Next.js 16 → Cloudflare Workers (via @opennextjs/cloudflare)
-├── backend/      # FastAPI → Render / Railway (Docker)
+├── frontend/     # Next.js 16 (App Router) → Vercel
+├── backend/      # FastAPI (Python) → Google Cloud Run
 ├── .gitignore
 └── README.md
 ```
 
 | Layer | Technology | Hosting |
 |-------|------------|---------|
-| Frontend | Next.js 16 (App Router), Tailwind CSS, Clerk | **Cloudflare Workers** |
-| Backend | FastAPI, SQLModel, Pydantic v2, Alembic | **Render / Railway (Docker)** |
+| Frontend | Next.js 16 (App Router), Tailwind CSS, Clerk | **Vercel** |
+| Backend | FastAPI, SQLModel, Pydantic v2, Alembic | **Google Cloud Run (Docker)** |
 | Database | Neon PostgreSQL (Serverless) | **Neon** |
 | Storage | Cloudflare R2 (S3-compatible, boto3) | **Cloudflare R2** |
 | Payments | Stripe | Stripe |
@@ -48,30 +48,38 @@ cp .env.example .env.local
 # Edit .env.local — fill in Clerk keys + NEXT_PUBLIC_API_URL
 
 npm run dev        # Next.js dev server (http://localhost:3000)
-npm run preview    # Build + preview via Cloudflare Workers runtime
 ```
 
 ## Production Deployment
 
-### Backend → Render / Railway
+### Backend → Google Cloud Run
 
-1. Create a new **Web Service** and connect to this repo
-2. Set **Root Directory** to `backend/`
-3. Set **Dockerfile Path** to `Dockerfile`
-4. Add environment variables from `backend/.env.example`
-5. Deploy — the container exposes port `8000`
+Google Cloud Run จะนำ `Dockerfile` ไปสร้าง Image และรันโดยอัตโนมัติ 
 
-### Frontend → Cloudflare Workers
+1. ติดตั้ง `gcloud` CLI และทำการ Login: `gcloud auth login`
+2. สร้าง Google Cloud Project และตั้งค่า Billing
+3. ไปที่โฟลเดอร์ `backend` และรันคำสั่ง Deploy:
+   ```bash
+   cd backend
+   gcloud run deploy mangalabth-backend --source .
+   ```
+4. เลือก Region (เช่น `asia-southeast1` สิงคโปร์)
+5. กดยอมรับการอนุญาตเข้าถึงแบบ Unauthenticated (สาธารณะ)
+6. ใส่ Environment Variables (เช่น `DATABASE_URL`, `CLERK_SECRET_KEY`, `R2_...`, `STRIPE_...`) ผ่าน Cloud Console หรือ CLI argument
+7. *หมายเหตุ:* ตัว Backend ถูกตั้งค่า `ProxyHeadersMiddleware` ไว้แล้ว ทำให้ใช้งานกับระบบตรวจจับ IP ของเน็ตเวิร์ค Google (Load Balancer) ได้อย่างไม่มีปัญหา
 
-```bash
-cd frontend
-npm run deploy     # Builds with OpenNext + deploys to Cloudflare
-```
+### Frontend → Vercel
 
-Or connect via **Cloudflare Workers Builds** (CI/CD):
-- **Build command:** `npm run build`
-- **Deploy command:** `opennextjs-cloudflare build && opennextjs-cloudflare deploy`
-- Add env vars in **Build Variables and Secrets** (Clerk keys, API URL)
+1. สร้างโปรเจคใหม่ใน [Vercel](https://vercel.com/)
+2. นำเข้า Repository นี้จาก GitHub
+3. ไปที่ตั้งค่า **Root Directory** เลือกโฟลเดอร์ `frontend`
+4. Vercel จะตรวจสอบและรู้ว่าเป็นโปรเจ็กต์ Next.js โดยอัตโนมัติ (Build command: `next build`)
+5. กำหนด Environment Variables ใน Vercel:
+   * `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+   * `CLERK_SECRET_KEY`
+   * `NEXT_PUBLIC_API_URL` (URL ของ Google Cloud Run ที่เพิ่งสร้าง)
+   * `REVALIDATION_SECRET` (สำหรับรับ Webhook จาก Backend เพื่อเคลียร์ Cache)
+6. กดปุ่ม `Deploy`
 
 ## Features
 
@@ -87,7 +95,7 @@ Or connect via **Cloudflare Workers Builds** (CI/CD):
 - **Dashboard** — Stats overview
 - **Manga CRUD** — Create, edit, delete manga
 - **Chapter CRUD** — Manage chapters and pricing
-- **Upload** — Batch image upload to R2 (presigned URLs)
+- **Upload** — Batch image upload to R2 (presigned URLs) พร้อมระบบ Parallel Upload
 - **Users** — User management, coin grants
 - **Transactions** — Revenue monitoring
 
@@ -109,7 +117,9 @@ Or connect via **Cloudflare Workers Builds** (CI/CD):
 | `STRIPE_SECRET_KEY` | Stripe secret key |
 | `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret |
 | `APP_ENV` | `development` or `production` |
-| `CORS_ORIGINS` | Comma-separated allowed origins |
+| `CORS_ORIGINS` | Comma-separated allowed origins (URL ของ Vercel) |
+| `FRONTEND_URL` | URL ของ Vercel (สำหรับการสั่ง Revalidate Cache) |
+| `REVALIDATION_SECRET` | รหัสผ่านลับสำหรับสั่งเคลียร์ Cache |
 
 ### Frontend (`frontend/.env.local`)
 
@@ -121,6 +131,7 @@ Or connect via **Cloudflare Workers Builds** (CI/CD):
 | `NEXT_PUBLIC_CLERK_SIGN_UP_URL` | Sign-up route (`/sign-up`) |
 | `NEXT_PUBLIC_API_URL` | Backend API base URL |
 | `NEXT_PUBLIC_R2_PUBLIC_URL` | R2 public bucket URL |
+| `REVALIDATION_SECRET` | รหัสผ่านลับสำหรับยืนยันรับคำสั่ง เคลียร์ Cache |
 
 ## License
 
