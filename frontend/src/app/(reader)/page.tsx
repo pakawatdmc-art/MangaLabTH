@@ -43,51 +43,60 @@ export default async function HomePage({ searchParams }: Props) {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-surface-300">
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-surface-200 via-surface-100 to-surface-200 py-12 sm:py-20">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(212,175,55,0.1),transparent_60%)]" />
-        <div className="relative mx-auto max-w-6xl px-4 text-center sm:px-6">
-          <h1 className="mb-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">
+      <section className="relative overflow-hidden py-16 sm:py-24">
+        {/* Subtle glow instead of heavy radial gradient */}
+        <div className="absolute left-1/2 top-0 -ml-[50%] h-[500px] w-full max-w-[1000px] bg-[radial-gradient(ellipse_at_top,rgba(212,175,55,0.08),transparent_50%)]" />
+
+        <div className="relative mx-auto max-w-4xl px-4 text-center sm:px-6">
+          <h1 className="mb-5 text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl drop-shadow-sm">
             MangaLab<span className="text-gold">TH</span>
           </h1>
-          <p className="mx-auto mb-8 max-w-xl text-lg text-gray-400">
+          <p className="mx-auto mb-10 max-w-xl text-lg text-gray-400">
             อ่านมังงะออนไลน์คุณภาพสูง อัปเดตทุกวัน พร้อมระบบเหรียญปลดล็อคตอนพิเศษ
           </p>
 
-          {/* Search bar */}
-          {/* Search bar */}
-          <form action="/search" method="GET" className="mx-auto flex max-w-xl gap-2">
+          {/* Search bar - more premium */}
+          <form action="/search" method="GET" className="mx-auto flex max-w-xl items-center gap-2 rounded-3xl bg-surface-100/40 p-2 shadow-2xl ring-1 ring-white/10 backdrop-blur-xl transition focus-within:ring-white/20">
             <input
               type="text"
               name="q"
-              placeholder="ค้นหามังงะ..."
+              placeholder="ค้นหามังงะที่อยากอ่าน..."
               defaultValue={params.q}
-              className="flex-1 rounded-xl border-0 bg-surface-100/80 px-4 py-3 text-sm text-white placeholder-gray-500 ring-1 ring-white/10 backdrop-blur focus:outline-none focus:ring-2 focus:ring-gold/50"
+              className="flex-1 bg-transparent px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none"
             />
             <button
               type="submit"
-              className="rounded-xl bg-gold px-6 py-3 text-sm font-semibold text-black transition hover:bg-gold/90"
+              className="rounded-2xl bg-gold px-8 py-3 text-sm font-bold text-black shadow-lg shadow-gold/20 transition hover:bg-gold-light hover:shadow-gold/40"
             >
               ค้นหา
             </button>
           </form>
+
+          {/* SEO Text Component - Elegant and subtle */}
+          <div className="mx-auto mt-12 max-w-3xl">
+            <p className="text-[11px] leading-relaxed text-gray-500/50 balance-text font-medium">
+              mangalab-th แหล่งอ่านมังงะฟรีที่มาพร้อมระบบที่ทันสมัยที่สุดประจำปี 2026 เราคัดสรร Manga ใหม่ล่าสุดและมังงะยอดนิยมสูงสุดทั้งประจำสัปดาห์และประจำเดือนมาไว้ให้ครบถ้วน คุณสามารถอ่านมังงะฟรีได้ทุกเรื่อง เพียงแค่มีมือถือก็สนุกกับการ์ตูนออนไลน์ได้ทันที
+              ที่ mangalab-th เรารวบรวมมังงะจากทุกมุมโลกไว้ให้แล้ว ไม่ว่าจะเป็นมังงะแปลไทย จีน เกาหลี หรือญี่ปุ่น รวมถึงการ์ตูนเรื่องดังจาก Webtoon, Kakao และ Comico ครบจบทุกแพลตฟอร์มในเว็บเดียว
+            </p>
+          </div>
         </div>
       </section>
 
       {/* Latest Updates Section */}
       {!params.q && page === 1 && updatedManga.items.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 pt-8 sm:px-6">
-          <div className="overflow-hidden rounded-xl bg-[#1A1A1A] shadow-xl ring-1 ring-white/10">
+        <section className="mx-auto max-w-7xl px-4 pt-10 sm:px-6">
+          <div className="overflow-hidden rounded-[2rem] bg-surface-200/40 shadow-2xl ring-1 ring-white/5 backdrop-blur-md">
             {/* Panel Header */}
-            <div className="flex items-center justify-between border-b border-white/5 bg-[#242424] px-4 py-3 sm:px-5">
-              <h2 className="flex items-center gap-2 text-lg font-bold tracking-wide text-white">
-                <span className="text-xl">⚡</span> อัปเดตใหม่ล่าสุด
+            <div className="flex items-center justify-between border-b border-white/5 bg-transparent px-6 py-5">
+              <h2 className="flex items-center gap-3 text-lg font-bold tracking-tight text-white/90">
+                <span className="text-2xl drop-shadow-md">⚡</span> อัปเดตใหม่ล่าสุด
               </h2>
             </div>
             {/* Panel Body */}
-            <div className="p-4 sm:p-5">
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+            <div className="p-6">
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
                 {updatedManga.items.map((m: Manga) => (
                   <UpdateMangaCard key={m.id} manga={m} />
                 ))}
@@ -98,35 +107,35 @@ export default async function HomePage({ searchParams }: Props) {
       )}
 
       {/* Split Layout Container */}
-      <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6 lg:flex-row">
+      <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-10 sm:px-6 lg:flex-row">
 
         {/* Main Left Column (All Manga) */}
         <div className="flex w-full min-w-0 flex-1 flex-col">
-          <section className="overflow-hidden rounded-xl bg-[#1A1A1A] shadow-xl ring-1 ring-white/10">
+          <section className="overflow-hidden rounded-[2rem] bg-surface-200/40 shadow-2xl ring-1 ring-white/5 backdrop-blur-md">
             {/* Panel Header */}
-            <div className="flex items-center justify-between border-b border-white/5 bg-[#242424] px-4 py-3 sm:px-5">
-              <h2 className="flex items-center gap-2 text-lg font-bold tracking-wide text-white">
-                <span className="text-xl">📚</span>
+            <div className="flex items-center justify-between border-b border-white/5 bg-transparent px-6 py-5">
+              <h2 className="flex items-center gap-3 text-lg font-bold tracking-tight text-white/90">
+                <span className="text-2xl drop-shadow-md">📚</span>
                 {params.q
                   ? `ผลการค้นหา "${params.q}"`
                   : params.category
                     ? CATEGORY_LABELS[params.category] || "มังงะ"
                     : "มังงะทั้งหมด"}
               </h2>
-              <span className="rounded-md bg-black/40 px-2 py-1 text-xs font-medium text-gray-400">
+              <span className="rounded-xl bg-white/5 px-3 py-1.5 text-xs font-semibold text-gray-400">
                 {manga.total} เรื่อง
               </span>
             </div>
 
             {/* Panel Body */}
-            <div className="p-4 sm:p-5">
+            <div className="p-6">
               {/* Filters */}
-              <div className="mb-6 flex flex-wrap gap-2">
+              <div className="mb-8 flex flex-wrap gap-2.5">
                 <Link
                   href="/"
-                  className={`rounded-full px-3 py-1 text-xs font-medium transition ${!params.category
-                    ? "bg-gold text-black"
-                    : "bg-[#2A2A2A] text-gray-400 hover:text-white"
+                  className={`rounded-full px-4 py-2 text-[13px] font-semibold transition-all ${!params.category
+                    ? "bg-gold text-black shadow-lg shadow-gold/20"
+                    : "bg-surface-100/50 text-gray-400 hover:bg-surface-100 hover:text-white ring-1 ring-white/5"
                     }`}
                 >
                   ทั้งหมด
@@ -135,9 +144,9 @@ export default async function HomePage({ searchParams }: Props) {
                   <Link
                     key={key}
                     href={`/?category=${key}`}
-                    className={`rounded-full px-3 py-1 text-xs font-medium transition ${params.category === key
-                      ? "bg-gold text-black"
-                      : "bg-[#2A2A2A] text-gray-400 hover:text-white"
+                    className={`rounded-full px-4 py-2 text-[13px] font-semibold transition-all ${params.category === key
+                      ? "bg-gold text-black shadow-lg shadow-gold/20"
+                      : "bg-surface-100/50 text-gray-400 hover:bg-surface-100 hover:text-white ring-1 ring-white/5"
                       }`}
                   >
                     {label}
@@ -146,18 +155,18 @@ export default async function HomePage({ searchParams }: Props) {
               </div>
 
               {manga.items.length > 0 ? (
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                   {manga.items.map((m: Manga) => (
                     <MangaCard key={m.id} manga={m} />
                   ))}
                 </div>
               ) : (
-                <div className="py-20 text-center">
-                  <p className="text-gray-500">ยังไม่มีมังงะ</p>
-                  <p className="mt-1 text-xs text-gray-600">
-                    เพิ่มมังงะได้ที่{" "}
-                    <Link href="/admin/manga" className="text-gold hover:underline">
-                      แอดมิน
+                <div className="py-24 text-center">
+                  <p className="text-lg text-gray-500 font-medium">ไม่มีมังงะในหมวดหมู่นี้</p>
+                  <p className="mt-2 text-sm text-gray-600">
+                    เพิ่มมังงะเรื่องใหม่ได้ที่{" "}
+                    <Link href="/admin/manga" className="text-gold font-medium hover:underline">
+                      ระบบจัดการ
                     </Link>
                   </p>
                 </div>
@@ -165,15 +174,15 @@ export default async function HomePage({ searchParams }: Props) {
 
               {/* Pagination */}
               {manga.pages > 1 && (
-                <div className="mt-8 flex justify-center gap-2">
+                <div className="mt-12 flex justify-center gap-2">
                   {Array.from({ length: manga.pages }, (_, i) => i + 1).map((p) => (
                     <Link
                       key={p}
                       href={`/?page=${p}${params.category ? `&category=${params.category}` : ""
                         }${params.q ? `&q=${params.q}` : ""}`}
-                      className={`flex h-9 w-9 items-center justify-center rounded-lg text-sm font-medium transition ${p === page
-                        ? "bg-gold text-black"
-                        : "bg-surface-100 text-gray-400 hover:bg-surface-50 hover:text-white"
+                      className={`flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold transition-all ${p === page
+                        ? "bg-gold text-black shadow-lg shadow-gold/20"
+                        : "bg-surface-100/50 text-gray-400 hover:bg-surface-100 hover:text-white ring-1 ring-white/5"
                         }`}
                     >
                       {p}
