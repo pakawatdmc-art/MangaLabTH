@@ -1,0 +1,46 @@
+import asyncio
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from dotenv import load_dotenv
+load_dotenv()
+
+from sqlmodel import select
+from app.database import async_session_factory
+from app.models.transaction import CoinPackage
+
+packages_data = [
+    {"name": "แพ็กเกจ 49 เหรียญ", "coins": 49, "price_thb": 4900, "sort_order": 1},
+    {"name": "แพ็กเกจ 104 เหรียญ", "coins": 104, "price_thb": 9900, "sort_order": 2},
+    {"name": "แพ็กเกจ 157 เหรียญ", "coins": 157, "price_thb": 14900, "sort_order": 3},
+    {"name": "แพ็กเกจ 214 เหรียญ", "coins": 214, "price_thb": 19900, "sort_order": 4},
+    {"name": "แพ็กเกจ 262 เหรียญ", "coins": 262, "price_thb": 24900, "sort_order": 5},
+    {"name": "แพ็กเกจ 549 เหรียญ", "coins": 549, "price_thb": 49900, "sort_order": 6},
+]
+
+async def seed():
+    async with async_session_factory() as session:
+        # Clear existing
+        result = await session.execute(select(CoinPackage))
+        existing = result.scalars().all()
+        for p in existing:
+            await session.delete(p)
+        await session.commit()
+        
+        # Insert new
+        for pd in packages_data:
+            mock_stripe_id = f"price_PLACEHOLDER_{pd['price_thb'] // 100}"
+            pkg = CoinPackage(
+                name=pd["name"],
+                coins=pd["coins"],
+                price_thb=pd["price_thb"], # save satang
+                stripe_price_id=mock_stripe_id,
+                sort_order=pd["sort_order"],
+                is_active=True
+            )
+            session.add(pkg)
+        await session.commit()
+        print("Seeded coin packages successfully")
+
+if __name__ == "__main__":
+    asyncio.run(seed())

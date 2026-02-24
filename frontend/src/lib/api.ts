@@ -244,13 +244,6 @@ export async function getTopManga(period: "weekly" | "monthly" | "all_time", lim
   return fetcher<Manga[]>(`/manga/ranking/${period}?limit=${limit}`);
 }
 
-export async function getCoinTiers() {
-  return fetcher<{
-    presets: { amount_thb: number; coins: number }[];
-    default_rate: number;
-  }>("/payments/coin-tiers");
-}
-
 export async function getPackages() {
   return fetcher<CoinPackage[]>("/payments/packages");
 }
@@ -258,14 +251,6 @@ export async function getPackages() {
 export async function createCheckoutSession(packageId: string, token: string) {
   return fetcher<{ url: string }>(`/payments/checkout?package_id=${packageId}`, {
     method: "POST",
-    token,
-  });
-}
-
-export async function createCustomCheckout(amountThb: number, token: string) {
-  return fetcher<{ url: string; coins: number }>("/payments/checkout/custom", {
-    method: "POST",
-    body: JSON.stringify({ amount_thb: amountThb }),
     token,
   });
 }

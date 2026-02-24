@@ -14,33 +14,13 @@ import {
 } from "lucide-react";
 import {
   confirmCheckoutPayment,
-  createCustomCheckout,
+  createCheckoutSession,
   getMe,
   getMyTransactions,
+  getPackages,
 } from "@/lib/api";
 import { formatDate, formatNumber } from "@/lib/utils";
-import type { Transaction, User } from "@/lib/types";
-
-// ── Coin calculation (mirrors backend calculate_coins) ──────────────────────
-const BONUS_MAP: Record<number, number> = { 50: 55, 100: 120, 150: 170 };
-
-function calculateCoins(amountThb: number): number {
-  const a = Math.floor(amountThb);
-  if (a <= 0) return 0;
-  return BONUS_MAP[a] ?? a; // preset amounts get bonus, everything else is 1:1
-}
-
-function getBonusCoins(amountThb: number): number {
-  const a = Math.floor(amountThb);
-  return (BONUS_MAP[a] ?? a) - a;
-}
-
-// ── Preset suggestions ───────────────────────────────────────────────────────
-const PRESETS = [
-  { amountThb: 50, coins: 55, bonusPct: 10, recommended: false },
-  { amountThb: 100, coins: 120, bonusPct: 20, recommended: true },
-  { amountThb: 150, coins: 170, bonusPct: 13, recommended: false },
-] as const;
+import type { Transaction, User, CoinPackage } from "@/lib/types";
 
 const TX_LABEL: Record<string, string> = {
   coin_purchase: "ซื้อเหรียญ",
@@ -55,13 +35,13 @@ function CoinsPageInner() {
 
   const [user, setUser] = useState<User | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [packages, setPackages] = useState<CoinPackage[]>([]);
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [rawInput, setRawInput] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [selectedPackage, setSelectedPackage] = useState<CoinPackage | null>(null);
   const prevBalanceRef = useRef<number | null>(null);
 
   const paymentStatus = searchParams.get("success")
@@ -75,12 +55,14 @@ function CoinsPageInner() {
     try {
       const token = await getToken();
       if (!token) return null;
-      const [me, txs] = await Promise.all([
+      const [me, txs, pkgs] = await Promise.all([
         getMe(token),
         getMyTransactions(token, 20),
+        getPackages(),
       ]);
       setUser(me);
       setTransactions(txs);
+      setPackages(pkgs);
 
       // Notify Navbar to update balance (e.g., after a successful poll)
       window.dispatchEvent(new Event("balance-update"));
@@ -180,23 +162,9 @@ function CoinsPageInner() {
     }
   };
 
-  const amountThb = useMemo(() => {
-    const n = parseInt(rawInput, 10);
-    return isNaN(n) || n < 0 ? 0 : n;
-  }, [rawInput]);
-
-  const coinsPreview = useMemo(() => calculateCoins(amountThb), [amountThb]);
-  const bonusCoins = useMemo(() => getBonusCoins(amountThb), [amountThb]);
-  const baseCoins = coinsPreview - bonusCoins;
-
-  const handlePreset = (amount: number) => {
-    setRawInput(String(amount));
-    inputRef.current?.focus();
-  };
-
   const handleCheckout = async () => {
-    if (amountThb < 20) {
-      setError("จำนวนเงินขั้นต่ำ 20 บาท");
+    if (!selectedPackage) {
+      setError("กรุณาเลือกแพ็กเกจที่ต้องการเติม");
       return;
     }
     setError(null);
@@ -204,7 +172,7 @@ function CoinsPageInner() {
       setBuying(true);
       const token = await getToken();
       if (!token) return;
-      const { url } = await createCustomCheckout(amountThb, token);
+      const { url } = await createCheckoutSession(selectedPackage.id, token);
       window.location.href = url;
     } catch (err) {
       setError(err instanceof Error ? err.message : "ไม่สามารถสร้างรายการชำระเงินได้");
@@ -288,86 +256,47 @@ function CoinsPageInner() {
         <section className="rounded-3xl border border-white/10 bg-surface-100/80 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.4)] backdrop-blur-xl sm:p-6">
           <div className="mb-1 flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-gold" />
-            <h2 className="text-lg font-semibold text-white">เติมเหรียญ</h2>
+            <h2 className="text-lg font-semibold text-white">เติมเครดิต</h2>
           </div>
           <p className="mb-5 text-xs text-gray-400">
-            ระบุจำนวนเงิน (บาท) ที่ต้องการเติม — ยิ่งเติมมาก ยิ่งได้โบนัสสูง
+            เลือกแพ็กเกจที่ต้องการเติม — ยิ่งเติมแพ็กเกจใหญ่ ยิ่งได้โบนัสสุดคุ้ม
           </p>
 
           {/* Preset chips */}
-          <div className="mb-4 grid grid-cols-3 gap-2.5">
-            {PRESETS.map((p) => {
-              const active = amountThb === p.amountThb;
+          <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {packages.map((pkg) => {
+              const active = selectedPackage?.id === pkg.id;
+              const priceBaht = pkg.price_thb / 100;
+              const hasBonus = pkg.coins > priceBaht;
+              const bonusAmount = pkg.coins - priceBaht;
               return (
                 <button
-                  key={p.amountThb}
+                  key={pkg.id}
                   type="button"
-                  onClick={() => handlePreset(p.amountThb)}
-                  className={`relative rounded-2xl border px-3 py-3 text-center transition ${active
-                    ? "border-gold bg-gold/15 text-white"
+                  onClick={() => {
+                    setSelectedPackage(pkg);
+                    setError(null);
+                  }}
+                  className={`relative flex flex-col items-center justify-center rounded-2xl border p-4 text-center transition ${active
+                    ? "border-gold bg-gold/15 text-white shadow-[0_0_15px_rgba(212,168,67,0.2)]"
                     : "border-white/10 bg-surface-200/70 text-gray-300 hover:border-gold/40 hover:bg-surface-50"
                     }`}
                 >
-                  {p.recommended && (
-                    <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-gold px-2 py-0.5 text-[10px] font-bold text-black">
-                      <Sparkles className="mr-0.5 mb-px inline-block h-2.5 w-2.5" />
-                      แนะนำ
+                  <p className="text-xl font-bold text-white">฿{formatNumber(priceBaht)}</p>
+                  <p className="mt-1 text-sm font-semibold text-gold">{pkg.coins} เหรียญ</p>
+                  {hasBonus && (
+                    <span className="mt-2 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
+                      แถมโบนัส {formatNumber(bonusAmount)}
                     </span>
                   )}
-                  <p className="text-lg font-bold text-white">฿{p.amountThb}</p>
-                  <p className="text-xs text-gold">{p.coins} เหรียญ</p>
-                  <span className="mt-1 inline-block rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-medium text-emerald-400">
-                    +{p.bonusPct}%
-                  </span>
                 </button>
               );
             })}
           </div>
 
-          {/* Custom amount input */}
-          <div className="relative mb-4">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-semibold text-gray-400">
-              ฿
-            </span>
-            <input
-              ref={inputRef}
-              type="number"
-              inputMode="numeric"
-              min={20}
-              placeholder="ระบุจำนวนเงิน..."
-              value={rawInput}
-              onChange={(e) => {
-                setRawInput(e.target.value);
-                setError(null);
-              }}
-              className="w-full rounded-2xl border border-white/10 bg-surface-200/80 py-4 pl-10 pr-4 text-xl font-semibold text-white placeholder:text-gray-600 focus:border-gold/50 focus:outline-none focus:ring-1 focus:ring-gold/40"
-            />
-          </div>
-
-          {/* Coin preview */}
-          {amountThb >= 1 && (
-            <div className="mb-5 rounded-2xl border border-white/10 bg-surface-200/60 px-4 py-3.5">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-300">คุณจะได้รับ</span>
-                <span className="text-2xl font-bold text-gold">
-                  {formatNumber(coinsPreview)} เหรียญ
-                </span>
-              </div>
-              {bonusCoins > 0 && (
-                <div className="mt-1.5 flex items-center justify-between text-xs">
-                  <span className="text-gray-500">
-                    {formatNumber(baseCoins)} + โบนัส {formatNumber(bonusCoins)} เหรียญ
-                  </span>
-                  <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 font-medium text-emerald-400">
-                    ได้พิเศษ!
-                  </span>
-                </div>
-              )}
-              {amountThb > 0 && !BONUS_MAP[amountThb] && (
-                <p className="mt-1.5 text-xs text-gray-500">
-                  เติม ฿50 / ฿100 / ฿150 เพื่อรับโบนัสเหรียญพิเศษ
-                </p>
-              )}
+          {packages.length === 0 && (
+            <div className="mb-6 rounded-xl border border-dashed border-white/10 py-8 text-center text-sm text-gray-500">
+              ไม่มีแพ็กเกจให้เลือกในขณะนี้
             </div>
           )}
 
@@ -380,7 +309,7 @@ function CoinsPageInner() {
           <button
             type="button"
             onClick={handleCheckout}
-            disabled={buying || amountThb <= 0}
+            disabled={buying || !selectedPackage}
             className="w-full rounded-2xl bg-gold py-3.5 text-base font-semibold text-black shadow-[0_8px_30px_rgba(212,168,67,0.3)] transition hover:bg-gold-light disabled:cursor-not-allowed disabled:opacity-50"
           >
             {buying ? (
@@ -388,21 +317,17 @@ function CoinsPageInner() {
                 <Loader2 className="h-5 w-5 animate-spin" />
                 กำลังเชื่อมต่อ Stripe...
               </span>
-            ) : amountThb > 0 ? (
-              `เติม ฿${formatNumber(amountThb)} → รับ ${formatNumber(coinsPreview)} เหรียญ`
+            ) : selectedPackage ? (
+              `ชำระเงิน ฿${formatNumber(selectedPackage.price_thb)} → รับ ${formatNumber(selectedPackage.coins)} เหรียญ`
             ) : (
-              "ระบุจำนวนเงินเพื่อเติมเหรียญ"
+              "กรุณาเลือกแพ็กเกจ"
             )}
           </button>
 
-          <p className="mt-3 text-center text-xs text-gray-600">
+          <p className="mt-4 text-center text-xs text-gray-400">
             ชำระผ่าน Stripe — รองรับบัตรเครดิต/เดบิต และ PromptPay
           </p>
         </section>
-
-        <p className="mt-6 text-center text-xs text-gray-600">
-          ราคาอื่น ๆ คิดเรท 1 บาท = 1 เหรียญ (ไม่มีโบนัส)
-        </p>
 
         {/* Transaction history */}
         <section className="mt-8">
