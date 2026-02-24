@@ -56,7 +56,7 @@ async def list_manga(
     # Filtering for visibility (Admins see everything)
     is_admin = current_user and current_user.role == "admin"
     if not is_admin:
-        query = query.where(Manga.is_visible == True)
+        query = query.where(Manga.is_visible.is_(True))
 
     if category:
         query = query.where(
@@ -128,7 +128,7 @@ async def get_manga_ranking(
     if period == "all_time":
         query = select(Manga)
         if not is_admin:
-            query = query.where(Manga.is_visible == True)
+            query = query.where(Manga.is_visible.is_(True))
         query = query.order_by(col(Manga.total_views).desc()).limit(limit)
         results = (await session.execute(query)).scalars().all()
         data = [MangaRead.model_validate(m) for m in results]
@@ -164,7 +164,7 @@ async def get_manga_ranking(
     # 2. Fetch Manga details
     manga_stmt = select(Manga).where(col(Manga.id).in_(manga_ids))
     if not is_admin:
-        manga_stmt = manga_stmt.where(Manga.is_visible == True)
+        manga_stmt = manga_stmt.where(Manga.is_visible.is_(True))
 
     mangas = (await session.execute(manga_stmt)).scalars().all()
 

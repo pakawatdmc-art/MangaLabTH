@@ -5,9 +5,9 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from dotenv import load_dotenv
 load_dotenv()
 
-from sqlmodel import select
-from app.database import async_session_factory
-from app.models.transaction import CoinPackage
+from sqlmodel import select  # noqa: E402
+from app.database import async_session_factory  # noqa: E402
+from app.models.transaction import CoinPackage  # noqa: E402
 
 # 1. แก้ไขข้อมูลแพ็กเกจตรงนี้ (เอา ID จาก Stripe มาวาง)
 packages_data = [
