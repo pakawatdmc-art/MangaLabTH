@@ -266,7 +266,7 @@ function CoinsPageInner() {
           <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
             {packages.map((pkg) => {
               const active = selectedPackage?.id === pkg.id;
-              const priceBaht = pkg.price_thb / 100;
+              const priceBaht = pkg.price_thb;
               const hasBonus = pkg.coins > priceBaht;
               const bonusAmount = pkg.coins - priceBaht;
               return (

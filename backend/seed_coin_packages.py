@@ -10,12 +10,12 @@ from app.database import async_session_factory
 from app.models.transaction import CoinPackage
 
 packages_data = [
-    {"name": "แพ็กเกจ 49 เหรียญ", "coins": 49, "price_thb": 4900, "sort_order": 1},
-    {"name": "แพ็กเกจ 104 เหรียญ", "coins": 104, "price_thb": 9900, "sort_order": 2},
-    {"name": "แพ็กเกจ 157 เหรียญ", "coins": 157, "price_thb": 14900, "sort_order": 3},
-    {"name": "แพ็กเกจ 214 เหรียญ", "coins": 214, "price_thb": 19900, "sort_order": 4},
-    {"name": "แพ็กเกจ 262 เหรียญ", "coins": 262, "price_thb": 24900, "sort_order": 5},
-    {"name": "แพ็กเกจ 549 เหรียญ", "coins": 549, "price_thb": 49900, "sort_order": 6},
+    {"name": "แพ็กเกจ 49 เหรียญ", "coins": 49, "price_thb": 49, "sort_order": 1},
+    {"name": "แพ็กเกจ 104 เหรียญ", "coins": 104, "price_thb": 99, "sort_order": 2},
+    {"name": "แพ็กเกจ 157 เหรียญ", "coins": 157, "price_thb": 149, "sort_order": 3},
+    {"name": "แพ็กเกจ 214 เหรียญ", "coins": 214, "price_thb": 199, "sort_order": 4},
+    {"name": "แพ็กเกจ 262 เหรียญ", "coins": 262, "price_thb": 249, "sort_order": 5},
+    {"name": "แพ็กเกจ 549 เหรียญ", "coins": 549, "price_thb": 499, "sort_order": 6},
 ]
 
 async def seed():

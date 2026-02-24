@@ -94,7 +94,7 @@ class CoinPackage(SQLModel, table=True):
     name: str = Field(max_length=128)
     coins: int = Field(gt=0, description="Number of coins granted")
     price_thb: int = Field(
-        gt=0, description="Price in Thai Baht satang (smallest unit)")
+        gt=0, description="Price in Thai Baht (THB) - changed from satang")
     stripe_price_id: str = Field(
         default="",
         max_length=128,
