@@ -17,7 +17,7 @@ from fastapi import APIRouter, HTTPException, Request
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy.exc import IntegrityError
-from sqlmodel import select
+from sqlmodel import select, col
 
 logger = logging.getLogger(__name__)
 
@@ -163,8 +163,8 @@ async def list_packages(session: DBSession):
     """List available coin packages."""
     stmt = (
         select(CoinPackage)
-        .where(CoinPackage.is_active.is_(True))
-        .order_by(CoinPackage.sort_order)
+        .where(CoinPackage.is_active == True)
+        .order_by(col(CoinPackage.sort_order))
     )
     return (await session.execute(stmt)).scalars().all()
 
@@ -238,6 +238,8 @@ async def stripe_webhook(request: Request, session: DBSession):
     """Handle Stripe webhooks to fulfill orders."""
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature")
+    if not sig_header:
+        raise HTTPException(status_code=400, detail="Missing signature")
 
     try:
         event = verify_webhook_signature(payload, sig_header)

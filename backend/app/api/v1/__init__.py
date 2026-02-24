@@ -2,10 +2,11 @@
 
 from fastapi import APIRouter
 
-from app.api.v1 import chapters, manga, payments, settings, transactions, upload, users
+from app.api.v1 import analytics, chapters, manga, payments, settings, transactions, upload, users
 
 router = APIRouter(prefix="/v1")
 
+router.include_router(analytics.router)
 router.include_router(manga.router)
 router.include_router(chapters.router)
 router.include_router(payments.router)

@@ -215,7 +215,7 @@ export async function listAllChapters(token: string) {
   return fetcher<Chapter[]>("/chapters", { token });
 }
 
-// ── Payments ────────────────────────────────────
+// ── Analytics & Stats ────────────────────────────────────
 
 export async function getStats(token: string) {
   return fetcher<{
@@ -225,6 +225,23 @@ export async function getStats(token: string) {
     total_coins_in_circulation: number;
     total_views: number;
   }>("/users/stats", { token });
+}
+
+export async function getAnalyticsViews(token: string, days = 30) {
+  return fetcher<{
+    summary: {
+      today: number;
+      this_week: number;
+      this_month: number;
+      this_year: number;
+      all_time: number;
+    };
+    chart_data: { date: string; views: number }[];
+  }>(`/analytics/views?days=${days}`, { token });
+}
+
+export async function getTopManga(period: "weekly" | "monthly" | "all_time", limit = 10) {
+  return fetcher<Manga[]>(`/manga/ranking/${period}?limit=${limit}`);
 }
 
 export async function getCoinTiers() {

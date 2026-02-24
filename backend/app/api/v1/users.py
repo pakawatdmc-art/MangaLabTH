@@ -4,7 +4,7 @@ import asyncio
 from typing import Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException
-from sqlmodel import select
+from sqlmodel import select, col
 
 from app.api.deps import AdminUser, CurrentUser, DBSession, get_clerk_profile
 from app.config import get_settings
@@ -67,7 +67,7 @@ async def list_users(
     admin: AdminUser,
 ):
     """Admin: list all users."""
-    stmt = select(User).order_by(User.role, User.created_at.desc())
+    stmt = select(User).order_by(User.role, col(User.created_at).desc())
     results = (await session.execute(stmt)).scalars().all()
     profiles = await asyncio.gather(
         *[get_clerk_profile(u.clerk_id) for u in results]
@@ -135,11 +135,11 @@ async def admin_stats(
         select(sa_func.count()).select_from(User)
     )).scalar_one()
 
-    total_coins = (await session.execute(
+    total_coins: int = (await session.execute(
         select(sa_func.coalesce(sa_func.sum(User.coin_balance), 0))
     )).scalar_one()
 
-    total_views = (await session.execute(
+    total_views: int = (await session.execute(
         select(sa_func.coalesce(sa_func.sum(Manga.total_views), 0))
     )).scalar_one()
 

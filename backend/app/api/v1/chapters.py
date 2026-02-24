@@ -1,9 +1,12 @@
 """Chapter & Page endpoints."""
 
+from datetime import datetime, timezone
 from typing import List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, status
-from sqlmodel import select
+from fastapi import APIRouter, BackgroundTasks, HTTPException, status, Request
+from sqlmodel import select, col
+
+from app.services.analytics import record_manga_view_task
 
 from app.api.deps import AdminUser, DBSession, OptionalUser
 from app.models.manga import Chapter, Manga, Page
@@ -31,7 +34,7 @@ async def list_all_chapters(
     admin: AdminUser,
 ):
     """Admin: list all chapters across all manga."""
-    stmt = select(Chapter).order_by(Chapter.created_at.desc())
+    stmt = select(Chapter).order_by(col(Chapter.created_at).desc())
     results = (await session.execute(stmt)).scalars().all()
     items = []
     for ch in results:
@@ -50,7 +53,7 @@ async def list_chapters(manga_id: str, session: DBSession, user: OptionalUser):
     stmt = (
         select(Chapter)
         .where(Chapter.manga_id == manga_id)
-        .order_by(Chapter.number)
+        .order_by(col(Chapter.number))
     )
     results = (await session.execute(stmt)).scalars().all()
 
@@ -59,7 +62,7 @@ async def list_chapters(manga_id: str, session: DBSession, user: OptionalUser):
         unlock_stmt = select(Transaction.chapter_id).where(
             Transaction.user_id == user.id,
             Transaction.type == TransactionType.CHAPTER_UNLOCK,
-            Transaction.chapter_id.in_([c.id for c in results])
+            col(Transaction.chapter_id).in_([c.id for c in results])
         )
         unlocked_ids = set((await session.execute(unlock_stmt)).scalars().all())
 
@@ -76,8 +79,10 @@ async def list_chapters(manga_id: str, session: DBSession, user: OptionalUser):
 @router.get("/{chapter_id}", response_model=ChapterDetail)
 async def get_chapter(
     chapter_id: str,
+    request: Request,
     session: DBSession,
     user: OptionalUser,
+    background_tasks: BackgroundTasks,
 ):
     """Get chapter detail with pages. Pages are ordered by number."""
     chapter = await session.get(Chapter, chapter_id)
@@ -108,6 +113,11 @@ async def get_chapter(
             return detail
 
     detail.pages.sort(key=lambda p: p.number)
+
+    client_ip = request.client.host if request.client else "unknown"
+    background_tasks.add_task(record_manga_view_task,
+                              chapter.manga_id, client_ip)
+
     return detail
 
 
@@ -132,6 +142,12 @@ async def create_chapter(
 
     chapter = Chapter(manga_id=manga_id, **body.model_dump())
     session.add(chapter)
+
+    # Bump manga updated time
+    manga.last_chapter_updated_at = datetime.now(
+        timezone.utc).replace(tzinfo=None)
+    session.add(manga)
+
     await session.commit()
     await session.refresh(chapter)
     data = ChapterRead.model_validate(chapter)

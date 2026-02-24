@@ -13,8 +13,8 @@ Environment variables required:
 
 from typing import List
 
-import boto3
-from botocore.config import Config as BotoConfig
+import boto3  # type: ignore
+from botocore.config import Config as BotoConfig  # type: ignore
 
 from app.config import get_settings
 

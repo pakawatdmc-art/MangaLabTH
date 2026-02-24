@@ -8,6 +8,12 @@ interface Props {
 }
 
 export default function MangaCard({ manga }: Props) {
+  // eslint-disable-next-line react-hooks/purity
+  const now = Date.now();
+  const isNew = manga.last_chapter_updated_at
+    ? new Date(manga.last_chapter_updated_at + "Z").getTime() > now - 7 * 24 * 60 * 60 * 1000
+    : false;
+
   return (
     <Link href={`/manga/${manga.slug}`} className="group">
       <article className="relative aspect-[2/3] overflow-hidden rounded-xl bg-surface-100 ring-1 ring-white/10 transition-all duration-300 group-hover:ring-gold/40">
@@ -25,6 +31,12 @@ export default function MangaCard({ manga }: Props) {
             {CATEGORY_LABELS[manga.category] || manga.category}
           </span>
         </div>
+
+        {isNew && (
+          <div className="absolute right-2 top-2 z-10 flex animate-pulse items-center rounded-sm bg-red-600 px-1.5 py-0.5 text-[10px] font-extrabold tracking-wider text-white shadow-lg shadow-red-900/50 ring-1 ring-white/30">
+            NEW
+          </div>
+        )}
 
         <div className="absolute inset-x-0 bottom-0 p-3">
           <h3 className="mb-1 text-sm font-semibold leading-snug text-white">

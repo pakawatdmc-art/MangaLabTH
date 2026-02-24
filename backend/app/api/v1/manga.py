@@ -1,18 +1,22 @@
 """Manga CRUD endpoints."""
 
 import re
+from datetime import date, timedelta
 from math import ceil
-from typing import Optional
+from typing import Any, Optional, List
+from cachetools import TTLCache  # type: ignore
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, status, Request
 from sqlalchemy import func
 from sqlmodel import col, select
 
 from app.api.deps import AdminUser, DBSession, OptionalUser
 from app.models.manga import Manga, MangaCategory, MangaStatus
+from app.models.analytics import DailyMangaView
 from app.models.transaction import Transaction, TransactionType
 from app.services.storage import delete_object, delete_objects
 from app.services.revalidate import revalidate_paths
+from app.services.analytics import record_manga_view_task
 from app.schemas.manga import (
     MangaCreate,
     MangaDetail,
@@ -22,6 +26,9 @@ from app.schemas.manga import (
 )
 
 router = APIRouter(prefix="/manga", tags=["Manga"])
+
+# Global cache for rankings (1 hour TTL)
+_ranking_cache = TTLCache(maxsize=10, ttl=3600)
 
 
 def _escape_like(value: str) -> str:
@@ -49,18 +56,20 @@ async def list_manga(
     # Filtering for visibility (Admins see everything)
     is_admin = current_user and current_user.role == "admin"
     if not is_admin:
-        query = query.where(Manga.is_visible.is_(True))
+        query = query.where(Manga.is_visible == True)
 
     if category:
-        query = query.where((Manga.category == category) |
-                            (Manga.sub_category == category))
+        query = query.where(
+            (Manga.category == category)
+            | (Manga.sub_category == category)
+        )
     if status_filter:
         query = query.where(Manga.status == status_filter)
     if q:
         safe_q = _escape_like(q)
         query = query.where(
-            col(Manga.title).ilike(f"%{safe_q}%") | col(
-                Manga.description).ilike(f"%{safe_q}%")
+            col(Manga.title).ilike(f"%{safe_q}%")
+            | col(Manga.description).ilike(f"%{safe_q}%")
         )
 
     # Count
@@ -69,9 +78,13 @@ async def list_manga(
 
     # Sort
     if sort == "views":
-        query = query.order_by(Manga.total_views.desc())
+        query = query.order_by(col(Manga.total_views).desc())
+    elif sort == "updated":
+        # Sort by updated time, putting mangas with no updates at the end
+        query = query.order_by(
+            col(Manga.last_chapter_updated_at).desc().nulls_last())
     else:  # latest
-        query = query.order_by(Manga.created_at.desc())
+        query = query.order_by(col(Manga.created_at).desc())
 
     # Paginate
     query = query.offset((page - 1) * per_page).limit(per_page)
@@ -92,8 +105,81 @@ async def list_manga(
     )
 
 
+@router.get("/ranking/{period}", response_model=List[MangaRead])
+async def get_manga_ranking(
+    period: str,
+    session: DBSession,
+    limit: int = 10,
+    current_user: OptionalUser = None,
+):
+    """Public manga ranking: weekly, monthly, all_time."""
+    valid_periods = {"weekly", "monthly", "all_time"}
+    if period not in valid_periods:
+        raise HTTPException(status_code=400, detail="Invalid period")
+
+    is_admin = current_user and current_user.role == "admin"
+    role_suffix = "admin" if is_admin else "public"
+
+    # Serve from cache if available to prevent heavy DB load
+    cache_key = f"{period}_{limit}_{role_suffix}"
+    if cache_key in _ranking_cache:
+        return _ranking_cache[cache_key]
+
+    if period == "all_time":
+        query = select(Manga)
+        if not is_admin:
+            query = query.where(Manga.is_visible == True)
+        query = query.order_by(col(Manga.total_views).desc()).limit(limit)
+        results = (await session.execute(query)).scalars().all()
+        data = [MangaRead.model_validate(m) for m in results]
+
+        if data:
+            _ranking_cache[cache_key] = data
+        return data
+
+    today = date.today()
+    if period == "weekly":
+        start_date = today - timedelta(days=7)
+    else:  # monthly
+        start_date = today - timedelta(days=30)
+
+    # 1. Sum up view_count from DailyMangaView
+    stmt: Any = (
+        select(
+            DailyMangaView.manga_id,
+            func.sum(DailyMangaView.view_count).label("period_views")
+        )
+        .where(DailyMangaView.view_date >= start_date)
+        .group_by(DailyMangaView.manga_id)
+        .order_by(func.sum(DailyMangaView.view_count).desc())
+        .limit(limit)
+    )
+    top_entries = (await session.execute(stmt)).all()
+
+    if not top_entries:
+        return []
+
+    manga_ids = [row.manga_id for row in top_entries]
+
+    # 2. Fetch Manga details
+    manga_stmt = select(Manga).where(col(Manga.id).in_(manga_ids))
+    if not is_admin:
+        manga_stmt = manga_stmt.where(Manga.is_visible == True)
+
+    mangas = (await session.execute(manga_stmt)).scalars().all()
+
+    # 3. Sort Manga to match the original ranked manga_ids order
+    manga_dict = {m.id: m for m in mangas}
+    sorted_mangas = [manga_dict[mid] for mid in manga_ids if mid in manga_dict]
+
+    data = [MangaRead.model_validate(m) for m in sorted_mangas]
+    if data:
+        _ranking_cache[cache_key] = data
+    return data
+
+
 @router.get("/{manga_id}", response_model=MangaDetail)
-async def get_manga(manga_id: str, session: DBSession, user: OptionalUser):
+async def get_manga(manga_id: str, request: Request, session: DBSession, user: OptionalUser, background_tasks: BackgroundTasks):
     """Public manga detail with chapters list."""
     manga = await session.get(Manga, manga_id)
     if not manga:
@@ -113,18 +199,20 @@ async def get_manga(manga_id: str, session: DBSession, user: OptionalUser):
         unlock_stmt = select(Transaction.chapter_id).where(
             Transaction.user_id == user.id,
             Transaction.type == TransactionType.CHAPTER_UNLOCK,
-            Transaction.chapter_id.in_(chapter_ids)
+            col(Transaction.chapter_id).in_(chapter_ids)
         )
         unlocked_ids = set((await session.execute(unlock_stmt)).scalars().all())
         for ch in detail.chapters:
             if ch.id in unlocked_ids:
                 ch.is_unlocked = True
 
+    client_ip = request.client.host if request.client else "unknown"
+    background_tasks.add_task(record_manga_view_task, manga.id, client_ip)
     return detail
 
 
 @router.get("/slug/{slug}", response_model=MangaDetail)
-async def get_manga_by_slug(slug: str, session: DBSession, user: OptionalUser):
+async def get_manga_by_slug(slug: str, request: Request, session: DBSession, user: OptionalUser, background_tasks: BackgroundTasks):
     """Public manga detail by slug."""
     stmt = select(Manga).where(Manga.slug == slug)
     result = await session.execute(stmt)
@@ -146,13 +234,15 @@ async def get_manga_by_slug(slug: str, session: DBSession, user: OptionalUser):
         unlock_stmt = select(Transaction.chapter_id).where(
             Transaction.user_id == user.id,
             Transaction.type == TransactionType.CHAPTER_UNLOCK,
-            Transaction.chapter_id.in_(chapter_ids)
+            col(Transaction.chapter_id).in_(chapter_ids)
         )
         unlocked_ids = set((await session.execute(unlock_stmt)).scalars().all())
         for ch in detail.chapters:
             if ch.id in unlocked_ids:
                 ch.is_unlocked = True
 
+    client_ip = request.client.host if request.client else "unknown"
+    background_tasks.add_task(record_manga_view_task, manga.id, client_ip)
     return detail
 
 

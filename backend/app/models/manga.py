@@ -61,6 +61,10 @@ class Manga(SQLModel, table=True):
     is_featured: bool = Field(default=False, index=True)
     is_visible: bool = Field(default=True, index=True)
     total_views: int = Field(default=0, ge=0)
+    last_chapter_updated_at: Optional[datetime] = Field(
+        default=None,
+        index=True,
+    )
 
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(

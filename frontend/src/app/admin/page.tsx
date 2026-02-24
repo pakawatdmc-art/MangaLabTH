@@ -76,6 +76,7 @@ export default function AdminDashboard() {
       value: stats ? formatNumber(stats.total_views) : "—",
       icon: Eye,
       color: "text-pink-400",
+      href: "/admin/analytics",
     },
   ];
 
@@ -126,18 +127,40 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Stats grid */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
-        {STATS.map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-xl border border-white/10 bg-surface-100/80 p-4 ring-1 ring-white/5"
-          >
-            <stat.icon className={`mb-2 h-5 w-5 ${stat.color}`} />
-            <p className="text-2xl font-bold text-white">{stat.value}</p>
-            <p className="text-xs text-gray-400">{stat.label}</p>
-          </div>
-        ))}
+        {STATS.map((stat) => {
+          const content = (
+            <>
+              <div className="flex items-center justify-between">
+                <stat.icon className={`mb-2 h-5 w-5 ${stat.color}`} />
+                {stat.href && <ArrowUpRight className="h-4 w-4 text-white/30" />}
+              </div>
+              <p className="text-2xl font-bold text-white">{stat.value}</p>
+              <p className="text-xs text-gray-400">{stat.label}</p>
+            </>
+          );
+
+          if (stat.href) {
+            return (
+              <Link
+                key={stat.label}
+                href={stat.href}
+                className="group rounded-xl border border-white/10 bg-surface-100/80 p-4 ring-1 ring-white/5 transition hover:border-white/20 hover:bg-surface-200"
+              >
+                {content}
+              </Link>
+            );
+          }
+
+          return (
+            <div
+              key={stat.label}
+              className="rounded-xl border border-white/10 bg-surface-100/80 p-4 ring-1 ring-white/5"
+            >
+              {content}
+            </div>
+          );
+        })}
       </div>
 
       {/* Quick actions */}

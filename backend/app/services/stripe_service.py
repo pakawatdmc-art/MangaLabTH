@@ -30,7 +30,7 @@ def create_checkout_session(
 ) -> str:
     """Create a Stripe Checkout Session and return the URL."""
     try:
-        line_item: dict = {}
+        line_item: dict = {}  # type: ignore
         if stripe_price_id:
             line_item = {"price": stripe_price_id, "quantity": 1}
         elif amount_thb > 0:
@@ -54,12 +54,12 @@ def create_checkout_session(
 
         session = stripe.checkout.Session.create(
             mode="payment",
-            line_items=[line_item],
+            line_items=[line_item],  # type: ignore
             success_url=success_url,
             cancel_url=cancel_url,
             metadata=metadata,
         )
-        return session.url
+        return session.url or ""
     except stripe.StripeError as e:
         logger.error("Stripe checkout error: %s", e)
         raise HTTPException(status_code=502, detail="Payment service error")

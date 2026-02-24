@@ -38,10 +38,10 @@ app = FastAPI(
 
 # ── Rate Limiter state ───────────────────────────
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore
 
 # ── Proxy Headers (for Cloud Run rate limiting) ────
-app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])  # type: ignore
 
 # ── CORS (V8: restricted methods/headers) ────────
 app.add_middleware(

@@ -4,3 +4,4 @@ from app.models.manga import *  # noqa: F401, F403
 from app.models.user import *  # noqa: F401, F403
 from app.models.transaction import *  # noqa: F401, F403
 from app.models.setting import *  # noqa: F401, F403
+from app.models.analytics import *  # noqa: F401, F403

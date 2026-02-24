@@ -8,7 +8,7 @@ from typing import List
 
 from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy.exc import IntegrityError
-from sqlmodel import select
+from sqlmodel import select, col
 
 from app.api.deps import AdminUser, CurrentUser, DBSession
 from app.models.manga import Chapter
@@ -36,7 +36,7 @@ async def list_all_transactions(
     """Admin: list all transactions across all users."""
     stmt = (
         select(Transaction)
-        .order_by(Transaction.created_at.desc())
+        .order_by(col(Transaction.created_at).desc())
         .limit(limit)
     )
     results = (await session.execute(stmt)).scalars().all()
@@ -55,7 +55,7 @@ async def my_transactions(
     stmt = (
         select(Transaction)
         .where(Transaction.user_id == user.id)
-        .order_by(Transaction.created_at.desc())
+        .order_by(col(Transaction.created_at).desc())
         .limit(limit)
     )
     results = (await session.execute(stmt)).scalars().all()
