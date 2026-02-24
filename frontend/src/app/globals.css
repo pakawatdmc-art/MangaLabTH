@@ -134,12 +134,17 @@ body:not(.theme-default) .hero-glow {
 }
 
 /* Make opaque sections transparent to reveal the theme background */
+/* Make opaque sections transparent to reveal the theme background */
+body:not(.theme-default) .bg-surface-300,
 body:not(.theme-default) .bg-surface-200,
 body:not(.theme-default) .bg-surface-100,
+body:not(.theme-default) .bg-surface-50,
+body:not(.theme-default) .bg-\[\#1A1A1A\],
+body:not(.theme-default) .bg-\[\#242424\],
 body:not(.theme-default) .bg-gradient-to-br {
-  background-color: rgba(15, 15, 20, 0.5) !important;
+  background-color: rgba(15, 15, 20, 0.65) !important;
   background-image: none !important;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
 }
 
 /* Subtle page-level atmospheric overlay (shows on themed pages) */
@@ -154,6 +159,7 @@ body[class*="theme-"]:not(.theme-default)::after {
     radial-gradient(ellipse at 80% 100%, var(--theme-glow-2), transparent 50%);
   opacity: 0.5;
 }
+
 /* Hide Apple Login for non-Apple devices */
 body.not-apple-device button.cl-socialButtonsBlockButton[data-provider="apple"],
 body.not-apple-device button.cl-socialButtonsBlockButton__apple,
@@ -161,4 +167,3 @@ body.not-apple-device button.cl-socialButtonsIconButton[data-provider="apple"],
 body.not-apple-device button.cl-socialButtonsIconButton__apple {
   display: none !important;
 }
-
