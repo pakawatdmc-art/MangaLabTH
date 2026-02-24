@@ -167,3 +167,26 @@ body.not-apple-device button.cl-socialButtonsIconButton[data-provider="apple"],
 body.not-apple-device button.cl-socialButtonsIconButton__apple {
   display: none !important;
 }
+
+/* ── Custom Social-Only Login Styling ────────────────────── */
+#clerk-social-only .cl-dividerRow,
+#clerk-social-only .cl-form,
+#clerk-social-only .cl-headerSubtitle,
+#clerk-social-only .cl-footerActionText {
+  display: none !important;
+}
+
+#clerk-social-only .cl-socialButtonsBlockButton {
+  padding: 1rem 1.5rem !important;
+  /* Larger hit area */
+  height: auto !important;
+  font-size: 1.1rem !important;
+  /* Larger text */
+  justify-content: center !important;
+}
+
+#clerk-social-only .cl-socialButtonsProviderIcon {
+  width: 1.5rem !important;
+  /* Larger icon */
+  height: 1.5rem !important;
+}

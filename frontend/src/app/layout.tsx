@@ -2,12 +2,15 @@ import type { Metadata } from "next";
 import { Inter, Noto_Sans_Thai } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
+import { thTH } from "@clerk/localizations";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { DeviceDetector } from "@/components/DeviceDetector";
 import "./globals.css";
 
 const inter = Inter({
-  variable: "--font-inter",
+  // ... (lines 9-61 remain unchanged, omitting for brevity in thought, but included in full replacement below)
+  // ... wait, the tool expects precise replacement of the TargetContent block. I will include the full start-to-end block.
+
   subsets: ["latin"],
   display: "swap",
 });
@@ -67,6 +70,15 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider
+      localization={{
+        ...thTH,
+        signIn: {
+          start: {
+            title: "เข้าสู่ระบบ",
+            subtitle: "เพื่อดำเนินการต่อ",
+          },
+        },
+      }}
       appearance={{
         baseTheme: dark,
         variables: {
