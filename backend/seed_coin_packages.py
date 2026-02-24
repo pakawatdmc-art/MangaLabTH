@@ -9,13 +9,50 @@ from sqlmodel import select
 from app.database import async_session_factory
 from app.models.transaction import CoinPackage
 
+# 1. แก้ไขข้อมูลแพ็กเกจตรงนี้ (เอา ID จาก Stripe มาวาง)
 packages_data = [
-    {"name": "แพ็กเกจ 49 เหรียญ", "coins": 49, "price_thb": 49, "sort_order": 1},
-    {"name": "แพ็กเกจ 104 เหรียญ", "coins": 104, "price_thb": 99, "sort_order": 2},
-    {"name": "แพ็กเกจ 157 เหรียญ", "coins": 157, "price_thb": 149, "sort_order": 3},
-    {"name": "แพ็กเกจ 214 เหรียญ", "coins": 214, "price_thb": 199, "sort_order": 4},
-    {"name": "แพ็กเกจ 262 เหรียญ", "coins": 262, "price_thb": 249, "sort_order": 5},
-    {"name": "แพ็กเกจ 549 เหรียญ", "coins": 549, "price_thb": 499, "sort_order": 6},
+    {
+        "name": "แพ็กเกจ 49 เหรียญ",
+        "coins": 49,
+        "price_thb": 49,
+        "stripe_id": "price_1T4NiORzd0PuzM27hCITXi7Z", # เช่น price_1Qxxxx...
+        "sort_order": 1
+    },
+    {
+        "name": "แพ็กเกจ 104 เหรียญ",
+        "coins": 104,
+        "price_thb": 99,
+        "stripe_id": "price_1T4N0KRzd0PuzM27VKFXI4zt",
+        "sort_order": 2
+    },
+    {
+        "name": "แพ็กเกจ 157 เหรียญ",
+        "coins": 157,
+        "price_thb": 149,
+        "stripe_id": "price_1T4N0tRzd0PuzM27Lcdu14DW",
+        "sort_order": 3
+    },
+    {
+        "name": "แพ็กเกจ 214 เหรียญ",
+        "coins": 214,
+        "price_thb": 199,
+        "stripe_id": "price_1T4N1aRzd0PuzM27e3GD3aqB",
+        "sort_order": 4
+    },
+    {
+        "name": "แพ็กเกจ 262 เหรียญ",
+        "coins": 262,
+        "price_thb": 249,
+        "stripe_id": "price_1T4N23Rzd0PuzM27MThpRByX",
+        "sort_order": 5
+    },
+    {
+        "name": "แพ็กเกจ 549 เหรียญ",
+        "coins": 549,
+        "price_thb": 499,
+        "stripe_id": "price_1T4N2VRzd0PuzM27s4ZpYOkK",
+        "sort_order": 6
+    },
 ]
 
 async def seed():
@@ -29,12 +66,11 @@ async def seed():
         
         # Insert new
         for pd in packages_data:
-            mock_stripe_id = f"price_PLACEHOLDER_{pd['price_thb'] // 100}"
             pkg = CoinPackage(
                 name=pd["name"],
                 coins=pd["coins"],
                 price_thb=pd["price_thb"], # save satang
-                stripe_price_id=mock_stripe_id,
+                stripe_price_id=pd["stripe_id"],
                 sort_order=pd["sort_order"],
                 is_active=True
             )
