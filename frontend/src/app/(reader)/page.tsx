@@ -45,7 +45,7 @@ export default async function HomePage({ searchParams }: Props) {
   return (
     <div className="min-h-screen bg-surface-300">
       {/* Hero */}
-      <section className="relative overflow-hidden py-16 sm:py-24">
+      <section className="relative overflow-hidden py-8 sm:py-12">
         {/* Subtle glow instead of heavy radial gradient */}
         <div className="absolute left-1/2 top-0 -ml-[50%] h-[500px] w-full max-w-[1000px] bg-[radial-gradient(ellipse_at_top,rgba(212,175,55,0.08),transparent_50%)]" />
 
@@ -75,10 +75,10 @@ export default async function HomePage({ searchParams }: Props) {
           </form>
 
           {/* SEO Text Component - Elegant and subtle */}
-          <div className="mx-auto mt-12 max-w-3xl">
+          <div className="mx-auto mt-6 max-w-3xl">
             <p className="text-[11px] leading-relaxed text-gray-500/50 balance-text font-medium">
-              mangalab-th แหล่งอ่านมังงะฟรีที่มาพร้อมระบบที่ทันสมัยที่สุดประจำปี 2026 เราคัดสรร Manga ใหม่ล่าสุดและมังงะยอดนิยมสูงสุดทั้งประจำสัปดาห์และประจำเดือนมาไว้ให้ครบถ้วน คุณสามารถอ่านมังงะฟรีได้ทุกเรื่อง เพียงแค่มีมือถือก็สนุกกับการ์ตูนออนไลน์ได้ทันที
-              ที่ mangalab-th เรารวบรวมมังงะจากทุกมุมโลกไว้ให้แล้ว ไม่ว่าจะเป็นมังงะแปลไทย จีน เกาหลี หรือญี่ปุ่น รวมถึงการ์ตูนเรื่องดังจาก Webtoon, Kakao และ Comico ครบจบทุกแพลตฟอร์มในเว็บเดียว
+              "mangalab-th เว็บมังงะระบบทันสมัยปี 2026 ที่ คัดสรรเฉพาะเรื่องฮิตและมาแรงที่สุดเท่านั้น! เราไม่เน้นลงเยอะแต่เน้นคุณภาพ เพื่อให้คุณได้อ่านมังงะตัวท็อปจาก Webtoon, Kakao, Comico และมังงะจีน เกาหลี ญี่ปุ่น แบบไม่ตกเทรนด์
+              มั่นใจได้กับงานแปลที่ Admin แปลเอง ทุกเรื่อง อัปเดตตอนใหม่ล่าสุดก่อนใครเพื่อน ในราคาที่คุ้มค่า เหรียญไม่เกิน 3 เหรียญแน่นอน และเพราะเรา เน้นเอาใจผู้บริโภคเป็นหลัก หากมีเรื่องดังเรื่องไหนที่คุณอยากอ่าน ทักบอกแอดมินผ่าน LINE OA Official ได้เลย เรื่องไหนคนขอมาเยอะ เราจัดให้ที่ mangalab-th"
             </p>
           </div>
         </div>
@@ -86,7 +86,7 @@ export default async function HomePage({ searchParams }: Props) {
 
       {/* Latest Updates Section */}
       {!params.q && page === 1 && updatedManga.items.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 pt-10 sm:px-6">
+        <section className="mx-auto max-w-7xl px-4 pt-4 sm:pt-6 sm:px-6">
           <div className="overflow-hidden rounded-[2rem] bg-surface-200/40 shadow-2xl ring-1 ring-white/5 backdrop-blur-md">
             {/* Panel Header */}
             <div className="flex items-center justify-between border-b border-white/5 bg-transparent px-6 py-5">
@@ -107,7 +107,7 @@ export default async function HomePage({ searchParams }: Props) {
       )}
 
       {/* Split Layout Container */}
-      <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-10 sm:px-6 lg:flex-row">
+      <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:flex-row">
 
         {/* Main Left Column (All Manga) */}
         <div className="flex w-full min-w-0 flex-1 flex-col">
