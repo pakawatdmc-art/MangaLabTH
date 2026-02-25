@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import {
@@ -8,7 +8,6 @@ import {
   Coins,
   History,
   Loader2,
-  Sparkles,
   TrendingUp,
   XCircle,
 } from "lucide-react";
