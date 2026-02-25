@@ -8,9 +8,7 @@ import { DeviceDetector } from "@/components/DeviceDetector";
 import "./globals.css";
 
 const inter = Inter({
-  // ... (lines 9-61 remain unchanged, omitting for brevity in thought, but included in full replacement below)
-  // ... wait, the tool expects precise replacement of the TargetContent block. I will include the full start-to-end block.
-
+  variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
 });
