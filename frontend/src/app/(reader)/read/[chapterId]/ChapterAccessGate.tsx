@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { ArrowLeft, Coins, Loader2, Lock, LogIn, Sparkles } from "lucide-react";
-import { unlockChapter } from "@/lib/api";
+import { getMe, unlockChapter } from "@/lib/api";
 import { formatChapterNumber } from "@/lib/utils";
 
 interface Props {
@@ -29,6 +29,19 @@ export default function ChapterAccessGate({
   const { getToken, isSignedIn } = useAuth();
   const [unlocking, setUnlocking] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [balance, setBalance] = useState<number | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = await getToken();
+        if (token) {
+          const me = await getMe(token);
+          setBalance(me.coin_balance);
+        }
+      } catch { }
+    })();
+  }, [getToken]);
 
   const signInHref = useMemo(
     () => `/sign-in?redirect_url=${encodeURIComponent(`/read/${chapterId}`)}`,
@@ -45,6 +58,9 @@ export default function ChapterAccessGate({
         return;
       }
       await unlockChapter(chapterId, token);
+
+      // Update local balance
+      setBalance(prev => prev !== null ? prev - coinPrice : null);
 
       // Notify Navbar to update balance
       window.dispatchEvent(new Event("balance-update"));
@@ -99,6 +115,18 @@ export default function ChapterAccessGate({
               ปลดล็อกเพื่ออ่านเต็มตอนในราคา
               <span className="ml-1 font-semibold text-gold">{coinPrice} เหรียญ</span>
             </p>
+            {balance !== null && (
+              <p className="mt-2 flex items-center gap-1.5 text-sm text-gray-300">
+                <Coins className="h-3.5 w-3.5 text-gold" />
+                เหรียญคงเหลือ:
+                <span className={`font-semibold ${balance >= coinPrice ? "text-green-400" : "text-red-400"}`}>
+                  {balance} เหรียญ
+                </span>
+                {balance < coinPrice && (
+                  <span className="text-xs text-red-400">(ไม่เพียงพอ)</span>
+                )}
+              </p>
+            )}
           </div>
 
           {error && (

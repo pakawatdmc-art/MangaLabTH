@@ -85,9 +85,17 @@ export default function AdminMangaPage() {
         coverUrl = await uploadCoverImage(selectedFile, token);
       }
 
+      const title = (form.get("title") as string).trim();
+      const slug = title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
+
       const data: Partial<Manga> = {
-        title: form.get("title") as string,
-        slug: form.get("slug") as string,
+        title,
+        slug,
         author: (form.get("author") as string) || "",
         artist: (form.get("artist") as string) || "",
         category: (form.get("category") as string) as MangaCategory || "action",
@@ -206,21 +214,12 @@ export default function AdminMangaPage() {
                 placeholder="ชื่อมังงะ"
               />
             </div>
-            <div>
-              <label className="mb-1 block text-xs text-gray-400">Slug *</label>
-              <input
-                type="text"
-                name="slug"
-                required
-                defaultValue={editingManga?.slug || ""}
-                className="h-10 w-full rounded-lg border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:outline-none"
-                placeholder="my-manga-slug"
-              />
-            </div>
+
             <div>
               <label className="mb-1 block text-xs text-gray-400">ผู้แต่ง</label>
               <input
                 type="text"
+                name="author"
                 defaultValue={editingManga?.author || ""}
                 className="h-10 w-full rounded-lg border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:outline-none"
               />
@@ -229,6 +228,7 @@ export default function AdminMangaPage() {
               <label className="mb-1 block text-xs text-gray-400">ผู้วาด</label>
               <input
                 type="text"
+                name="artist"
                 defaultValue={editingManga?.artist || ""}
                 className="h-10 w-full rounded-lg border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:outline-none"
               />

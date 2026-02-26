@@ -200,7 +200,8 @@ export function ChapterImageManager({
             if (pendingUploads.length > 0) {
                 const fileInfos = pendingUploads.map((item, idx) => {
                     const ext = item.file!.name.split(".").pop() || "webp";
-                    const key = `chapters/${chapter.id}/upl_${Date.now()}_${idx}.${ext}`;
+                    const chNum = Number.isInteger(chapter.number) ? String(chapter.number) : chapter.number.toFixed(1);
+                    const key = `manga/${manga.slug}/chapters/${chNum}/page-${String(idx + 1).padStart(3, "0")}.${ext}`;
                     return { key, content_type: item.file!.type || "image/webp" };
                 });
 

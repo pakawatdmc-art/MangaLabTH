@@ -178,10 +178,12 @@ async def get_manga_ranking(
     return data
 
 
-@router.get("/{manga_id}", response_model=MangaDetail)
-async def get_manga(manga_id: str, request: Request, session: DBSession, user: OptionalUser, background_tasks: BackgroundTasks):
-    """Public manga detail with chapters list."""
-    manga = await session.get(Manga, manga_id)
+@router.get("/slug/{slug}", response_model=MangaDetail)
+async def get_manga_by_slug(slug: str, request: Request, session: DBSession, user: OptionalUser, background_tasks: BackgroundTasks):
+    """Public manga detail by slug."""
+    stmt = select(Manga).where(Manga.slug == slug)
+    result = await session.execute(stmt)
+    manga = result.scalar_one_or_none()
     if not manga:
         raise HTTPException(status_code=404, detail="Manga not found")
 
@@ -211,12 +213,10 @@ async def get_manga(manga_id: str, request: Request, session: DBSession, user: O
     return detail
 
 
-@router.get("/slug/{slug}", response_model=MangaDetail)
-async def get_manga_by_slug(slug: str, request: Request, session: DBSession, user: OptionalUser, background_tasks: BackgroundTasks):
-    """Public manga detail by slug."""
-    stmt = select(Manga).where(Manga.slug == slug)
-    result = await session.execute(stmt)
-    manga = result.scalar_one_or_none()
+@router.get("/{manga_id}", response_model=MangaDetail)
+async def get_manga(manga_id: str, request: Request, session: DBSession, user: OptionalUser, background_tasks: BackgroundTasks):
+    """Public manga detail with chapters list."""
+    manga = await session.get(Manga, manga_id)
     if not manga:
         raise HTTPException(status_code=404, detail="Manga not found")
 
@@ -328,6 +328,12 @@ async def delete_manga(
                 key = _to_key(page.image_url)
                 if key:
                     r2_keys.append(key)
+
+    # Delete analytics views first to satisfy FK constraint
+    views_stmt = select(DailyMangaView).where(DailyMangaView.manga_id == manga_id)
+    views_result = await session.execute(views_stmt)
+    for view in views_result.scalars().all():
+        await session.delete(view)
 
     await session.delete(manga)
     await session.commit()
