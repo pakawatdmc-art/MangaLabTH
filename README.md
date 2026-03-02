@@ -16,7 +16,7 @@ mangaFactory/
 |-------|------------|---------|
 | Frontend | Next.js 16 (App Router), Tailwind CSS, Clerk | **Vercel** |
 | Backend | FastAPI, SQLModel, Pydantic v2, Alembic | **Google Cloud Run (Docker)** |
-| Database | Neon PostgreSQL (Serverless) | **Neon** |
+| Database | Supabase PostgreSQL (IPv4 Session Pooler) | **Supabase** |
 | Storage | Cloudflare R2 (S3-compatible, boto3) | **Cloudflare R2** |
 | Payments | Stripe | Stripe |
 | Auth | Clerk (JWT + RBAC) | Clerk |
@@ -32,7 +32,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 cp .env.example .env
-# Edit .env — fill in Neon, Clerk, R2, Stripe credentials
+# Edit .env — fill in Supabase, Clerk, R2, Stripe credentials
 
 alembic upgrade head
 uvicorn app.main:app --reload --port 8000
@@ -95,7 +95,7 @@ Google Cloud Run จะนำ `Dockerfile` ไปสร้าง Image และ
 - **Dashboard** — Stats overview
 - **Manga CRUD** — Create, edit, delete manga
 - **Chapter CRUD** — Manage chapters and pricing
-- **Upload** — Batch image upload to R2 (presigned URLs) พร้อมระบบ Parallel Upload
+- **Upload** — อัพโหลดหน้าปกและภาพเนื้อเรื่อง พร้อมแปลงนามสกุลเป็น WebP ย่อส่วนอัตโนมัติก่อนส่งตรงขึ้น R2 (Parallel Upload)
 - **Users** — User management, coin grants
 - **Transactions** — Revenue monitoring
 
@@ -105,7 +105,7 @@ Google Cloud Run จะนำ `Dockerfile` ไปสร้าง Image และ
 
 | Variable | Description |
 |----------|-------------|
-| `DATABASE_URL` | Neon PostgreSQL connection string |
+| `DATABASE_URL` | Supabase PostgreSQL connection string |
 | `CLERK_PUBLISHABLE_KEY` | Clerk publishable key |
 | `CLERK_SECRET_KEY` | Clerk secret key |
 | `CLERK_JWKS_URL` | Clerk JWKS endpoint |

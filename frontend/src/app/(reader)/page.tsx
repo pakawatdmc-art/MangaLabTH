@@ -5,8 +5,7 @@ import MangaCard from "@/components/MangaCard";
 import UpdateMangaCard from "@/components/UpdateMangaCard";
 import TopMangaRanking from "@/components/TopMangaRanking";
 
-export const dynamic = "force-dynamic";
-
+// Removed force-dynamic to allow ISR and page caching
 interface Props {
   searchParams: Promise<{
     page?: string;

@@ -18,7 +18,8 @@ const nextConfig: NextConfig = {
         pathname: "/**",
       },
     ],
-    unoptimized: false, // Enable Vercel Image Optimization
+    // V13: Bypass Vercel Image Optimization to leverage zero egress from R2
+    unoptimized: true,
   },
 };
 

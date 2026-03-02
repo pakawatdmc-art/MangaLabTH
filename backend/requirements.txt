@@ -27,3 +27,4 @@ pydantic[email]==2.10.4
 pydantic-settings==2.7.1
 python-multipart==0.0.20
 cachetools==6.2.6
+Pillow==11.3.0

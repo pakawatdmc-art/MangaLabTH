@@ -11,6 +11,7 @@ from slowapi.util import get_remote_address
 
 from app.api.deps import AdminUser
 from app.services.storage import generate_presigned_upload_url, upload_file_to_r2
+from app.services.image import process_image_to_webp
 
 router = APIRouter(prefix="/upload", tags=["Upload"])
 
@@ -137,9 +138,62 @@ async def upload_cover(
         raise HTTPException(
             status_code=400, detail="ไฟล์ไม่ใช่รูปภาพที่ถูกต้อง")
 
-    # Generate unique key
-    safe_name = re.sub(r"[^a-zA-Z0-9._-]", "_", file.filename or "cover.png")
+    # --- Optimization: Convert to WebP ---
+    try:
+        contents, content_type = process_image_to_webp(contents)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"เกิดข้อผิดพลาดในการประมวลผลรูปภาพ: {str(e)}")
+
+    # Generate unique key (always .webp now)
+    safe_name = re.sub(r"[^a-zA-Z0-9._-]", "_", file.filename or "cover")
+    # Strip extension if any and add .webp
+    safe_name = safe_name.rsplit(".", 1)[0] + ".webp"
     key = f"covers/{int(time.time())}-{safe_name}"
 
-    public_url = upload_file_to_r2(key, contents, file.content_type)
+    public_url = upload_file_to_r2(key, contents, content_type)
     return CoverUploadResponse(public_url=public_url, key=key)
+
+
+class ChapterUploadResponse(BaseModel):
+    public_url: str
+    key: str
+
+
+@router.post("/chapter_page", response_model=ChapterUploadResponse)
+@limiter.limit("60/minute")
+async def upload_chapter_page(
+    request: Request,
+    admin: AdminUser,
+    key: str = Form(...),
+    file: UploadFile = File(...),
+):
+    """Admin: upload a chapter page, convert to WebP, and store directly."""
+    _validate_storage_key(key)
+    
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(
+            status_code=400, detail="ไฟล์ต้องเป็นรูปภาพเท่านั้น")
+
+    # Read file content (limit 15 MB since chapter pages can be long vertically)
+    contents = await file.read()
+    if len(contents) > 15 * 1024 * 1024:
+        raise HTTPException(
+            status_code=400, detail="ไฟล์ขนาดใหญ่เกินไป (สูงสุด 15 MB)")
+
+    if not _validate_image_bytes(contents):
+        raise HTTPException(
+            status_code=400, detail="ไฟล์ไม่ใช่รูปภาพที่ถูกต้อง")
+
+    # Optimization: Convert to WebP
+    try:
+        contents, content_type = process_image_to_webp(contents)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"เกิดข้อผิดพลาดในการประมวลผลรูปภาพ: {str(e)}")
+
+    # Force the key extension to be .webp
+    final_key = key.rsplit(".", 1)[0] + ".webp"
+
+    public_url = upload_file_to_r2(final_key, contents, content_type)
+    return ChapterUploadResponse(public_url=public_url, key=final_key)

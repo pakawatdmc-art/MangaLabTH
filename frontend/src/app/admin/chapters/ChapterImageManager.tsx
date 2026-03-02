@@ -18,7 +18,7 @@ import {
 import { useAuth } from "@clerk/nextjs";
 import type { Chapter, Manga } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { getChapter, getPresignedUploadUrls, replacePages } from "@/lib/api";
+import { getChapter, uploadChapterPage, replacePages } from "@/lib/api";
 
 interface FileItem {
     id: string; // Unique ID for tracking mapping
@@ -198,15 +198,6 @@ export function ChapterImageManager({
             const updatedFiles = [...files];
 
             if (pendingUploads.length > 0) {
-                const fileInfos = pendingUploads.map((item, idx) => {
-                    const ext = item.file!.name.split(".").pop() || "webp";
-                    const chNum = Number.isInteger(chapter.number) ? String(chapter.number) : chapter.number.toFixed(1);
-                    const key = `manga/${manga.slug}/chapters/${chNum}/page-${String(idx + 1).padStart(3, "0")}.${ext}`;
-                    return { key, content_type: item.file!.type || "image/webp" };
-                });
-
-                const presigned = await getPresignedUploadUrls(fileInfos, currentToken);
-
                 const CONCURRENCY_LIMIT = 5;
                 for (let i = 0; i < pendingUploads.length; i += CONCURRENCY_LIMIT) {
                     const batch = pendingUploads.slice(i, i + CONCURRENCY_LIMIT);
@@ -218,24 +209,22 @@ export function ChapterImageManager({
                     });
                     setFiles([...updatedFiles]);
 
-                    // Upload in parallel
-                    await Promise.all(batch.map(async (pendingItem, batchIdx) => {
+                    // Upload in parallel via new backend proxy endpoint (auto-converts to WebP)
+                    await Promise.all(batch.map(async (pendingItem) => {
                         const globalIdx = updatedFiles.findIndex(f => f.id === pendingItem.id);
-                        const presignedIdx = i + batchIdx;
+                        const pageNumber = globalIdx + 1;
+
+                        const ext = pendingItem.file!.name.split(".").pop() || "webp";
+                        const chNum = Number.isInteger(chapter.number) ? String(chapter.number) : chapter.number.toFixed(1);
+                        const key = `manga/${manga.slug}/chapters/${chNum}/page-${String(pageNumber).padStart(3, "0")}.${ext}`;
 
                         try {
-                            const res = await fetch(presigned[presignedIdx].upload_url, {
-                                method: "PUT",
-                                body: pendingItem.file,
-                                headers: { "Content-Type": pendingItem.file!.type || "image/webp" },
-                            });
-
-                            if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
+                            const res = await uploadChapterPage(pendingItem.file!, key, currentToken);
 
                             updatedFiles[globalIdx] = {
                                 ...updatedFiles[globalIdx],
                                 status: "done",
-                                publicUrl: presigned[presignedIdx].public_url,
+                                publicUrl: res.public_url,
                             };
                         } catch {
                             updatedFiles[globalIdx] = { ...updatedFiles[globalIdx], status: "error" };

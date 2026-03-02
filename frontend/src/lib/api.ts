@@ -70,13 +70,17 @@ export async function getMangaList(params?: {
   if (params?.q) sp.set("q", params.q);
   if (params?.sort) sp.set("sort", params.sort);
   const qs = sp.toString();
-  return fetcher<PaginatedResponse<Manga>>(`/manga${qs ? `?${qs}` : ""}`, { token });
+  return fetcher<PaginatedResponse<Manga>>(`/manga${qs ? `?${qs}` : ""}`, {
+    token,
+    // V13: Enable ISR (Incremental Static Regeneration) caching for 60 seconds
+    next: { revalidate: 60, tags: ["manga-list"] }
+  });
 }
 
 export async function getManga(id: string, token?: string) {
   return fetcher<MangaDetail>(
     `/manga/${id}`,
-    token ? { token, cache: "no-store", next: { revalidate: 0 } } : undefined
+    token ? { token, cache: "no-store", next: { revalidate: 0 } } : { next: { revalidate: 60, tags: [`manga-${id}`] } }
   );
 }
 
@@ -241,7 +245,9 @@ export async function getAnalyticsViews(token: string, days = 30) {
 }
 
 export async function getTopManga(period: "weekly" | "monthly" | "all_time", limit = 10) {
-  return fetcher<Manga[]>(`/manga/ranking/${period}?limit=${limit}`);
+  return fetcher<Manga[]>(`/manga/ranking/${period}?limit=${limit}`, {
+    next: { revalidate: 300, tags: ["manga-ranking"] }
+  });
 }
 
 export async function getPackages() {
@@ -287,6 +293,27 @@ export async function uploadCoverImage(file: File, token: string): Promise<strin
 
   const data = await res.json();
   return data.public_url;
+}
+
+export async function uploadChapterPage(file: File, key: string, token: string): Promise<{ public_url: string; key: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("key", key);
+
+  const res = await fetch(`${API}/upload/chapter_page`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail || "อัปโหลดภาพตอนล้มเหลว");
+  }
+
+  return res.json();
 }
 
 export async function getPresignedUploadUrls(
