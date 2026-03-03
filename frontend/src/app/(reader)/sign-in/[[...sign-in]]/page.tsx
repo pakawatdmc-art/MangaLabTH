@@ -32,7 +32,7 @@ export default function SignInPage() {
           </div>
         ) : (
           <div className="relative">
-            <div id="clerk-social-only" className="relative flex justify-center w-full">
+            <div className="relative flex justify-center w-full">
               <SignIn
                 appearance={{
                   elements: {
