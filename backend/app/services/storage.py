@@ -11,10 +11,11 @@ Environment variables required:
     R2_PUBLIC_URL         — Public URL prefix, e.g. https://pub-xxx.r2.dev
 """
 
-from typing import List
+from typing import List, Optional
 
 import boto3  # type: ignore
 from botocore.config import Config as BotoConfig  # type: ignore
+from fastapi import Request
 
 from app.config import get_settings
 
@@ -39,6 +40,37 @@ def _get_r2_client():
             ),
         )
     return _client
+
+
+# ── Shared Utilities ─────────────────────────────
+
+
+def r2_url_to_key(url: str) -> Optional[str]:
+    """Extract the R2 object key from a public URL.
+
+    Example:
+        "https://pub-xxx.r2.dev/covers/abc.webp" → "covers/abc.webp"
+
+    Returns None if the URL does not contain the expected ".r2.dev/" marker.
+    """
+    parts = url.split(".r2.dev/", 1)
+    return parts[1] if len(parts) == 2 else None
+
+
+def get_client_ip(request: Request) -> str:
+    """Get the real client IP, respecting X-Forwarded-For behind load balancers.
+
+    Cloud Run (and most reverse proxies) set X-Forwarded-For.
+    The leftmost IP is the original client.
+    """
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        # X-Forwarded-For: client, proxy1, proxy2
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
+# ── R2 Operations ────────────────────────────────
 
 
 def generate_presigned_upload_url(

@@ -7,21 +7,13 @@ from fastapi import APIRouter, HTTPException
 from sqlmodel import select, col
 
 from app.api.deps import AdminUser, CurrentUser, DBSession, get_clerk_profile
+from app.api.deps import _normalize_email, _is_primary_admin_email
 from app.config import get_settings
 from app.models.user import User, UserRole
 from app.schemas.user import UserAdminUpdate, UserRead, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["Users"])
 settings = get_settings()
-
-
-def _normalize_email(email: str) -> str:
-    return email.strip().lower()
-
-
-def _is_primary_admin_email(email: str) -> bool:
-    primary = _normalize_email(settings.PRIMARY_ADMIN_EMAIL)
-    return bool(primary) and _normalize_email(email) == primary
 
 
 def _to_user_read(user: User, profile: Optional[Dict[str, str]] = None) -> UserRead:

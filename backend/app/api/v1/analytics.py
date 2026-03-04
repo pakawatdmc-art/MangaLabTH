@@ -70,13 +70,20 @@ async def get_views_analytics(
     ).where(DailyMangaView.view_date >= year_start)
     this_year_views = (await session.execute(year_stmt)).scalar_one()
 
+    # All-time total views (from Manga aggregate, not limited by date)
+    from app.models.manga import Manga
+    all_time_stmt: Any = select(
+        func.coalesce(func.sum(Manga.total_views), 0)
+    )
+    all_time_views = (await session.execute(all_time_stmt)).scalar_one()
+
     return {
         "summary": {
             "today": today_views,
             "this_week": this_week_views,
             "this_month": this_month_views,
             "this_year": this_year_views,
-            "all_time": this_year_views,  # simplified if total views required
+            "all_time": all_time_views,
         },
         "chart_data": chart_data
     }

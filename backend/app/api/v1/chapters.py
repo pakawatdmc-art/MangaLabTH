@@ -11,7 +11,7 @@ from app.services.analytics import record_manga_view_task
 from app.api.deps import AdminUser, DBSession, OptionalUser
 from app.models.manga import Chapter, Manga, Page
 from app.models.transaction import Transaction, TransactionType
-from app.services.storage import delete_objects
+from app.services.storage import delete_objects, r2_url_to_key, get_client_ip
 from app.services.revalidate import revalidate_paths
 from app.schemas.manga import (
     ChapterCreate,
@@ -114,9 +114,8 @@ async def get_chapter(
 
     detail.pages.sort(key=lambda p: p.number)
 
-    client_ip = request.client.host if request.client else "unknown"
     background_tasks.add_task(record_manga_view_task,
-                              chapter.manga_id, client_ip)
+                              chapter.manga_id, get_client_ip(request))
 
     return detail
 
@@ -195,10 +194,9 @@ async def delete_chapter(
     r2_keys = []
     for page in (chapter.pages or []):
         if page.image_url:
-            # Extract key from public URL: https://pub-xxx.r2.dev/<key>
-            parts = page.image_url.split(".r2.dev/", 1)
-            if len(parts) == 2:
-                r2_keys.append(parts[1])
+            key = r2_url_to_key(page.image_url)
+            if key:
+                r2_keys.append(key)
 
     await session.delete(chapter)
     await session.commit()
@@ -255,16 +253,12 @@ async def replace_pages(
         await session.refresh(pg)
 
     # Cleanup old files that are no longer referenced by new pages (best-effort)
-    def _to_key(url: str) -> Optional[str]:
-        parts = url.split(".r2.dev/", 1)
-        return parts[1] if len(parts) == 2 else None
-
     removable_keys = []
     kept_urls = set(new_urls)
     for url in old_urls:
         if url in kept_urls:
             continue
-        key = _to_key(url)
+        key = r2_url_to_key(url)
         if key:
             removable_keys.append(key)
 

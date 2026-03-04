@@ -133,6 +133,116 @@ Google Cloud Run จะนำ `Dockerfile` ไปสร้าง Image และ
 | `NEXT_PUBLIC_R2_PUBLIC_URL` | R2 public bucket URL |
 | `REVALIDATION_SECRET` | รหัสผ่านลับสำหรับยืนยันรับคำสั่ง เคลียร์ Cache |
 
+## API Reference
+
+<details>
+<summary>คลิกเพื่อเปิดดู — <b>34 Endpoints</b></summary>
+
+### Manga
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/v1/manga` | Optional | List manga (paginated, filtered by category/status/search) |
+| `GET` | `/v1/manga/ranking/{period}` | Optional | Manga ranking (weekly/monthly/all_time) |
+| `GET` | `/v1/manga/slug/{slug}` | Optional | Manga detail by slug (records view) |
+| `GET` | `/v1/manga/{id}` | Optional | Manga detail by ID (records view) |
+| `POST` | `/v1/manga` | Admin | Create manga |
+| `PATCH` | `/v1/manga/{id}` | Admin | Update manga (auto-deletes old cover from R2) |
+| `DELETE` | `/v1/manga/{id}` | Admin | Delete manga + all chapters/pages from R2 |
+
+### Chapters & Pages
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/v1/chapters` | Admin | List all chapters across all manga |
+| `GET` | `/v1/chapters/manga/{id}` | Optional | List chapters for a specific manga |
+| `GET` | `/v1/chapters/{id}` | Optional | Chapter detail with pages (coin-gated) |
+| `POST` | `/v1/chapters/manga/{id}` | Admin | Create chapter |
+| `PATCH` | `/v1/chapters/{id}` | Admin | Update chapter |
+| `DELETE` | `/v1/chapters/{id}` | Admin | Delete chapter + pages from R2 |
+| `PUT` | `/v1/chapters/{id}/pages` | Admin | Replace all pages (reorder/re-upload) |
+| `POST` | `/v1/chapters/{id}/pages` | Admin | Add pages to chapter |
+
+### Upload (R2)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `POST` | `/v1/upload/presigned` | Admin | Generate presigned R2 PUT URLs |
+| `POST` | `/v1/upload/cover` | Admin | Upload cover (proxy + WebP auto-convert) |
+| `POST` | `/v1/upload/chapter_page` | Admin | Upload chapter page (proxy + WebP) |
+
+### Users
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/v1/users/me` | User | Current user profile |
+| `PATCH` | `/v1/users/me` | User | Update own profile |
+| `GET` | `/v1/users` | Admin | List all users |
+| `PATCH` | `/v1/users/{id}` | Admin | Update user role/balance |
+| `GET` | `/v1/users/stats` | Admin | Dashboard stats |
+
+### Transactions (Coin Economy)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/v1/transactions/me` | User | My transaction history |
+| `GET` | `/v1/transactions` | Admin | All transactions |
+| `POST` | `/v1/transactions/unlock` | User | Unlock chapter (atomic coin deduction) |
+| `POST` | `/v1/transactions/admin/grant` | Admin | Grant coins to user |
+
+### Payments (Stripe)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/v1/payments/packages` | Public | List available coin packages |
+| `POST` | `/v1/payments/checkout` | User | Create Stripe Checkout session |
+| `POST` | `/v1/payments/webhook` | Stripe | Webhook handler (idempotent) |
+| `POST` | `/v1/payments/confirm` | User | Confirm checkout (webhook fallback) |
+
+### Settings & Analytics
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/v1/analytics/views` | Admin | View analytics chart data + summary |
+| `GET` | `/v1/settings/theme` | Public | Get current global theme |
+| `POST` | `/v1/settings/theme` | Admin | Set global theme |
+
+</details>
+
+## Security Features
+
+- **Authentication:** Clerk JWT (RS256 + JWKS rotation)
+- **RBAC:** Reader / Admin roles with `require_admin` dependency
+- **Rate Limiting:** slowapi on upload and payment endpoints
+- **Upload Security:**
+  - V5: Path traversal prevention (regex + null byte + `..` check)
+  - V10: Magic byte validation (verifies actual file header, not just Content-Type)
+  - WebP auto-conversion via Pillow
+- **Payments:** Atomic coin mutations with `SELECT ... FOR UPDATE` (prevents double-spend)
+- **Stripe:** Idempotent webhook processing (checks `stripe_session_id` + `payment_intent_id`)
+- **IP Detection:** X-Forwarded-For aware (for accurate analytics behind Cloud Run LB)
+
+## Database Schema
+
+```
+mangas ──< chapters ──< pages
+users ──< transactions >── chapters
+mangas ──< daily_manga_views
+coin_packages
+system_settings
+```
+
+| Table | Description |
+|-------|-------------|
+| `mangas` | Manga metadata (title, slug, category, cover, views) |
+| `chapters` | Chapter data (number, coin_price, is_free) |
+| `pages` | Page images (R2 URLs, dimensions, order) |
+| `users` | User profiles linked to Clerk (roles, coin balance) |
+| `transactions` | Immutable ledger for all coin movements |
+| `coin_packages` | Predefined Stripe purchase packages |
+| `daily_manga_views` | Per-manga per-day view aggregation |
+| `system_settings` | Key-value store (global theme) |
+
 ## License
 
 MIT

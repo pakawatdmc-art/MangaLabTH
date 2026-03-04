@@ -37,8 +37,8 @@ export default async function HomePage({ searchParams }: Props) {
       q: params.q,
       sort: params.sort,
     });
-  } catch {
-    // API not available — show empty state
+  } catch (err) {
+    console.error("Failed to fetch manga list:", err);
   }
 
   return (
@@ -163,10 +163,7 @@ export default async function HomePage({ searchParams }: Props) {
                 <div className="py-24 text-center">
                   <p className="text-lg text-gray-500 font-medium">ไม่มีมังงะในหมวดหมู่นี้</p>
                   <p className="mt-2 text-sm text-gray-600">
-                    เพิ่มมังงะเรื่องใหม่ได้ที่{" "}
-                    <Link href="/admin/manga" className="text-gold font-medium hover:underline">
-                      ระบบจัดการ
-                    </Link>
+                    ยังไม่มีเรื่องในหมวดหมู่นี้ ลองค้นหาหมวดอื่นดูนะ
                   </p>
                 </div>
               )}

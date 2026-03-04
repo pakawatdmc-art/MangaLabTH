@@ -8,12 +8,12 @@ def process_image_to_webp(image_bytes: bytes, quality: int = 80) -> tuple[bytes,
     """
     img = Image.open(io.BytesIO(image_bytes))
     
-    # Convert RGBA to RGB if needed (WebP supports alpha, but sometimes we want to flatten)
-    # However, for manga covers/pages, we usually keep it as is or convert to RGB for size.
+    # WebP supports transparency, so keep alpha channel for RGBA/palette images.
+    # For opaque images (RGB, L, etc.), convert to RGB to avoid unnecessary alpha.
     if img.mode in ("RGBA", "P"):
-        img = img.convert("RGBA")
+        img = img.convert("RGBA")  # Preserve transparency
     else:
-        img = img.convert("RGB")
+        img = img.convert("RGB")   # Flatten to opaque
         
     output = io.BytesIO()
     img.save(output, format="WEBP", quality=quality, method=6) # method 6 = slow but better compression

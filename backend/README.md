@@ -1,28 +1,73 @@
----
-title: MangaLabTH Backend
-emoji: 📚
-colorFrom: indigo
-colorTo: purple
-sdk: docker
-app_port: 7860
----
-
 # MangaLabTH Backend
 
-This is the FastAPI backend for MangaLabTH, running in a Docker container on Hugging Face Spaces.
+FastAPI backend สำหรับ MangaLabTH — แพลตฟอร์มอ่านมังงะออนไลน์
 
-## Environment Variables Required
+## Tech Stack
 
-When deploying this Space, you must configure the following Secrets (Settings > Variables and secrets > Secrets):
+- **Framework:** FastAPI (async)
+- **ORM:** SQLModel + SQLAlchemy (asyncpg)
+- **Database:** Supabase PostgreSQL
+- **Storage:** Cloudflare R2 (S3-compatible via boto3)
+- **Auth:** Clerk JWT (RS256 + JWKS)
+- **Payments:** Stripe Checkout + Webhooks
+- **Image Processing:** Pillow (WebP auto-conversion)
+- **Deployment:** Google Cloud Run (Docker)
 
-*   `DATABASE_URL`: Your PostgreSQL connection string (e.g., Neon).
-*   `CORS_ORIGINS`: The URL of your Vercel frontend (e.g., `https://your-frontend.vercel.app`). You can also use `*` for testing, but it is less secure.
-*   `CLERK_PUBLISHABLE_KEY`: Your Clerk publishable key.
-*   `CLERK_SECRET_KEY`: Your Clerk secret key.
-*   `CLERK_JWKS_URL`: Your Clerk JWKS URL.
-*   `R2_ENDPOINT_URL`: Cloudflare R2 endpoint.
-*   `R2_ACCESS_KEY_ID`: Cloudflare R2 access key.
-*   `R2_SECRET_ACCESS_KEY`: Cloudflare R2 secret key.
-*   `R2_BUCKET_NAME`: Cloudflare R2 bucket name.
-*   `R2_PUBLIC_URL`: Cloudflare R2 public URL.
+## Quick Start
 
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+cp .env.example .env
+# Fill in all variables (see root README for details)
+
+alembic upgrade head
+uvicorn app.main:app --reload --port 8000
+```
+
+## Project Structure
+
+```
+app/
+├── main.py              # FastAPI app, CORS, middleware
+├── config.py            # Settings (Pydantic v2)
+├── database.py          # Async SQLModel engine + session
+├── models/              # SQLModel table definitions
+│   ├── manga.py         # Manga, Chapter, Page
+│   ├── user.py          # User (Clerk-linked, RBAC)
+│   ├── transaction.py   # Transaction, CoinPackage
+│   ├── analytics.py     # DailyMangaView
+│   └── settings.py      # SystemSettings
+├── schemas/             # Pydantic request/response schemas
+│   ├── manga.py
+│   ├── user.py
+│   └── transaction.py
+├── api/
+│   ├── deps.py          # Auth dependencies, RBAC, user provisioning
+│   └── v1/              # Route modules
+│       ├── manga.py     # Manga CRUD + ranking
+│       ├── chapters.py  # Chapter/Page CRUD + coin gating
+│       ├── upload.py    # R2 upload (presigned + proxy)
+│       ├── users.py     # User management
+│       ├── transactions.py  # Coin economy (atomic)
+│       ├── payments.py  # Stripe integration
+│       ├── analytics.py # View tracking dashboard
+│       └── settings.py  # Global theme
+└── services/
+    ├── storage.py       # R2 operations + shared utilities
+    ├── image.py         # WebP conversion
+    ├── revalidate.py    # Frontend ISR cache purge
+    ├── stripe_service.py # Stripe API wrapper
+    └── analytics.py     # Background view recording
+```
+
+## Deployment (Cloud Run)
+
+```bash
+gcloud run deploy mangalabth-backend --source .
+```
+
+Set environment variables via Cloud Console or `--set-env-vars`.
+See root `README.md` for full variable list.

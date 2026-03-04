@@ -114,7 +114,7 @@ export function ChapterImageManager({
                 a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" })
             );
         const items: FileItem[] = imageFiles.map((file) => ({
-            id: Math.random().toString(36).substring(7),
+            id: crypto.randomUUID(),
             file,
             preview: URL.createObjectURL(file),
             status: "pending" as const,

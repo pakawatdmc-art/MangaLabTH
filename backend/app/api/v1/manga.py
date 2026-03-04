@@ -14,7 +14,7 @@ from app.api.deps import AdminUser, DBSession, OptionalUser
 from app.models.manga import Manga, MangaCategory, MangaStatus
 from app.models.analytics import DailyMangaView
 from app.models.transaction import Transaction, TransactionType
-from app.services.storage import delete_object, delete_objects
+from app.services.storage import delete_object, delete_objects, r2_url_to_key, get_client_ip
 from app.services.revalidate import revalidate_paths
 from app.services.analytics import record_manga_view_task
 from app.schemas.manga import (
@@ -208,8 +208,7 @@ async def get_manga_by_slug(slug: str, request: Request, session: DBSession, use
             if ch.id in unlocked_ids:
                 ch.is_unlocked = True
 
-    client_ip = request.client.host if request.client else "unknown"
-    background_tasks.add_task(record_manga_view_task, manga.id, client_ip)
+    background_tasks.add_task(record_manga_view_task, manga.id, get_client_ip(request))
     return detail
 
 
@@ -241,8 +240,7 @@ async def get_manga(manga_id: str, request: Request, session: DBSession, user: O
             if ch.id in unlocked_ids:
                 ch.is_unlocked = True
 
-    client_ip = request.client.host if request.client else "unknown"
-    background_tasks.add_task(record_manga_view_task, manga.id, client_ip)
+    background_tasks.add_task(record_manga_view_task, manga.id, get_client_ip(request))
     return detail
 
 
@@ -281,10 +279,9 @@ async def update_manga(
     # Check if cover_url is being updated to a new URL
     if "cover_url" in update_data and update_data["cover_url"] != manga.cover_url:
         old_cover_url = manga.cover_url
-        if old_cover_url and ".r2.dev/" in old_cover_url:
-            old_key = old_cover_url.split(".r2.dev/", 1)[1]
+        old_key = r2_url_to_key(old_cover_url) if old_cover_url else None
+        if old_key:
             try:
-                # Synchronously delete the old object from R2 (boto3 is thread-safe here)
                 delete_object(old_key)
             except Exception as e:
                 print(f"Failed to delete old cover {old_key} from R2: {e}")
@@ -313,19 +310,15 @@ async def delete_manga(
     # Collect R2 keys for cleanup (cover + all chapter pages)
     r2_keys = []
 
-    def _to_key(url: str) -> Optional[str]:
-        parts = url.split(".r2.dev/", 1)
-        return parts[1] if len(parts) == 2 else None
-
     if manga.cover_url:
-        key = _to_key(manga.cover_url)
+        key = r2_url_to_key(manga.cover_url)
         if key:
             r2_keys.append(key)
 
     for chapter in (manga.chapters or []):
         for page in (chapter.pages or []):
             if page.image_url:
-                key = _to_key(page.image_url)
+                key = r2_url_to_key(page.image_url)
                 if key:
                     r2_keys.append(key)
 

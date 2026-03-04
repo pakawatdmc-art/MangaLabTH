@@ -142,7 +142,7 @@ async def list_packages(session: DBSession):
     """List available coin packages."""
     stmt = (
         select(CoinPackage)
-        .where(CoinPackage.is_active == True)
+        .where(CoinPackage.is_active.is_(True))
         .order_by(col(CoinPackage.sort_order))
     )
     return (await session.execute(stmt)).scalars().all()
