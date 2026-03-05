@@ -29,6 +29,5 @@ class UserUpdate(BaseModel):
 
 
 class UserAdminUpdate(BaseModel):
-    """Admin-only fields."""
+    """Admin-only fields. coin_balance is excluded — use /transactions/admin/grant instead."""
     role: Optional[UserRole] = None
-    coin_balance: Optional[int] = Field(None, ge=0)

@@ -27,19 +27,29 @@ export default function Navbar() {
   const pathname = usePathname();
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
-  const [user, setUser] = useState<{ coin_balance: number } | null>(null);
+  const [user, setUser] = useState<{ coin_balance: number; role?: string } | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const fetchUser = useCallback(async () => {
+  const fetchUser = useCallback(async (force = false) => {
     try {
+      const w = window as any;
+      const now = Date.now();
+      if (!force && w.__cachedUser && now - (w.__cachedUserTime || 0) < 30000) {
+        setUser(w.__cachedUser);
+        setIsAdmin(w.__cachedUser.role === "admin");
+        return;
+      }
       const token = await getToken();
       if (!token) return;
       const me = await getMe(token);
+      w.__cachedUser = me;
+      w.__cachedUserTime = Date.now();
       setUser(me);
       setIsAdmin(me.role === "admin");
     } catch {
       setUser(null);
       setIsAdmin(false);
+      if (typeof window !== "undefined") (window as any).__cachedUser = null;
     }
   }, [getToken]);
 
@@ -48,13 +58,15 @@ export default function Navbar() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setUser(null);
       setIsAdmin(false);
+      if (typeof window !== "undefined") (window as any).__cachedUser = null;
       return;
     }
     fetchUser();
 
     // Listen for manual balance updates
-    window.addEventListener("balance-update", fetchUser);
-    return () => window.removeEventListener("balance-update", fetchUser);
+    const handleUpdate = () => fetchUser(true);
+    window.addEventListener("balance-update", handleUpdate);
+    return () => window.removeEventListener("balance-update", handleUpdate);
   }, [isLoaded, isSignedIn, fetchUser]);
 
   if (pathname.startsWith("/read/")) {

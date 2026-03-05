@@ -28,7 +28,22 @@ async function fetcher<T>(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API}${path}`, { ...init, headers });
+  let res: Response | undefined;
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      res = await fetch(`${API}${path}`, { ...init, headers });
+      if (res.ok || (res.status >= 400 && res.status < 500)) break;
+    } catch (err) {
+      lastError = err;
+    }
+    if (attempt < 2) await new Promise((r) => setTimeout(r, 500 * (attempt + 1)));
+  }
+
+  if (!res) {
+    throw lastError || new Error("Network error");
+  }
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));

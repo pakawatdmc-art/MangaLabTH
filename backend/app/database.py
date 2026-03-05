@@ -37,17 +37,17 @@ async def seed_coin_packages(session: AsyncSession):
     if result.first():
         return
 
-    # 1 THB = 1 Coin
+    # 1 THB = 1 Coin (price_thb is in Thai Baht)
     packages = [
-        CoinPackage(name="50 Coins", coins=50, price_thb=5000, sort_order=1),
+        CoinPackage(name="50 Coins", coins=50, price_thb=50, sort_order=1),
         CoinPackage(name="100 Coins", coins=100,
-                    price_thb=10000, sort_order=2),
+                    price_thb=100, sort_order=2),
         CoinPackage(name="300 Coins", coins=300,
-                    price_thb=30000, sort_order=3),
+                    price_thb=300, sort_order=3),
         CoinPackage(name="500 Coins", coins=500,
-                    price_thb=50000, sort_order=4),
+                    price_thb=500, sort_order=4),
         CoinPackage(name="1,000 Coins", coins=1000,
-                    price_thb=100000, sort_order=5),
+                    price_thb=1000, sort_order=5),
     ]
     for p in packages:
         session.add(p)

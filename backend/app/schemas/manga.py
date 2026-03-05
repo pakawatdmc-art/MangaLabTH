@@ -1,7 +1,7 @@
 """Pydantic v2 schemas for Manga, Chapter, and Page endpoints."""
 
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -58,12 +58,30 @@ class ChapterCreate(BaseModel):
     coin_price: int = Field(0, ge=0)
     is_free: bool = True
 
+    def model_post_init(self, __context: Any) -> None:
+        """Auto-sync is_free ↔ coin_price to prevent conflicting state."""
+        if self.is_free:
+            object.__setattr__(self, "coin_price", 0)
+        elif self.coin_price == 0:
+            object.__setattr__(self, "is_free", True)
+
 
 class ChapterUpdate(BaseModel):
     number: Optional[float] = None
     title: Optional[str] = None
     coin_price: Optional[int] = Field(None, ge=0)
     is_free: Optional[bool] = None
+
+    def model_post_init(self, __context: Any) -> None:
+        """Auto-sync is_free ↔ coin_price when both are provided."""
+        if self.is_free is True and self.coin_price is None:
+            object.__setattr__(self, "coin_price", 0)
+        elif self.is_free is True and self.coin_price is not None and self.coin_price > 0:
+            object.__setattr__(self, "coin_price", 0)
+        elif self.coin_price is not None and self.coin_price > 0 and self.is_free is None:
+            object.__setattr__(self, "is_free", False)
+        elif self.coin_price == 0 and self.is_free is None:
+            object.__setattr__(self, "is_free", True)
 
 
 # ── Manga ────────────────────────────────────────

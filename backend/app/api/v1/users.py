@@ -61,9 +61,14 @@ async def list_users(
     """Admin: list all users."""
     stmt = select(User).order_by(User.role, col(User.created_at).desc())
     results = (await session.execute(stmt)).scalars().all()
-    profiles = await asyncio.gather(
-        *[get_clerk_profile(u.clerk_id) for u in results]
-    )
+    profiles = []
+    chunk_size = 10
+    for i in range(0, len(results), chunk_size):
+        chunk = results[i:i + chunk_size]
+        chunk_profiles = await asyncio.gather(
+            *[get_clerk_profile(u.clerk_id) for u in chunk]
+        )
+        profiles.extend(chunk_profiles)
 
     items: List[UserRead] = []
     for u, profile in zip(results, profiles):

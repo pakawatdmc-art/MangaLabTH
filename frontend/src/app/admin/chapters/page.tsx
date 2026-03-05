@@ -241,23 +241,29 @@ export default function AdminChaptersPage() {
       )}
 
       {editingChapter && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4 py-6 backdrop-blur-sm sm:px-6">
-          <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-[#161616] ring-1 ring-white/5 shadow-2xl overflow-hidden">
-            <div className="border-b border-white/5 bg-white/[0.02] px-6 py-5">
-              <h3 className="text-lg font-bold text-white flex flex-col gap-1">
-                <span>แก้ไขตอนที่ {formatChapterNumber(editingChapter.number)}</span>
-                <span className="text-xs font-normal text-gold/80 bg-gold/10 w-fit px-2 py-0.5 rounded-full border border-gold/20">
-                  {selectedManga?.title || "ไม่ได้เลือกเรื่อง"}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6 backdrop-blur-md sm:px-6">
+          <div className="relative w-full max-w-lg overflow-hidden rounded-[2rem] border border-white/10 bg-surface-200/95 ring-1 ring-white/5 shadow-2xl backdrop-blur-xl">
+            {/* Subtle glow */}
+            <div className="absolute -left-40 -top-40 h-[300px] w-[300px] rounded-full bg-gold/10 blur-[100px]" />
+
+            <div className="relative border-b border-white/5 bg-transparent px-6 py-5">
+              <h3 className="flex flex-col gap-1.5 text-lg font-bold tracking-tight text-white/90">
+                <span className="flex items-center gap-2">
+                  <Pencil className="h-5 w-5 text-gold" />
+                  แก้ไขตอนที่ {formatChapterNumber(editingChapter.number)}
+                </span>
+                <span className="w-fit rounded-full border border-gold/20 bg-gold/10 px-2.5 py-0.5 text-[11px] font-medium text-gold/90">
+                  กำลังจัดการ: {selectedManga?.title || "ไม่ได้เลือกเรื่อง"}
                 </span>
               </h3>
             </div>
 
-            <form onSubmit={handleUpdate} className="p-6">
+            <form onSubmit={handleUpdate} className="relative p-6">
               <div className="grid grid-cols-1 gap-5">
                 {/* Row 1: Number & Price */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="mb-1.5 block text-xs font-medium text-gray-400">ตอนที่ <span className="text-red-400">*</span></label>
+                    <label className="mb-1.5 block text-xs font-medium tracking-wide text-gray-400">ตอนที่ <span className="text-red-400">*</span></label>
                     <input
                       type="number"
                       name="number"
@@ -265,66 +271,66 @@ export default function AdminChaptersPage() {
                       min="0"
                       required
                       defaultValue={editingChapter.number}
-                      className="h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3.5 text-sm text-white transition-colors focus:border-gold/60 focus:bg-black/60 focus:outline-none"
+                      className="h-11 w-full rounded-xl border border-white/5 bg-white/[0.03] px-3.5 text-sm font-medium text-white transition focus:border-gold/50 focus:bg-white/[0.05] focus:ring-1 focus:ring-gold/50 focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-xs font-medium text-gray-400">ราคา (เหรียญ)</label>
+                    <label className="mb-1.5 block text-xs font-medium tracking-wide text-gray-400">ราคา <span className="text-gray-500">(เหรียญ)</span></label>
                     <input
                       type="number"
                       name="coin_price"
                       min="0"
                       defaultValue={editingChapter.coin_price || 0}
-                      className="h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3.5 text-sm text-white transition-colors focus:border-gold/60 focus:bg-black/60 focus:outline-none"
+                      className="h-11 w-full rounded-xl border border-white/5 bg-white/[0.03] px-3.5 text-sm font-medium text-white transition focus:border-gold/50 focus:bg-white/[0.05] focus:ring-1 focus:ring-gold/50 focus:outline-none"
                     />
                   </div>
                 </div>
 
                 {/* Row 2: Title */}
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium text-gray-400">ชื่อตอน <span className="text-gray-500 font-normal">(ไม่บังคับ)</span></label>
+                  <label className="mb-1.5 block text-xs font-medium tracking-wide text-gray-400">ชื่อตอน <span className="font-normal text-gray-500">(ไม่บังคับ)</span></label>
                   <input
                     type="text"
                     name="title"
                     defaultValue={editingChapter.title || ""}
                     placeholder="เช่น: บทเริ่มต้น, ศึกตัดสิน"
-                    className="h-11 w-full rounded-xl border border-white/10 bg-black/40 px-3.5 text-sm text-white transition-colors focus:border-gold/60 focus:bg-black/60 focus:outline-none placeholder:text-white/20"
+                    className="h-11 w-full rounded-xl border border-white/5 bg-white/[0.03] px-3.5 text-sm text-white transition placeholder:text-gray-600 focus:border-gold/50 focus:bg-white/[0.05] focus:ring-1 focus:ring-gold/50 focus:outline-none"
                   />
                 </div>
 
                 {/* Row 3: Is Free */}
-                <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-white/5 bg-white/[0.02] p-4 transition-colors hover:bg-white/[0.04] mt-1">
+                <label className="mt-2 flex cursor-pointer items-center gap-3 rounded-xl border border-white/5 bg-white/[0.02] p-4 transition-colors hover:bg-white/[0.04]">
                   <div className="relative flex items-center">
                     <input
                       type="checkbox"
                       name="is_free"
                       defaultChecked={editingChapter.is_free}
-                      className="peer h-5 w-5 cursor-pointer appearance-none rounded border border-white/20 bg-black/50 checked:border-gold checked:bg-gold transition-all"
+                      className="peer h-5 w-5 cursor-pointer appearance-none rounded border border-white/20 bg-black/50 transition-all checked:border-gold checked:bg-gold"
                     />
-                    <svg className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-3.5 w-3.5 text-black opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <svg className="pointer-events-none absolute left-1/2 top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 text-black opacity-0 transition-opacity peer-checked:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
                   <div className="flex flex-col">
                     <span className="text-sm font-medium text-white">เปิดให้อ่านฟรี</span>
-                    <span className="text-xs text-gray-500">ผู้ใช้ไม่ต้องใช้เหรียญเพื่ออ่านตอนนี้</span>
+                    <span className="text-xs text-gray-500">ผู้อ่านไม่ต้องใช้เหรียญเพื่ออ่านตอนนี้</span>
                   </div>
                 </label>
               </div>
 
               {/* Actions */}
-              <div className="mt-8 flex items-center justify-end gap-3 pt-2 border-t border-white/5">
+              <div className="mt-8 flex items-center justify-end gap-3 pt-6 border-t border-white/5">
                 <button
                   type="button"
                   onClick={() => setEditingChapter(null)}
-                  className="h-10 rounded-xl px-5 text-sm font-medium text-gray-300 transition-colors hover:bg-white/5 hover:text-white"
+                  className="h-10 rounded-xl px-5 text-sm font-medium text-gray-400 transition hover:bg-white/5 hover:text-white"
                 >
                   ยกเลิก
                 </button>
                 <button
                   type="submit"
                   disabled={updating}
-                  className="h-10 rounded-xl bg-gold px-6 text-sm font-semibold text-black transition-all hover:bg-gold-light disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(212,168,67,0.3)] hover:shadow-[0_0_20px_rgba(212,168,67,0.5)]"
+                  className="h-10 rounded-xl bg-gold px-6 text-sm font-semibold text-black shadow-lg shadow-gold/20 transition hover:bg-gold-light disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {updating ? "กำลังบันทึก..." : "บันทึกการแก้ไข"}
                 </button>

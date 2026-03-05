@@ -6,6 +6,8 @@ Design principles:
   can always be re-derived from the transaction ledger.
 - All balance mutations MUST happen inside an atomic DB transaction
   with SELECT ... FOR UPDATE on the user row to prevent race conditions.
+- A unique index on (user_id, chapter_id) WHERE chapter_id IS NOT NULL
+  prevents double-unlock at the database level.
 """
 
 import enum
@@ -13,6 +15,7 @@ from datetime import datetime, timezone
 from typing import Optional, TYPE_CHECKING
 from uuid import uuid4
 
+from sqlalchemy import Index
 from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
@@ -79,6 +82,19 @@ class Transaction(SQLModel, table=True):
 
     # ── Relationships ────────────────────────────
     user: Optional["User"] = Relationship(back_populates="transactions")
+
+    # ── Constraints ──────────────────────────────
+    # Prevent duplicate chapter unlocks per user at the DB level.
+    # This is a partial unique index: only applies when chapter_id IS NOT NULL.
+    __table_args__ = (
+        Index(
+            "uq_user_chapter_unlock",
+            "user_id",
+            "chapter_id",
+            unique=True,
+            postgresql_where="chapter_id IS NOT NULL",
+        ),
+    )
 
 
 class CoinPackage(SQLModel, table=True):

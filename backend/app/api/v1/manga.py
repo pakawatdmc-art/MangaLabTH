@@ -178,6 +178,39 @@ async def get_manga_ranking(
     return data
 
 
+async def _build_manga_detail(
+    manga: Manga,
+    user: OptionalUser,
+    request: Request,
+    session: DBSession,
+    background_tasks: BackgroundTasks,
+) -> MangaDetail:
+    """Shared helper: build MangaDetail with unlock status + record view."""
+    # Visibility Check
+    is_admin = user and user.role == "admin"
+    if not manga.is_visible and not is_admin:
+        raise HTTPException(status_code=404, detail="Manga not found")
+
+    detail = MangaDetail.model_validate(manga)
+    detail.chapter_count = len(manga.chapters)
+    detail.chapters.sort(key=lambda c: c.number)
+
+    if user and detail.chapters:
+        chapter_ids = [c.id for c in detail.chapters]
+        unlock_stmt = select(Transaction.chapter_id).where(
+            Transaction.user_id == user.id,
+            Transaction.type == TransactionType.CHAPTER_UNLOCK,
+            col(Transaction.chapter_id).in_(chapter_ids)
+        )
+        unlocked_ids = set((await session.execute(unlock_stmt)).scalars().all())
+        for ch in detail.chapters:
+            if ch.id in unlocked_ids:
+                ch.is_unlocked = True
+
+    background_tasks.add_task(record_manga_view_task, manga.id, get_client_ip(request))
+    return detail
+
+
 @router.get("/slug/{slug}", response_model=MangaDetail)
 async def get_manga_by_slug(slug: str, request: Request, session: DBSession, user: OptionalUser, background_tasks: BackgroundTasks):
     """Public manga detail by slug."""
@@ -187,29 +220,7 @@ async def get_manga_by_slug(slug: str, request: Request, session: DBSession, use
     if not manga:
         raise HTTPException(status_code=404, detail="Manga not found")
 
-    # Visibility Check
-    is_admin = user and user.role == "admin"
-    if not manga.is_visible and not is_admin:
-        raise HTTPException(status_code=404, detail="Manga not found")
-
-    detail = MangaDetail.model_validate(manga)
-    detail.chapter_count = len(manga.chapters)
-    detail.chapters.sort(key=lambda c: c.number)
-
-    if user and detail.chapters:
-        chapter_ids = [c.id for c in detail.chapters]
-        unlock_stmt = select(Transaction.chapter_id).where(
-            Transaction.user_id == user.id,
-            Transaction.type == TransactionType.CHAPTER_UNLOCK,
-            col(Transaction.chapter_id).in_(chapter_ids)
-        )
-        unlocked_ids = set((await session.execute(unlock_stmt)).scalars().all())
-        for ch in detail.chapters:
-            if ch.id in unlocked_ids:
-                ch.is_unlocked = True
-
-    background_tasks.add_task(record_manga_view_task, manga.id, get_client_ip(request))
-    return detail
+    return await _build_manga_detail(manga, user, request, session, background_tasks)
 
 
 @router.get("/{manga_id}", response_model=MangaDetail)
@@ -219,29 +230,7 @@ async def get_manga(manga_id: str, request: Request, session: DBSession, user: O
     if not manga:
         raise HTTPException(status_code=404, detail="Manga not found")
 
-    # Visibility Check
-    is_admin = user and user.role == "admin"
-    if not manga.is_visible and not is_admin:
-        raise HTTPException(status_code=404, detail="Manga not found")
-
-    detail = MangaDetail.model_validate(manga)
-    detail.chapter_count = len(manga.chapters)
-    detail.chapters.sort(key=lambda c: c.number)
-
-    if user and detail.chapters:
-        chapter_ids = [c.id for c in detail.chapters]
-        unlock_stmt = select(Transaction.chapter_id).where(
-            Transaction.user_id == user.id,
-            Transaction.type == TransactionType.CHAPTER_UNLOCK,
-            col(Transaction.chapter_id).in_(chapter_ids)
-        )
-        unlocked_ids = set((await session.execute(unlock_stmt)).scalars().all())
-        for ch in detail.chapters:
-            if ch.id in unlocked_ids:
-                ch.is_unlocked = True
-
-    background_tasks.add_task(record_manga_view_task, manga.id, get_client_ip(request))
-    return detail
+    return await _build_manga_detail(manga, user, request, session, background_tasks)
 
 
 # ── Admin ────────────────────────────────────────

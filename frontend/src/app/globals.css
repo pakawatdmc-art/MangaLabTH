@@ -142,9 +142,9 @@ body:not(.theme-default) .bg-surface-50,
 body:not(.theme-default) .bg-\[\#1A1A1A\],
 body:not(.theme-default) .bg-\[\#242424\],
 body:not(.theme-default) .bg-gradient-to-br {
-  background-color: rgba(15, 15, 20, 0.2) !important;
-  background-image: none !important;
-  backdrop-filter: none !important;
+  background-color: rgba(15, 15, 20, 0.2);
+  background-image: none;
+  backdrop-filter: none;
 }
 
 /* Subtle page-level atmospheric overlay (shows on themed pages) */

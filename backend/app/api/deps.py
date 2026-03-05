@@ -74,8 +74,16 @@ def _is_primary_admin_email(email: str) -> bool:
     return bool(primary) and _normalize_email(email) == primary
 
 
+# ── Clerk profile cache ──────────────────────────
+from cachetools import TTLCache  # type: ignore
+_clerk_profile_cache: TTLCache = TTLCache(maxsize=500, ttl=60)
+
+
 async def get_clerk_profile(clerk_id: str) -> dict[str, str]:
-    """Fetch Clerk profile (username + primary email) via Backend API."""
+    """Fetch Clerk profile (username + primary email) via Backend API. Cached 60s."""
+    if clerk_id in _clerk_profile_cache:
+        return _clerk_profile_cache[clerk_id]
+
     if not clerk_id or not settings.CLERK_SECRET_KEY:
         return {"username": "", "email": ""}
 
@@ -112,7 +120,9 @@ async def get_clerk_profile(clerk_id: str) -> dict[str, str]:
                 email = _first_non_empty(
                     data["primary_email_address"].get("email_address"))
 
-            return {"username": username, "email": email}
+            result = {"username": username, "email": email}
+            _clerk_profile_cache[clerk_id] = result
+            return result
     except Exception:
         return {"username": "", "email": ""}
 

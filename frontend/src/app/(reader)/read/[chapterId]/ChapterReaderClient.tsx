@@ -183,10 +183,9 @@ export default function ChapterReaderClient({
               <ChevronDown className="ml-1 h-3.5 w-3.5 opacity-70" />
             </button>
 
-            {/* Dropdown Menu */}
             {showChapterMenu && (
               <div
-                className="absolute left-1/2 mt-2 max-h-[60vh] w-56 -translate-x-1/2 overflow-y-auto rounded-xl border border-white/10 bg-surface-200 p-1.5 shadow-2xl backdrop-blur-xl sm:w-64"
+                className="absolute left-1/2 mt-2 max-h-[60vh] w-56 -translate-x-1/2 overflow-y-auto rounded-xl border border-white/10 bg-black/95 p-1.5 shadow-2xl backdrop-blur-2xl sm:w-64"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="mb-1 px-2 pb-1 pt-1.5 text-[10px] font-semibold tracking-wider text-gray-500">

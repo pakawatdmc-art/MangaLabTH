@@ -208,7 +208,9 @@ async def stripe_webhook(request: Request, session: DBSession):
 
 
 @router.post("/confirm")
+@limiter.limit("5/minute")
 async def confirm_checkout_payment(
+    request: Request,
     checkout_session_id: str,
     user: CurrentUser,
     session: DBSession,
