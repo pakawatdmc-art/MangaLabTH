@@ -94,10 +94,10 @@ Google Cloud Run จะนำ `Dockerfile` ไปสร้าง Image และ
 ### Admin (แอดมิน)
 - **Dashboard** — Stats overview
 - **Manga CRUD** — Create, edit, delete manga
-- **Chapter CRUD** — Manage chapters and pricing
+- **Chapter CRUD** — Manage chapters and pricing (Premium UI: Glassmorphism + Gold accents)
 - **Upload** — อัพโหลดหน้าปกและภาพเนื้อเรื่อง พร้อมแปลงนามสกุลเป็น WebP ย่อส่วนอัตโนมัติก่อนส่งตรงขึ้น R2 (Parallel Upload)
-- **Users** — User management, coin grants
-- **Transactions** — Revenue monitoring
+- **Users** — User management, coin grants (Secure: Admin balance bypass protection)
+- **Transactions** — Revenue monitoring (Paginated)
 
 ## Environment Variables
 
@@ -213,13 +213,19 @@ Google Cloud Run จะนำ `Dockerfile` ไปสร้าง Image และ
 
 - **Authentication:** Clerk JWT (RS256 + JWKS rotation)
 - **RBAC:** Reader / Admin roles with `require_admin` dependency
-- **Rate Limiting:** slowapi on upload and payment endpoints
+- **Rate Limiting:** slowapi on upload and payment endpoints (Confirm endpoint protected)
 - **Upload Security:**
   - V5: Path traversal prevention (regex + null byte + `..` check)
   - V10: Magic byte validation (verifies actual file header, not just Content-Type)
   - WebP auto-conversion via Pillow
-- **Payments:** Atomic coin mutations with `SELECT ... FOR UPDATE` (prevents double-spend)
+- **Payments:** 
+  - Atomic coin mutations with `SELECT ... FOR UPDATE` (prevents double-spend)
+  - **Double-Unlock Protection:** Partial Unique Index on `(user_id, chapter_id)` in Transactions
+  - **Admin Safety:** coin_balance protected - must use Admin Grant endpoint (Audit Logged)
 - **Stripe:** Idempotent webhook processing (checks `stripe_session_id` + `payment_intent_id`)
+- **Performance:**
+  - **Clerk Caching:** TTLCache on backend for user profiles (reduces external API calls)
+  - **Frontend API Logic:** Exponential backoff retry for transient network errors
 - **IP Detection:** X-Forwarded-For aware (for accurate analytics behind Cloud Run LB)
 
 ## Database Schema
