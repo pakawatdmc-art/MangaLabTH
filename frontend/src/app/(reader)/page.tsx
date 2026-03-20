@@ -94,8 +94,8 @@ export default async function HomePage({ searchParams }: Props) {
               </h2>
             </div>
             {/* Panel Body */}
-            <div className="p-6">
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+            <div className="p-4 sm:p-6">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
                 {updatedManga.items.map((m: Manga) => (
                   <UpdateMangaCard key={m.id} manga={m} />
                 ))}
@@ -127,12 +127,12 @@ export default async function HomePage({ searchParams }: Props) {
             </div>
 
             {/* Panel Body */}
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {/* Filters */}
-              <div className="mb-8 flex flex-wrap gap-2.5">
+              <div className="mb-6 sm:mb-8 flex gap-2.5 overflow-x-auto sm:flex-wrap sm:overflow-visible snap-x scrollbar-hide pb-2">
                 <Link
                   href="/"
-                  className={`rounded-full px-4 py-2 text-[13px] font-semibold transition-all ${!params.category
+                  className={`snap-start shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-[13px] font-semibold transition-all ${!params.category
                     ? "bg-gold text-black shadow-lg shadow-gold/20"
                     : "bg-surface-100/50 text-gray-400 hover:bg-surface-100 hover:text-white ring-1 ring-white/5"
                     }`}
@@ -143,7 +143,7 @@ export default async function HomePage({ searchParams }: Props) {
                   <Link
                     key={key}
                     href={`/?category=${key}`}
-                    className={`rounded-full px-4 py-2 text-[13px] font-semibold transition-all ${params.category === key
+                    className={`snap-start shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-[13px] font-semibold transition-all ${params.category === key
                       ? "bg-gold text-black shadow-lg shadow-gold/20"
                       : "bg-surface-100/50 text-gray-400 hover:bg-surface-100 hover:text-white ring-1 ring-white/5"
                       }`}
@@ -154,7 +154,7 @@ export default async function HomePage({ searchParams }: Props) {
               </div>
 
               {manga.items.length > 0 ? (
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                   {manga.items.map((m: Manga) => (
                     <MangaCard key={m.id} manga={m} />
                   ))}

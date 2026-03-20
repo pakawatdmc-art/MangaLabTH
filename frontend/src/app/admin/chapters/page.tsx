@@ -411,19 +411,20 @@ export default function AdminChaptersPage() {
               <th className="px-4 py-3">ชื่อตอน</th>
               <th className="px-4 py-3">ราคา</th>
               <th className="px-4 py-3">หน้า</th>
+              <th className="px-4 py-3">อัปเดตเมื่อ</th>
               <th className="px-4 py-3 text-right">จัดการ</th>
             </tr>
           </thead>
           <tbody>
             {!selectedMangaId ? (
               <tr>
-                <td colSpan={5} className="px-4 py-12 text-center text-gray-600">
+                <td colSpan={6} className="px-4 py-12 text-center text-gray-600">
                   กรุณาเลือกมังงะก่อน เพื่อดูและจัดการตอน
                 </td>
               </tr>
             ) : filteredChapters.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-12 text-center text-gray-600">
+                <td colSpan={6} className="px-4 py-12 text-center text-gray-600">
                   เรื่องนี้ยังไม่มีตอน — กดปุ่ม “เพิ่มตอน” เพื่อเริ่มต้น
                 </td>
               </tr>
@@ -442,6 +443,17 @@ export default function AdminChaptersPage() {
                     )}
                   </td>
                   <td className="px-4 py-2.5 text-gray-400">{ch.page_count ?? 0}</td>
+                  <td className="px-4 py-2.5 text-xs text-gray-400">
+                    {ch.published_at
+                      ? new Date(ch.published_at + "Z").toLocaleDateString("th-TH", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : "—"}
+                  </td>
                   <td className="px-4 py-2.5 text-right">
                     <button
                       onClick={() => setEditingChapter(ch)}

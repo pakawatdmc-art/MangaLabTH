@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { getMangaBySlug } from "@/lib/api";
 import { CATEGORY_LABELS, STATUS_LABELS } from "@/lib/types";
-import { formatNumber } from "@/lib/utils";
+import { formatNumber, formatDateTime } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -10,6 +10,7 @@ import {
   Eye,
   Layers,
   Tag,
+  Calendar,
 } from "lucide-react";
 import { ChapterListClient } from "@/components/ChapterListClient";
 
@@ -39,6 +40,9 @@ export async function generateMetadata({ params }: Props): Promise<import("next"
         description: desc,
         images: manga.cover_url ? [manga.cover_url] : [],
       },
+      alternates: {
+        canonical: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/manga/${manga.slug}`,
+      },
     };
   } catch {
     return { title: "มังงะ — MangaLabTH" };
@@ -65,8 +69,26 @@ export default async function MangaDetailPage({ params }: Props) {
   const freeChapterCount = manga.chapters.filter((ch) => ch.is_free || ch.coin_price === 0).length;
   const premiumChapterCount = manga.chapters.length - freeChapterCount;
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ComicSeries",
+    name: manga.title,
+    description: manga.description || `อ่าน ${manga.title} มังงะแปลไทย ออนไลน์ฟรี ภาพคมชัด`,
+    author: { "@type": "Person", "name": manga.author || "Unknown" },
+    image: manga.cover_url || "",
+    url: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/manga/${manga.slug}`,
+    datePublished: manga.created_at ? new Date(manga.created_at + "Z").toISOString() : undefined,
+    dateModified: (manga.last_chapter_updated_at || manga.created_at) 
+      ? new Date((manga.last_chapter_updated_at || manga.created_at) + "Z").toISOString() 
+      : undefined,
+  };
+
   return (
     <div className="min-h-screen bg-background text-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Hero backdrop */}
       <div className="relative h-64 sm:h-80">
         <Image
@@ -121,6 +143,13 @@ export default async function MangaDetailPage({ params }: Props) {
               <span className="inline-flex items-center gap-1 rounded-full bg-surface-100 px-2.5 py-1 text-gray-300 ring-1 ring-white/10">
                 <Eye className="h-3 w-3" />
                 {formatNumber(manga.total_views)}
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-surface-100 px-2.5 py-1 text-gray-300 ring-1 ring-white/10">
+                <Calendar className="h-3 w-3" />
+                {(() => {
+                  const d = manga.last_chapter_updated_at || manga.created_at;
+                  return d ? formatDateTime(d + "Z") : "";
+                })()}
               </span>
             </div>
 

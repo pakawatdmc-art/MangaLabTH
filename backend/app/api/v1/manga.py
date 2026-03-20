@@ -93,7 +93,7 @@ async def list_manga(
     items = []
     for m in results:
         data = MangaRead.model_validate(m)
-        data.chapter_count = len(m.chapters) if m.chapters else 0
+        data.chapter_count = int(max((c.number for c in m.chapters), default=0)) if m.chapters else 0
         items.append(data)
 
     return PaginatedResponse(
@@ -131,7 +131,11 @@ async def get_manga_ranking(
             query = query.where(Manga.is_visible.is_(True))
         query = query.order_by(col(Manga.total_views).desc()).limit(limit)
         results = (await session.execute(query)).scalars().all()
-        data = [MangaRead.model_validate(m) for m in results]
+        data = []
+        for m in results:
+            d = MangaRead.model_validate(m)
+            d.chapter_count = int(max((c.number for c in m.chapters), default=0)) if m.chapters else 0
+            data.append(d)
 
         if data:
             _ranking_cache[cache_key] = data
@@ -172,7 +176,11 @@ async def get_manga_ranking(
     manga_dict = {m.id: m for m in mangas}
     sorted_mangas = [manga_dict[mid] for mid in manga_ids if mid in manga_dict]
 
-    data = [MangaRead.model_validate(m) for m in sorted_mangas]
+    data = []
+    for m in sorted_mangas:
+        d = MangaRead.model_validate(m)
+        d.chapter_count = int(max((c.number for c in m.chapters), default=0)) if m.chapters else 0
+        data.append(d)
     if data:
         _ranking_cache[cache_key] = data
     return data
@@ -192,7 +200,7 @@ async def _build_manga_detail(
         raise HTTPException(status_code=404, detail="Manga not found")
 
     detail = MangaDetail.model_validate(manga)
-    detail.chapter_count = len(manga.chapters)
+    detail.chapter_count = int(max((c.number for c in manga.chapters), default=0)) if manga.chapters else 0
     detail.chapters.sort(key=lambda c: c.number)
 
     if user and detail.chapters:

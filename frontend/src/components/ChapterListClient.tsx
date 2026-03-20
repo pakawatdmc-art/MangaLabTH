@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { formatChapterNumber, formatDate } from "@/lib/utils";
+import { formatChapterNumber, formatDateTime } from "@/lib/utils";
 import { Clock, Lock } from "lucide-react";
 
 interface Chapter {
@@ -71,7 +71,7 @@ export function ChapterListClient({ chapters, freeChapterCount }: ChapterListCli
                                     </p>
                                     <p className={`text-[11px] ${isRead ? "text-gray-500" : "text-gray-400"}`}>
                                         <Clock className="mr-0.5 inline-block h-3 w-3" />
-                                        {formatDate(ch.published_at)}
+                                        {formatDateTime(ch.published_at + "Z")}
                                         {ch.page_count ? ` · ${ch.page_count} หน้า` : ""}
                                     </p>
                                 </div>

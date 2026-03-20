@@ -84,10 +84,11 @@ Google Cloud Run จะนำ `Dockerfile` ไปสร้าง Image และ
 ## Features
 
 ### Reader (หน้าผู้อ่าน)
-- **Home** — Hero, manga grid, search, filters, pagination
+- **Home** — Hero, manga grid, search, filters, pagination (Premium Floating UI & Mobile-friendly horizontal scroll)
 - **Search** — Advanced filters (category, status, sort)
 - **Manga Detail** — Cover, info, chapter list with coin pricing
 - **Chapter Reader** — Vertical scroll, lazy load, progress bar, keyboard nav
+- **SEO & Metadata** — Dynamic Sitemap XML, JSON-LD Schema (ComicSeries) for Rich Snippets, Canonical URLs
 - **Coins** — Purchase packages, transaction history
 - **Auth** — Clerk sign-in/sign-up with RBAC
 
