@@ -175,6 +175,12 @@ async def admin_grant_coins(
     admin: AdminUser,
 ):
     """Admin: grant coins to a user."""
+    if not admin.is_primary_admin:
+        raise HTTPException(
+            status_code=403, 
+            detail="เฉพาะ Admin Master เท่านั้นที่สามารถแจกเหรียญได้"
+        )
+
     lock_stmt = (
         select(User)
         .where(User.id == body.user_id)

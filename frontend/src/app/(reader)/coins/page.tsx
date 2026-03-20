@@ -168,7 +168,7 @@ function CoinsPageInner() {
       if (timeoutId) clearTimeout(timeoutId);
       setIsRefreshing(false);
     };
-  }, [paymentStatus, isLoaded, confirmAndRefreshPayment]);
+  }, [paymentStatus, isLoaded, confirmAndRefreshPayment, activeReferenceNo, qrCodeData]);
 
   const handleManualRefresh = async () => {
     if (!activeReferenceNo) return;

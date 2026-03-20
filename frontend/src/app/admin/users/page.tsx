@@ -14,7 +14,7 @@ function getUsername(u: User): string {
 }
 
 export default function AdminUsersPage() {
-  const { getToken } = useAuth();
+  const { getToken, userId } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -61,6 +61,9 @@ export default function AdminUsersPage() {
   const readerCount = users.length - adminCount;
   const filteredAdmins = filteredUsers.filter((u) => u.role === "admin");
   const filteredReaders = filteredUsers.filter((u) => u.role !== "admin");
+
+  const currentUser = users.find((u) => u.clerk_id === userId);
+  const isPrimaryAdmin = currentUser?.is_primary_admin || false;
 
   useEffect(() => {
     fetchUsers();
@@ -140,12 +143,14 @@ export default function AdminUsersPage() {
           {new Date(u.created_at).toLocaleDateString("th-TH")}
         </td>
         <td className="px-4 py-2 text-right">
-          <button
-            onClick={() => setGrantTarget(u)}
-            className="mr-2 rounded-md border border-gold/20 bg-gold/10 px-2.5 py-1 text-xs text-gold transition hover:bg-gold/20"
-          >
-            เติมเหรียญ
-          </button>
+          {isPrimaryAdmin && (
+            <button
+              onClick={() => setGrantTarget(u)}
+              className="mr-2 rounded-md border border-gold/20 bg-gold/10 px-2.5 py-1 text-xs text-gold transition hover:bg-gold/20"
+            >
+              เติมเหรียญ
+            </button>
+          )}
           <button
             onClick={() => handleToggleRole(u)}
             disabled={u.is_primary_admin}
