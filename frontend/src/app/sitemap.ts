@@ -3,7 +3,7 @@ import { getMangaList } from "@/lib/api";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl =
-        process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+        process.env.NEXT_PUBLIC_SITE_URL || "https://mangalab-th.com";
 
     // Static pages
     const staticPages: MetadataRoute.Sitemap = [
