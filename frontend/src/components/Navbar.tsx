@@ -1,9 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  BookOpen,
   Coins,
   Home,
   LogIn,
@@ -17,6 +17,14 @@ import { cn, formatNumber } from "@/lib/utils";
 import { SignedIn, SignedOut, UserButton, useAuth } from "@clerk/nextjs";
 import { useCallback, useEffect, useState } from "react";
 import { getMe } from "@/lib/api";
+
+// Extend Window interface to type the user cache
+declare global {
+  interface Window {
+    __cachedUser?: { coin_balance: number; role?: string } | null;
+    __cachedUserTime?: number;
+  }
+}
 
 const NAV_LINKS = [
   { href: "/", label: "หน้าแรก", icon: Home },
@@ -32,7 +40,7 @@ export default function Navbar() {
 
   const fetchUser = useCallback(async (force = false) => {
     try {
-      const w = window as any;
+      const w = window;
       const now = Date.now();
       if (!force && w.__cachedUser && now - (w.__cachedUserTime || 0) < 30000) {
         setUser(w.__cachedUser);
@@ -49,7 +57,7 @@ export default function Navbar() {
     } catch {
       setUser(null);
       setIsAdmin(false);
-      if (typeof window !== "undefined") (window as any).__cachedUser = null;
+      if (typeof window !== "undefined") window.__cachedUser = null;
     }
   }, [getToken]);
 
@@ -58,7 +66,7 @@ export default function Navbar() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setUser(null);
       setIsAdmin(false);
-      if (typeof window !== "undefined") (window as any).__cachedUser = null;
+      if (typeof window !== "undefined") window.__cachedUser = null;
       return;
     }
     fetchUser();
@@ -77,9 +85,16 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-surface-300/80 backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
-          <BookOpen className="h-5 w-5 text-gold" />
-          <span className="text-lg font-bold text-white">
+        <Link href="/" className="group flex items-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]">
+          <Image 
+            src="/logo.webp" 
+            alt="MangaLabTH Logo" 
+            width={36} 
+            height={36} 
+            className="h-7 w-7 sm:h-8 sm:w-8 rounded-full object-cover drop-shadow-[0_0_10px_rgba(212,168,67,0.3)] group-hover:drop-shadow-[0_0_15px_rgba(212,168,67,0.6)]" 
+            priority
+          />
+          <span className="text-[17px] sm:text-lg font-bold tracking-tight text-white drop-shadow-sm">
             MangaLab<span className="text-gold">TH</span>
           </span>
         </Link>

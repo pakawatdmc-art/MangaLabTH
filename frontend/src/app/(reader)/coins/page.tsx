@@ -8,8 +8,11 @@ import {
   Coins,
   History,
   Loader2,
-  TrendingUp,
   XCircle,
+  Sparkles,
+  Zap,
+  QrCode,
+  Wallet,
 } from "lucide-react";
 import {
   confirmCheckoutPayment,
@@ -97,15 +100,12 @@ function CoinsPageInner() {
 
   const confirmAndRefreshPayment = useCallback(async (refNo: string): Promise<boolean> => {
     try {
-      let confirmStatus: string | null = null;
-      let confirmNewBalance: number | undefined;
-
       const token = await getToken();
       if (!token) return true;
 
       const confirm = await confirmCheckoutPayment(refNo, token);
-      confirmStatus = confirm.status;
-      confirmNewBalance = confirm.new_balance;
+      const confirmStatus = confirm.status;
+      const confirmNewBalance = confirm.new_balance;
 
       const me = await fetchUserData();
       const balanceChanged =
@@ -127,7 +127,7 @@ function CoinsPageInner() {
         me.coin_balance !== prevBalanceRef.current
       );
     }
-  }, [currentReferenceNo, fetchUserData, getToken]);
+  }, [fetchUserData, getToken]);
 
   // Poll every 2 seconds if status is processing or QR is active until balance is updated.
   useEffect(() => {
@@ -292,41 +292,54 @@ function CoinsPageInner() {
         )}
 
         {/* Balance card */}
-        <div className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-gold/20 bg-gradient-to-br from-gold/15 via-surface-100 to-surface-200 px-5 py-5">
-          <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gold/20">
-              {isRefreshing ? (
-                <Loader2 className="h-7 w-7 animate-spin text-gold" />
-              ) : (
-                <Coins className="h-7 w-7 text-gold" />
-              )}
+        <div className="relative mb-10 overflow-hidden rounded-[2rem] border border-white/10 bg-surface-100/40 px-6 py-8 sm:px-8 shadow-2xl">
+          {/* Glass glare effect */}
+          <div className="absolute -left-[20%] -top-[50%] h-[200%] w-[50%] rotate-45 bg-gradient-to-r from-transparent via-white/5 to-transparent pointer-events-none" />
+          
+          <div className="relative flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4 sm:gap-6">
+              <div className="relative flex h-16 w-16 sm:h-20 sm:w-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gold/30 to-gold/5 border border-gold/20 shadow-inner">
+                {isRefreshing ? (
+                  <Loader2 className="h-8 w-8 sm:h-10 sm:w-10 animate-spin text-gold" />
+                ) : (
+                  <Coins className="h-8 w-8 sm:h-10 sm:w-10 text-gold drop-shadow-[0_0_10px_rgba(212,168,67,0.8)]" />
+                )}
+              </div>
+              <div>
+                <p className="text-xs sm:text-sm font-medium text-gray-400">
+                  {isRefreshing ? "กำลังอัปเดต..." : "ยอดเหรียญคงเหลือ"}
+                </p>
+                <div className="flex items-baseline gap-1.5">
+                  <p className="text-4xl sm:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-gold-light via-gold to-gold-dark drop-shadow-sm">
+                    {user ? formatNumber(user.coin_balance) : "0"}
+                  </p>
+                  <span className="text-sm font-bold text-gold/70">C</span>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="text-xs text-gray-400">
-                {isRefreshing ? "กำลังอัปเดต..." : "ยอดเหรียญคงเหลือ"}
+            {isRefreshing && (
+              <p className="hidden sm:block rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400 animate-pulse border border-emerald-500/20">
+                กำลัง Sync...
               </p>
-              <p className="text-4xl font-bold text-gold">
-                {user ? formatNumber(user.coin_balance) : "0"}
-              </p>
-            </div>
+            )}
           </div>
-          {isRefreshing && (
-            <p className="text-xs text-emerald-400 animate-pulse">รอสักครู…</p>
-          )}
         </div>
 
-        {/* Top-up card */}
-        <section className="rounded-3xl border border-white/10 bg-surface-100/80 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.4)] backdrop-blur-xl sm:p-6">
-          <div className="mb-1 flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-gold" />
-            <h2 className="text-lg font-semibold text-white">เติมเครดิต</h2>
+        {/* Top-up section */}
+        <section className="relative">
+          
+          <div className="relative mb-4 flex items-center gap-2.5 px-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gold/20">
+              <Sparkles className="h-4 w-4 text-gold" />
+            </div>
+            <h2 className="text-[19px] sm:text-xl font-bold text-white tracking-tight">เลือกแพ็กเกจสุดคุ้ม</h2>
           </div>
-          <p className="mb-5 text-xs text-gray-400">
-            1. เลือกแพ็กเกจที่ต้องการเติม
+          <p className="mb-8 text-sm text-gray-400 px-3">
+            เติมเหรียญเพื่อสนับสนุนนักเขียนและปลดล็อกตอนพิเศษ
           </p>
 
           {/* Preset chips */}
-          <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="relative mb-8 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
             {packages.map((pkg) => {
               const active = selectedPackage?.id === pkg.id;
               const priceBaht = pkg.price_thb;
@@ -340,57 +353,83 @@ function CoinsPageInner() {
                     setSelectedPackage(pkg);
                     setError(null);
                   }}
-                  className={`relative flex flex-col items-center justify-center rounded-2xl border p-4 text-center transition ${active
-                    ? "border-gold bg-gold/15 text-white shadow-[0_0_15px_rgba(212,168,67,0.2)]"
-                    : "border-white/10 bg-surface-200/70 text-gray-300 hover:border-gold/40 hover:bg-surface-50"
+                  className={`group relative flex flex-col items-center justify-center rounded-3xl border transition-all duration-300 overflow-hidden ${
+                    active
+                      ? "border-gold bg-surface-100 ring-1 ring-gold shadow-[0_0_20px_rgba(212,168,67,0.15)] scale-[1.02]"
+                      : "border-white/5 bg-surface-100/40 text-gray-300 hover:border-white/20 hover:bg-surface-100 hover:-translate-y-1"
                     }`}
                 >
-                  <p className="text-xl font-bold text-white">฿{formatNumber(priceBaht)}</p>
-                  <p className="mt-1 text-sm font-semibold text-gold">{pkg.coins} เหรียญ</p>
+                  {/* Subtle active glow inside card */}
+                  {active && <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,168,67,0.08),transparent_70%)] pointer-events-none" />}
+                  
                   {hasBonus && (
-                    <span className="mt-2 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
-                      แถมโบนัส {formatNumber(bonusAmount)}
-                    </span>
+                    <div className="absolute top-0 right-0 z-10 flex items-center justify-center rounded-bl-2xl bg-emerald-500 px-3 py-1.5 shadow-lg shadow-emerald-500/20">
+                      <span className="text-[10px] sm:text-[11px] font-bold text-black tracking-wide">
+                        โบนัส +{formatNumber(bonusAmount)}
+                      </span>
+                    </div>
                   )}
+
+                  <div className="flex w-full flex-col px-4 py-8 sm:py-10 items-center z-0">
+                    <Coins className={`h-8 w-8 sm:h-10 sm:w-10 transition-all duration-300 ${active ? "text-gold drop-shadow-[0_0_12px_rgba(212,168,67,0.8)] scale-110" : "text-gray-500 group-hover:text-gold/80"}`} />
+                    <p className={`mt-3 text-[1.35rem] sm:text-2xl font-black tracking-tight ${active ? "text-white" : "text-gray-100"}`}>
+                      ฿{formatNumber(priceBaht)}
+                    </p>
+                    <p className={`mt-1 text-xs sm:text-sm font-bold ${active ? "text-gold" : "text-gold/70"}`}>
+                      {pkg.coins} <span className="opacity-90">เหรียญ</span>
+                    </p>
+                  </div>
                 </button>
               );
             })}
           </div>
 
           {packages.length === 0 && (
-            <div className="mb-6 rounded-xl border border-dashed border-white/10 py-8 text-center text-sm text-gray-500">
+            <div className="mb-6 rounded-2xl border border-dashed border-white/10 py-12 text-center text-sm text-gray-500">
               ไม่มีแพ็กเกจให้เลือกในขณะนี้
             </div>
           )}
 
           {error && (
-            <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+            <div className="mb-4 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-300 flex items-center gap-2">
+              <XCircle className="h-5 w-5" />
               {error}
             </div>
           )}
 
-          <div className="mb-6">
-            <p className="mb-3 text-xs text-gray-400">2. เลือกช่องทางการชำระเงิน</p>
+          <div className="relative mb-10 px-2 mt-4">
+            <div className="mb-4 flex items-center gap-2 text-sm text-gray-400">
+              <Wallet className="h-4 w-4" />
+              <span className="font-medium">เลือกช่องทางการชำระเงิน</span>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setPaymentMethod("truewallet")}
-                className={`flex items-center justify-center gap-2 rounded-xl border p-3 text-sm font-medium transition ${paymentMethod === "truewallet"
-                  ? "border-orange-500 bg-orange-500/10 text-orange-400"
-                  : "border-white/10 bg-surface-200/50 text-gray-400 hover:border-orange-500/50"
+                className={`flex items-center justify-center gap-2.5 rounded-2xl border p-3.5 sm:p-4 text-sm font-semibold transition-all ${
+                  paymentMethod === "truewallet"
+                    ? "border-orange-500 bg-gradient-to-b from-orange-500/20 to-orange-500/5 text-orange-400 shadow-[0_0_15px_rgba(249,115,22,0.2)] scale-[1.02]"
+                    : "border-white/5 bg-surface-200/50 text-gray-400 hover:border-white/20 hover:bg-surface-200"
                   }`}
               >
-                TrueMoney Wallet
+                <div className={`flex h-6 w-6 items-center justify-center rounded-full ${paymentMethod === "truewallet" ? "bg-orange-500 text-white shadow-sm" : "bg-surface-50 text-gray-500"}`}>
+                  <span className="text-[10px] font-black tracking-tighter">TM</span>
+                </div>
+                TrueMoney
               </button>
               <button
                 type="button"
                 onClick={() => setPaymentMethod("qr")}
-                className={`flex items-center justify-center gap-2 rounded-xl border p-3 text-sm font-medium transition ${paymentMethod === "qr"
-                  ? "border-blue-500 bg-blue-500/10 text-blue-400"
-                  : "border-white/10 bg-surface-200/50 text-gray-400 hover:border-blue-500/50"
+                className={`flex items-center justify-center gap-2.5 rounded-2xl border p-3.5 sm:p-4 text-sm font-semibold transition-all ${
+                  paymentMethod === "qr"
+                    ? "border-blue-500 bg-gradient-to-b from-blue-500/20 to-blue-500/5 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.2)] scale-[1.02]"
+                    : "border-white/5 bg-surface-200/50 text-gray-400 hover:border-white/20 hover:bg-surface-200"
                   }`}
               >
-                QR Code
+                <div className={`flex h-6 w-6 items-center justify-center rounded-full ${paymentMethod === "qr" ? "bg-blue-500 text-white shadow-sm" : "bg-surface-50 text-gray-500"}`}>
+                  <QrCode className="h-3.5 w-3.5" />
+                </div>
+                QR PromptPay
               </button>
             </div>
           </div>
@@ -399,30 +438,50 @@ function CoinsPageInner() {
             type="button"
             onClick={handleCheckout}
             disabled={buying || !selectedPackage}
-            className="w-full rounded-2xl bg-gold py-3.5 text-base font-semibold text-black shadow-[0_8px_30px_rgba(212,168,67,0.3)] transition hover:bg-gold-light disabled:cursor-not-allowed disabled:opacity-50"
+            className={`group relative w-full overflow-hidden rounded-[1.25rem] py-4 text-base sm:text-lg font-bold transition-all duration-300 ${
+              selectedPackage && !buying
+                ? "bg-gradient-to-r from-gold-dark via-gold to-gold-light text-black shadow-[0_0_30px_rgba(212,168,67,0.4)] hover:shadow-[0_0_40px_rgba(212,168,67,0.6)] hover:scale-[1.01]"
+                : "bg-surface-200 text-gray-500 cursor-not-allowed border border-white/5"
+            }`}
           >
-            {buying ? (
-              <span className="flex items-center justify-center gap-2">
-                <Loader2 className="h-5 w-5 animate-spin" />
-                กำลังเปิดระบบชำระเงิน...
-              </span>
-            ) : selectedPackage ? (
-              `ชำระเงิน ฿${formatNumber(selectedPackage.price_thb)} → รับ ${formatNumber(selectedPackage.coins)} เหรียญ`
-            ) : (
-              "กรุณาเลือกแพ็กเกจ"
+            {/* Shimmer effect for active button */}
+            {selectedPackage && !buying && (
+              <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent transition-all duration-1000 ease-in-out group-hover:translate-x-full" />
             )}
+            
+            <div className="relative flex items-center justify-center gap-2">
+              {buying ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  กำลังเชื่อมต่อตู้รับชำระเงิน...
+                </>
+              ) : selectedPackage ? (
+                <>
+                  <Zap className="h-5 w-5 sm:h-6 sm:w-6 fill-black/20 text-black/40" />
+                  ชำระเงิน ฿{formatNumber(selectedPackage.price_thb)}
+                  <span className="mx-1 opacity-40 font-normal">|</span>
+                  รับ {formatNumber(selectedPackage.coins)} <Coins className="h-4 w-4 sm:h-5 sm:w-5 inline ml-0.5" />
+                </>
+              ) : (
+                "กรุณาเลือกตระกร้าเหรียญ"
+              )}
+            </div>
           </button>
 
           {qrCodeData && (
-            <div className="mt-6 flex flex-col items-center justify-center rounded-3xl border border-white/10 bg-white p-6 shadow-2xl">
-              <div className="mb-4 flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin text-emerald-500" />
-                <p className="text-sm font-bold text-gray-900 italic tracking-tight">กำลังรอการชำระเงิน...</p>
+            <div className="mt-8 flex flex-col items-center justify-center rounded-[2rem] border border-white/10 bg-white p-8 shadow-2xl relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-400" />
+              <div className="mb-5 flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                  <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />
+                </div>
+                <p className="text-base font-bold text-gray-900 tracking-tight">กำลังรอการชำระเงิน...</p>
               </div>
 
               {qrCodeData.startsWith("data:image") ? (
-                <div className="group relative mx-auto flex w-64 h-64 sm:w-72 sm:h-72 items-center justify-center overflow-hidden bg-white rounded-2xl border-4 border-emerald-500/20 shadow-inner p-2">
-                  <img src={qrCodeData} alt="QR Code" className="w-full h-full object-contain transition duration-500 group-hover:scale-105" />
+                <div className="group relative mx-auto flex w-64 h-64 sm:w-72 sm:h-72 items-center justify-center overflow-hidden bg-white rounded-2xl border-2 border-emerald-500/20 shadow-lg shadow-emerald-500/5 p-2 transition-all hover:border-emerald-500/40">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={qrCodeData} alt="QR Code" className="w-full h-full object-contain transition duration-500 group-hover:scale-[1.02]" />
                   <div className="absolute inset-0 bg-emerald-500/5 pointer-events-none" />
                 </div>
               ) : (
@@ -431,11 +490,11 @@ function CoinsPageInner() {
                 </div>
               )}
 
-              <div className="mt-5 space-y-2">
-                <p className="text-[11px] font-medium text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full inline-block">
-                  แสกนได้ทันทีผ่านทุก App ธนาคาร
+              <div className="mt-6 space-y-2 text-center">
+                <p className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-4 py-1.5 rounded-full inline-block">
+                  ⚡ แสกนได้ทันทีผ่านทุก App ธนาคาร
                 </p>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-gray-500 max-w-xs mx-auto pt-2">
                   โปรดรอสักครู่หลังจากสแกนสำเร็จ ยอดเหรียญจะอัปเดตอัตโนมัติ
                 </p>
               </div>
@@ -446,16 +505,19 @@ function CoinsPageInner() {
                   setQrCodeData(null);
                   setActiveReferenceNo(null);
                 }}
-                className="mt-6 text-xs font-semibold text-gray-400 hover:text-red-400 transition"
+                className="mt-6 rounded-full px-4 py-2 text-xs font-semibold text-gray-400 hover:text-red-500 hover:bg-red-50 transition"
               >
                 ยกเลิกรายการนี้
               </button>
             </div>
           )}
 
-          <p className="mt-4 text-center text-xs text-gray-400">
-            ชำระผ่าน FeelFreePay — ปลอดภัยและรวดเร็ว
-          </p>
+          <div className="mt-8 flex items-center justify-center gap-2 opacity-60">
+            <CheckCircle2 className="h-3.5 w-3.5 text-gray-400" />
+            <p className="text-center text-[11px] font-medium text-gray-400 uppercase tracking-wide">
+              Secure Payment via FeelFreePay
+            </p>
+          </div>
         </section>
 
         {/* Transaction history */}

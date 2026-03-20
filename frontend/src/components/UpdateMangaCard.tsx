@@ -52,12 +52,6 @@ export default function UpdateMangaCard({ manga }: Props) {
                     </div>
                 )}
 
-                {/* Color Badge */}
-                <div className="absolute bottom-2 left-2 z-10 flex items-center">
-                    <span className="rounded bg-gold px-1.5 py-0.5 text-[9px] font-bold text-black shadow-sm flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-black/60"></span> COLOR
-                    </span>
-                </div>
             </div>
 
             {/* Info Block */}

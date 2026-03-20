@@ -26,7 +26,7 @@ export default function TopMangaRanking() {
         (async () => {
             setLoading(true);
             try {
-                const data = await getTopManga(period, 10);
+                const data = await getTopManga(period, 5);
                 if (mounted) setMangas(data || []);
             } catch (err) {
                 console.error("Failed to load top manga", err);
