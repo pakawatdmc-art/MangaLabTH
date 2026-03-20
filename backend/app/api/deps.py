@@ -34,6 +34,18 @@ def _get_jwks_client() -> jwt.PyJWKClient:
 # ── Token verification ───────────────────────────
 
 
+def _get_clerk_issuer() -> str:
+    """Derive the Clerk issuer URL from the JWKS URL.
+    
+    JWKS URL format: https://<clerk-domain>/.well-known/jwks.json
+    Issuer format:   https://<clerk-domain>
+    """
+    jwks_url = settings.CLERK_JWKS_URL
+    if "/.well-known/" in jwks_url:
+        return jwks_url.split("/.well-known/")[0]
+    return jwks_url.rsplit("/", 1)[0]
+
+
 def _decode_clerk_token(token: str) -> dict:
     """Verify and decode a Clerk-issued JWT using JWKS."""
     try:
@@ -43,6 +55,7 @@ def _decode_clerk_token(token: str) -> dict:
             token,
             signing_key.key,
             algorithms=["RS256"],
+            issuer=_get_clerk_issuer(),
             options={"verify_aud": False},
         )
         return payload
@@ -88,41 +101,42 @@ async def get_clerk_profile(clerk_id: str) -> dict[str, str]:
         return {"username": "", "email": ""}
 
     try:
-        async with httpx.AsyncClient(timeout=8.0) as client:
-            res = await client.get(
-                f"https://api.clerk.com/v1/users/{clerk_id}",
-                headers={"Authorization": f"Bearer {settings.CLERK_SECRET_KEY}"},
-            )
-            if not res.is_success:
-                return {"username": "", "email": ""}
+        from app.services.http_client import get_http_client
+        client = get_http_client()
+        res = await client.get(
+            f"https://api.clerk.com/v1/users/{clerk_id}",
+            headers={"Authorization": f"Bearer {settings.CLERK_SECRET_KEY}"},
+        )
+        if not res.is_success:
+            return {"username": "", "email": ""}
 
-            data = res.json()
-            username = _first_non_empty(
-                data.get("username"),
-            )
+        data = res.json()
+        username = _first_non_empty(
+            data.get("username"),
+        )
 
-            email = ""
-            primary_email_id = data.get("primary_email_address_id")
-            email_addresses = data.get("email_addresses")
-            if isinstance(email_addresses, list):
-                for item in email_addresses:
-                    if not isinstance(item, dict):
-                        continue
-                    if primary_email_id and item.get("id") == primary_email_id:
-                        email = _first_non_empty(item.get("email_address"))
-                        break
-                if not email:
-                    first = email_addresses[0] if email_addresses else {}
-                    if isinstance(first, dict):
-                        email = _first_non_empty(first.get("email_address"))
+        email = ""
+        primary_email_id = data.get("primary_email_address_id")
+        email_addresses = data.get("email_addresses")
+        if isinstance(email_addresses, list):
+            for item in email_addresses:
+                if not isinstance(item, dict):
+                    continue
+                if primary_email_id and item.get("id") == primary_email_id:
+                    email = _first_non_empty(item.get("email_address"))
+                    break
+            if not email:
+                first = email_addresses[0] if email_addresses else {}
+                if isinstance(first, dict):
+                    email = _first_non_empty(first.get("email_address"))
 
-            if not email and isinstance(data.get("primary_email_address"), dict):
-                email = _first_non_empty(
-                    data["primary_email_address"].get("email_address"))
+        if not email and isinstance(data.get("primary_email_address"), dict):
+            email = _first_non_empty(
+                data["primary_email_address"].get("email_address"))
 
-            result = {"username": username, "email": email}
-            _clerk_profile_cache[clerk_id] = result
-            return result
+        result = {"username": username, "email": email}
+        _clerk_profile_cache[clerk_id] = result
+        return result
     except Exception:
         return {"username": "", "email": ""}
 

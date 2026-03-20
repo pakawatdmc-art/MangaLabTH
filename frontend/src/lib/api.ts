@@ -269,16 +269,24 @@ export async function getPackages() {
   return fetcher<CoinPackage[]>("/payments/packages");
 }
 
-export async function createCheckoutSession(packageId: string, token: string) {
-  return fetcher<{ url: string }>(`/payments/checkout?package_id=${packageId}`, {
+export async function createCheckoutSession(packageId: string, method: "qr" | "truewallet", token: string) {
+  return fetcher<{
+    url?: string;
+    raw?: string;
+    qr_data?: string;
+    type: string;
+    action_url?: string;
+    parameters?: Record<string, string>;
+    reference_no?: string;
+  }>(`/payments/checkout?package_id=${packageId}&method=${method}`, {
     method: "POST",
     token,
   });
 }
 
-export async function confirmCheckoutPayment(checkoutSessionId: string, token: string) {
+export async function confirmCheckoutPayment(referenceNo: string, token: string) {
   return fetcher<{ status: string; new_balance?: number; coins?: number }>(
-    `/payments/confirm?checkout_session_id=${encodeURIComponent(checkoutSessionId)}`,
+    `/payments/confirm?reference_no=${encodeURIComponent(referenceNo)}`,
     {
       method: "POST",
       token,

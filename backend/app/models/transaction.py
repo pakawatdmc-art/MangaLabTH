@@ -61,16 +61,21 @@ class Transaction(SQLModel, table=True):
         max_length=64,
         description="Chapter unlocked (for CHAPTER_UNLOCK type)",
     )
-    stripe_payment_intent_id: Optional[str] = Field(
+    ffp_reference_no: Optional[str] = Field(
         default=None,
-        max_length=128,
-        description="Stripe PI ID (for COIN_PURCHASE type)",
-    )
-    stripe_session_id: Optional[str] = Field(
-        default=None,
-        max_length=128,
+        max_length=64,
         sa_column_kwargs={"unique": True, "nullable": True},
-        description="Stripe Checkout Session ID — unique to prevent double-credit",
+        description="Our referenceNo sent to FeelFreePay",
+    )
+    ffp_txn_id: Optional[str] = Field(
+        default=None,
+        max_length=128,
+        description="FeelFreePay's internal ffpReferenceNo",
+    )
+    package_id: Optional[str] = Field(
+        default=None,
+        max_length=64,
+        description="ID of the coin package purchased (for webhook recovery)",
     )
     note: str = Field(default="", max_length=512)
 
@@ -110,12 +115,7 @@ class CoinPackage(SQLModel, table=True):
     name: str = Field(max_length=128)
     coins: int = Field(gt=0, description="Number of coins granted")
     price_thb: int = Field(
-        gt=0, description="Price in Thai Baht (THB) - changed from satang")
-    stripe_price_id: str = Field(
-        default="",
-        max_length=128,
-        description="Stripe Price object ID",
-    )
+        gt=0, description="Price in Thai Baht (THB)")
     is_active: bool = Field(default=True, index=True)
     sort_order: int = Field(default=0)
 

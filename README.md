@@ -18,7 +18,7 @@ mangaFactory/
 | Backend | FastAPI, SQLModel, Pydantic v2, Alembic | **Google Cloud Run (Docker)** |
 | Database | Supabase PostgreSQL (IPv4 Session Pooler) | **Supabase** |
 | Storage | Cloudflare R2 (S3-compatible, boto3) | **Cloudflare R2** |
-| Payments | Stripe | Stripe |
+| Payments | FeelFreePay (PromptPay QR / TrueWallet) | FeelFreePay |
 | Auth | Clerk (JWT + RBAC) | Clerk |
 
 ## Local Development
@@ -114,8 +114,10 @@ Google Cloud Run จะนำ `Dockerfile` ไปสร้าง Image และ
 | `R2_SECRET_ACCESS_KEY` | R2 API token secret |
 | `R2_BUCKET_NAME` | R2 bucket name |
 | `R2_PUBLIC_URL` | R2 public bucket URL (e.g. `https://pub-xxx.r2.dev`) |
-| `STRIPE_SECRET_KEY` | Stripe secret key |
-| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret |
+| `FFP_CUSTOMER_KEY` | FeelFreePay Customer Key |
+| `FFP_PUBLIC_KEY` | FeelFreePay Public Key |
+| `FFP_SECRET_KEY` | FeelFreePay Secret Key |
+| `FFP_BASE_URL` | FeelFreePay API Base URL |
 | `APP_ENV` | `development` or `production` |
 | `CORS_ORIGINS` | Comma-separated allowed origins (URL ของ Vercel) |
 | `FRONTEND_URL` | URL ของ Vercel (สำหรับการสั่ง Revalidate Cache) |
@@ -190,14 +192,14 @@ Google Cloud Run จะนำ `Dockerfile` ไปสร้าง Image และ
 | `POST` | `/v1/transactions/unlock` | User | Unlock chapter (atomic coin deduction) |
 | `POST` | `/v1/transactions/admin/grant` | Admin | Grant coins to user |
 
-### Payments (Stripe)
+### Payments (FeelFreePay)
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | `GET` | `/v1/payments/packages` | Public | List available coin packages |
-| `POST` | `/v1/payments/checkout` | User | Create Stripe Checkout session |
-| `POST` | `/v1/payments/webhook` | Stripe | Webhook handler (idempotent) |
-| `POST` | `/v1/payments/confirm` | User | Confirm checkout (webhook fallback) |
+| `POST` | `/v1/payments/checkout` | User | Create Payment session (QR / TrueWallet) |
+| `POST` | `/v1/payments/webhook` | System | Webhook handler |
+| `POST` | `/v1/payments/confirm` | User | Confirm checkout |
 
 ### Settings & Analytics
 
@@ -222,7 +224,7 @@ Google Cloud Run จะนำ `Dockerfile` ไปสร้าง Image และ
   - Atomic coin mutations with `SELECT ... FOR UPDATE` (prevents double-spend)
   - **Double-Unlock Protection:** Partial Unique Index on `(user_id, chapter_id)` in Transactions
   - **Admin Safety:** coin_balance protected - must use Admin Grant endpoint (Audit Logged)
-- **Stripe:** Idempotent webhook processing (checks `stripe_session_id` + `payment_intent_id`)
+- **FeelFreePay:** Secure webhook verification and payment processing integration
 - **Performance:**
   - **Clerk Caching:** TTLCache on backend for user profiles (reduces external API calls)
   - **Frontend API Logic:** Exponential backoff retry for transient network errors

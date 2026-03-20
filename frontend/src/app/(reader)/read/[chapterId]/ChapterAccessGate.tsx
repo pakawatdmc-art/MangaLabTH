@@ -39,7 +39,7 @@ export default function ChapterAccessGate({
           const me = await getMe(token);
           setBalance(me.coin_balance);
         }
-      } catch { }
+      } catch (e) { console.error('[MangaLabTH]', e); }
     })();
   }, [getToken]);
 

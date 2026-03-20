@@ -71,7 +71,7 @@ export default function ChapterReaderClient({
           updatedAt: new Date().toISOString(),
         })
       );
-    } catch { }
+    } catch (e) { console.error('[MangaLabTH]', e); }
   }, [chapter.id, chapter.number, manga.id, manga.title, manga.slug]);
 
   useEffect(() => {
@@ -111,7 +111,7 @@ export default function ChapterReaderClient({
         if (!token) return;
         const me = await getMe(token);
         setCurrentBalance(me.coin_balance);
-      } catch { }
+      } catch (e) { console.error('[MangaLabTH]', e); }
     };
 
     const handleBalanceUpdate = (e: Event) => {
@@ -137,7 +137,7 @@ export default function ChapterReaderClient({
         readChapters.push(chapter.id);
         localStorage.setItem(readChapKey, JSON.stringify(readChapters));
       }
-    } catch { }
+    } catch (e) { console.error('[MangaLabTH]', e); }
   }, [chapter.id]);
 
   return (

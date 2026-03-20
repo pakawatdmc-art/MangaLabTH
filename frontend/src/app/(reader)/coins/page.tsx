@@ -43,12 +43,18 @@ function CoinsPageInner() {
   const [selectedPackage, setSelectedPackage] = useState<CoinPackage | null>(null);
   const prevBalanceRef = useRef<number | null>(null);
 
-  const paymentStatus = searchParams.get("success")
-    ? "success"
-    : searchParams.get("canceled")
-      ? "canceled"
-      : null;
-  const checkoutSessionId = searchParams.get("session_id");
+  const [paymentMethod, setPaymentMethod] = useState<"truewallet" | "qr">("truewallet");
+  const [qrCodeData, setQrCodeData] = useState<string | null>(null);
+  const [activeReferenceNo, setActiveReferenceNo] = useState<string | null>(null);
+
+  const paymentStatus = searchParams.get("status") === "processing"
+    ? "processing"
+    : searchParams.get("success")
+      ? "success"
+      : searchParams.get("canceled")
+        ? "canceled"
+        : null;
+  const currentReferenceNo = searchParams.get("reference_no");
 
   const fetchUserData = useCallback(async () => {
     try {
@@ -83,19 +89,23 @@ function CoinsPageInner() {
       .finally(() => setLoading(false));
   }, [isLoaded, fetchUserData]);
 
-  const confirmAndRefreshPayment = useCallback(async (): Promise<boolean> => {
+  useEffect(() => {
+    if (currentReferenceNo) {
+      setActiveReferenceNo(currentReferenceNo);
+    }
+  }, [currentReferenceNo]);
+
+  const confirmAndRefreshPayment = useCallback(async (refNo: string): Promise<boolean> => {
     try {
       let confirmStatus: string | null = null;
       let confirmNewBalance: number | undefined;
 
-      if (checkoutSessionId) {
-        const token = await getToken();
-        if (!token) return true;
+      const token = await getToken();
+      if (!token) return true;
 
-        const confirm = await confirmCheckoutPayment(checkoutSessionId, token);
-        confirmStatus = confirm.status;
-        confirmNewBalance = confirm.new_balance;
-      }
+      const confirm = await confirmCheckoutPayment(refNo, token);
+      confirmStatus = confirm.status;
+      confirmNewBalance = confirm.new_balance;
 
       const me = await fetchUserData();
       const balanceChanged =
@@ -117,11 +127,14 @@ function CoinsPageInner() {
         me.coin_balance !== prevBalanceRef.current
       );
     }
-  }, [checkoutSessionId, fetchUserData, getToken]);
+  }, [currentReferenceNo, fetchUserData, getToken]);
 
-  // Confirm + poll every 2 seconds after successful payment until balance is updated.
+  // Poll every 2 seconds if status is processing or QR is active until balance is updated.
   useEffect(() => {
-    if (paymentStatus !== "success" || !isLoaded) return;
+    const isProcessing = paymentStatus === "processing";
+    const hasQR = !!qrCodeData;
+
+    if ((!isProcessing && !hasQR) || !activeReferenceNo || !isLoaded) return;
 
     setIsRefreshing(true);
     let cancelled = false;
@@ -131,12 +144,17 @@ function CoinsPageInner() {
 
     const run = async () => {
       attempts++;
-      const done = await confirmAndRefreshPayment();
+      const done = await confirmAndRefreshPayment(activeReferenceNo);
 
       if (cancelled) return;
 
       if (done || attempts >= MAX) {
         setIsRefreshing(false);
+        // If it was a QR code and it's done, clear it
+        if (done && hasQR) {
+          setQrCodeData(null);
+          setActiveReferenceNo(null);
+        }
         return;
       }
 
@@ -153,9 +171,14 @@ function CoinsPageInner() {
   }, [paymentStatus, isLoaded, confirmAndRefreshPayment]);
 
   const handleManualRefresh = async () => {
+    if (!activeReferenceNo) return;
     setIsRefreshing(true);
     try {
-      await confirmAndRefreshPayment();
+      const done = await confirmAndRefreshPayment(activeReferenceNo);
+      if (done && qrCodeData) {
+        setQrCodeData(null);
+        setActiveReferenceNo(null);
+      }
     } finally {
       setIsRefreshing(false);
     }
@@ -167,12 +190,36 @@ function CoinsPageInner() {
       return;
     }
     setError(null);
+    setQrCodeData(null);
     try {
       setBuying(true);
       const token = await getToken();
       if (!token) return;
-      const { url } = await createCheckoutSession(selectedPackage.id, token);
-      window.location.href = url;
+
+      const res = await createCheckoutSession(selectedPackage.id, paymentMethod, token);
+
+      if (res.type === "qr" && res.qr_data) {
+        // QR Code: Server returns base64 PNG image inline
+        setQrCodeData(res.qr_data);
+        setActiveReferenceNo(res.reference_no || null);
+      } else if (res.type === "truewallet_form" && res.action_url && res.parameters) {
+        // TrueWallet: Browser must POST form directly to FFP
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = res.action_url;
+
+        for (const [key, value] of Object.entries(res.parameters)) {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = key;
+          input.value = String(value);
+          form.appendChild(input);
+        }
+        document.body.appendChild(form);
+        form.submit();
+      } else {
+        throw new Error("รูปแบบการตอบกลับจากระบบชำระเงินไม่ถูกต้อง");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "ไม่สามารถสร้างรายการชำระเงินได้");
     } finally {
@@ -195,6 +242,31 @@ function CoinsPageInner() {
       <div className="relative mx-auto max-w-2xl px-4 py-8 pb-24 sm:px-6 sm:pb-10">
 
         {/* Payment status banners */}
+        {paymentStatus === "processing" && (
+          <div className="mb-6 flex items-start justify-between gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3.5 text-emerald-300">
+            <div className="flex items-start gap-3">
+              {isRefreshing ? (
+                <Loader2 className="mt-0.5 h-5 w-5 shrink-0 animate-spin" />
+              ) : (
+                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
+              )}
+              <div>
+                <p className="font-semibold">กำลังตรวจสอบรายการ...</p>
+                <p className="text-sm opacity-80">
+                  {isRefreshing ? "กำลังอัปเดตยอดเหรียญ..." : "รอการยืนยันจากระบบชำระเงิน"}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleManualRefresh}
+              disabled={isRefreshing}
+              className="shrink-0 rounded-lg border border-emerald-500/40 px-3 py-1 text-xs font-medium text-emerald-300 hover:bg-emerald-500/20 disabled:opacity-50"
+            >
+              Refresh
+            </button>
+          </div>
+        )}
         {paymentStatus === "success" && (
           <div className="mb-6 flex items-start justify-between gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3.5 text-emerald-300">
             <div className="flex items-start gap-3">
@@ -210,14 +282,6 @@ function CoinsPageInner() {
                 </p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={handleManualRefresh}
-              disabled={isRefreshing}
-              className="shrink-0 rounded-lg border border-emerald-500/40 px-3 py-1 text-xs font-medium text-emerald-300 hover:bg-emerald-500/20 disabled:opacity-50"
-            >
-              Refresh
-            </button>
           </div>
         )}
         {paymentStatus === "canceled" && (
@@ -258,7 +322,7 @@ function CoinsPageInner() {
             <h2 className="text-lg font-semibold text-white">เติมเครดิต</h2>
           </div>
           <p className="mb-5 text-xs text-gray-400">
-            เลือกแพ็กเกจที่ต้องการเติม — ยิ่งเติมแพ็กเกจใหญ่ ยิ่งได้โบนัสสุดคุ้ม
+            1. เลือกแพ็กเกจที่ต้องการเติม
           </p>
 
           {/* Preset chips */}
@@ -305,6 +369,32 @@ function CoinsPageInner() {
             </div>
           )}
 
+          <div className="mb-6">
+            <p className="mb-3 text-xs text-gray-400">2. เลือกช่องทางการชำระเงิน</p>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setPaymentMethod("truewallet")}
+                className={`flex items-center justify-center gap-2 rounded-xl border p-3 text-sm font-medium transition ${paymentMethod === "truewallet"
+                  ? "border-orange-500 bg-orange-500/10 text-orange-400"
+                  : "border-white/10 bg-surface-200/50 text-gray-400 hover:border-orange-500/50"
+                  }`}
+              >
+                TrueMoney Wallet
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaymentMethod("qr")}
+                className={`flex items-center justify-center gap-2 rounded-xl border p-3 text-sm font-medium transition ${paymentMethod === "qr"
+                  ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                  : "border-white/10 bg-surface-200/50 text-gray-400 hover:border-blue-500/50"
+                  }`}
+              >
+                QR Code
+              </button>
+            </div>
+          </div>
+
           <button
             type="button"
             onClick={handleCheckout}
@@ -314,7 +404,7 @@ function CoinsPageInner() {
             {buying ? (
               <span className="flex items-center justify-center gap-2">
                 <Loader2 className="h-5 w-5 animate-spin" />
-                กำลังเชื่อมต่อ Stripe...
+                กำลังเปิดระบบชำระเงิน...
               </span>
             ) : selectedPackage ? (
               `ชำระเงิน ฿${formatNumber(selectedPackage.price_thb)} → รับ ${formatNumber(selectedPackage.coins)} เหรียญ`
@@ -323,8 +413,48 @@ function CoinsPageInner() {
             )}
           </button>
 
+          {qrCodeData && (
+            <div className="mt-6 flex flex-col items-center justify-center rounded-3xl border border-white/10 bg-white p-6 shadow-2xl">
+              <div className="mb-4 flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin text-emerald-500" />
+                <p className="text-sm font-bold text-gray-900 italic tracking-tight">กำลังรอการชำระเงิน...</p>
+              </div>
+
+              {qrCodeData.startsWith("data:image") ? (
+                <div className="group relative mx-auto flex w-64 h-64 sm:w-72 sm:h-72 items-center justify-center overflow-hidden bg-white rounded-2xl border-4 border-emerald-500/20 shadow-inner p-2">
+                  <img src={qrCodeData} alt="QR Code" className="w-full h-full object-contain transition duration-500 group-hover:scale-105" />
+                  <div className="absolute inset-0 bg-emerald-500/5 pointer-events-none" />
+                </div>
+              ) : (
+                <div className="mx-auto flex h-64 w-64 sm:h-72 sm:w-72 items-center justify-center bg-gray-50 text-gray-800 break-words text-[10px] p-4 overflow-hidden border border-gray-200 rounded-2xl">
+                  {qrCodeData}
+                </div>
+              )}
+
+              <div className="mt-5 space-y-2">
+                <p className="text-[11px] font-medium text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full inline-block">
+                  แสกนได้ทันทีผ่านทุก App ธนาคาร
+                </p>
+                <p className="text-xs text-gray-400">
+                  โปรดรอสักครู่หลังจากสแกนสำเร็จ ยอดเหรียญจะอัปเดตอัตโนมัติ
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setQrCodeData(null);
+                  setActiveReferenceNo(null);
+                }}
+                className="mt-6 text-xs font-semibold text-gray-400 hover:text-red-400 transition"
+              >
+                ยกเลิกรายการนี้
+              </button>
+            </div>
+          )}
+
           <p className="mt-4 text-center text-xs text-gray-400">
-            ชำระผ่าน Stripe — รองรับบัตรเครดิต/เดบิต และ PromptPay
+            ชำระผ่าน FeelFreePay — ปลอดภัยและรวดเร็ว
           </p>
         </section>
 
@@ -334,9 +464,9 @@ function CoinsPageInner() {
             <History className="h-5 w-5 text-gold" />
             ประวัติการทำรายการ
           </h2>
-          {transactions.length > 0 ? (
+          {transactions.filter(tx => !(tx.type === "coin_purchase" && tx.balance_after === 0)).length > 0 ? (
             <div className="space-y-2">
-              {transactions.map((tx) => (
+              {transactions.filter(tx => !(tx.type === "coin_purchase" && tx.balance_after === 0)).map((tx) => (
                 <div
                   key={tx.id}
                   className="flex items-center justify-between rounded-xl bg-surface-100/60 px-4 py-3 ring-1 ring-white/5"

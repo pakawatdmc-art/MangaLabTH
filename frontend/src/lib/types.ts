@@ -102,7 +102,6 @@ export interface Transaction {
   amount: number;
   balance_after: number;
   chapter_id?: string;
-  stripe_payment_intent_id?: string;
   note: string;
   created_at: string;
 }
@@ -112,7 +111,6 @@ export interface CoinPackage {
   name: string;
   coins: number;
   price_thb: number;
-  stripe_price_id: string;
   is_active: boolean;
   sort_order: number;
 }

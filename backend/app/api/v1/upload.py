@@ -25,7 +25,7 @@ _IMAGE_SIGNATURES: dict[bytes, str] = {
     b"GIF87a": "image/gif",
     b"GIF89a": "image/gif",
     b"RIFF": "image/webp",  # WebP starts with RIFF....WEBP
-    b"<svg": "image/svg+xml",
+    # NOTE: SVG intentionally excluded — SVG can contain <script> tags (XSS risk)
 }
 
 
@@ -142,8 +142,10 @@ async def upload_cover(
     try:
         contents, content_type = process_image_to_webp(contents)
     except Exception as e:
+        import logging
+        logging.getLogger(__name__).error("Cover image processing failed: %s", e)
         raise HTTPException(
-            status_code=500, detail=f"เกิดข้อผิดพลาดในการประมวลผลรูปภาพ: {str(e)}")
+            status_code=500, detail="เกิดข้อผิดพลาดในการประมวลผลรูปภาพ")
 
     # Generate unique key (always .webp now)
     safe_name = re.sub(r"[^a-zA-Z0-9._-]", "_", file.filename or "cover")
@@ -189,8 +191,10 @@ async def upload_chapter_page(
     try:
         contents, content_type = process_image_to_webp(contents)
     except Exception as e:
+        import logging
+        logging.getLogger(__name__).error("Chapter page processing failed: %s", e)
         raise HTTPException(
-            status_code=500, detail=f"เกิดข้อผิดพลาดในการประมวลผลรูปภาพ: {str(e)}")
+            status_code=500, detail="เกิดข้อผิดพลาดในการประมวลผลรูปภาพ")
 
     # Force the key extension to be .webp
     final_key = key.rsplit(".", 1)[0] + ".webp"

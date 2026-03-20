@@ -15,7 +15,8 @@ class TransactionRead(BaseModel):
     amount: int
     balance_after: int
     chapter_id: Optional[str]
-    stripe_payment_intent_id: Optional[str]
+    ffp_reference_no: Optional[str] = None
+    ffp_txn_id: Optional[str] = None
     note: str
     created_at: datetime
 
@@ -27,7 +28,6 @@ class CoinPackageRead(BaseModel):
     name: str
     coins: int
     price_thb: int
-    stripe_price_id: str
     is_active: bool
     sort_order: int
 

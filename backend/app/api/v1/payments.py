@@ -1,9 +1,10 @@
-"""Payment endpoints (Stripe)."""
+"""Payment endpoints (FeelFreePay)."""
 
-from app.services.stripe_service import (
-    create_checkout_session,
-    retrieve_checkout_session,
-    verify_webhook_signature,
+from app.services.feelfreepay_service import (
+    create_qr_payment,
+    create_truewallet_payment,
+    check_payment_status,
+    _generate_reference_no,
 )
 from app.schemas.transaction import CoinPackageRead
 from app.models.user import User
@@ -12,8 +13,9 @@ from app.config import get_settings
 from app.api.deps import CurrentUser, DBSession
 import logging
 from typing import Any, List
+from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Form
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy.exc import IntegrityError
@@ -27,58 +29,27 @@ settings = get_settings()
 limiter = Limiter(key_func=get_remote_address)
 
 
-def _get_payment_reference(session_data: dict[str, Any]) -> str:
-    """Use payment_intent when present; fallback to checkout session id for idempotency."""
-    payment_intent_id = session_data.get("payment_intent")
-    if isinstance(payment_intent_id, str) and payment_intent_id:
-        return payment_intent_id
-
-    checkout_session_id = session_data.get("id")
-    if isinstance(checkout_session_id, str) and checkout_session_id:
-        return f"cs_{checkout_session_id}"
-
-    raise HTTPException(
-        status_code=400, detail="Missing Stripe payment reference")
-
-
-async def _fulfill_checkout_session(
+async def _fulfill_payment(
     *,
     session: DBSession,
-    session_data: dict[str, Any],
+    reference_no: str,
+    user_id: str,
+    package_id: str,
+    ffp_txn_id: str,
 ) -> dict[str, Any]:
-    """Credit coins from a paid Stripe Checkout session. Idempotent."""
-    metadata = session_data.get("metadata", {})
-    user_id = metadata.get("user_id")
-    package_id = metadata.get("package_id")
-
+    """Credit coins from a successful FeelFreePay payment."""
     if not user_id or not package_id:
         return {"status": "ignored", "reason": "missing metadata"}
 
-    if session_data.get("payment_status") != "paid":
-        return {"status": "pending", "reason": "payment_not_paid"}
+    # Idempotency: skip if already processed
+    existing = (
+        await session.execute(
+            select(Transaction).where(
+                Transaction.ffp_reference_no == reference_no)
+        )
+    ).scalar_one_or_none()
 
-    payment_ref = _get_payment_reference(session_data)
-
-    # Idempotency: skip if already processed (check by stripe_session_id first)
-    checkout_session_id = session_data.get("id", "")
-    existing = None
-    if checkout_session_id:
-        existing = (
-            await session.execute(
-                select(Transaction).where(
-                    Transaction.stripe_session_id == checkout_session_id)
-            )
-        ).scalar_one_or_none()
-
-    if not existing:
-        existing = (
-            await session.execute(
-                select(Transaction).where(
-                    Transaction.stripe_payment_intent_id == payment_ref)
-            )
-        ).scalar_one_or_none()
-
-    if existing:
+    if existing and existing.balance_after > 0:
         return {
             "status": "ignored",
             "reason": "already processed",
@@ -102,39 +73,44 @@ async def _fulfill_checkout_session(
     new_balance = user.coin_balance + coins
     user.coin_balance = new_balance
 
-    tx = Transaction(
-        user_id=user.id,
-        type=TransactionType.COIN_PURCHASE,
-        amount=coins,
-        balance_after=new_balance,
-        stripe_payment_intent_id=payment_ref,
-        stripe_session_id=checkout_session_id or None,
-        note=note,
-    )
+    # If we created a pending transaction earlier, update it, otherwise create new
+    if existing:
+        existing.balance_after = new_balance
+        existing.ffp_txn_id = ffp_txn_id
+        session.add(existing)
+    else:
+        tx = Transaction(
+            id=reference_no, # Ensure our pending transactions use referenceNo as ID
+            user_id=user.id,
+            type=TransactionType.COIN_PURCHASE,
+            amount=coins,
+            balance_after=new_balance,
+            ffp_reference_no=reference_no,
+            ffp_txn_id=ffp_txn_id,
+            note=note,
+        )
+        session.add(tx)
+
     session.add(user)
-    session.add(tx)
 
     try:
         await session.commit()
     except IntegrityError:
         await session.rollback()
         # Another worker already fulfilled this session
-        existing = (
+        existing_check = (
             await session.execute(
                 select(Transaction).where(
-                    Transaction.stripe_session_id == checkout_session_id)
+                    Transaction.ffp_reference_no == reference_no)
             )
         ).scalar_one_or_none()
         return {
             "status": "ignored",
             "reason": "already processed (concurrent)",
-            "new_balance": existing.balance_after if existing else 0,
+            "new_balance": existing_check.balance_after if existing_check else 0,
         }
 
     return {"status": "success", "new_balance": new_balance, "coins": coins}
-
-
-
 
 
 @router.get("/packages", response_model=List[CoinPackageRead])
@@ -148,35 +124,83 @@ async def list_packages(session: DBSession):
     return (await session.execute(stmt)).scalars().all()
 
 
-
-
-
 @router.post("/checkout")
 @limiter.limit("10/minute")
 async def create_checkout(
     request: Request,
     package_id: str,
+    method: str,  # 'qr' or 'truewallet'
     user: CurrentUser,
     session: DBSession,
 ):
-    """Create a Stripe Checkout Session for a specific package."""
+    """Create a FeelFreePay payment request."""
     package = await session.get(CoinPackage, package_id)
     if not package or not package.is_active:
         raise HTTPException(status_code=404, detail="Package not found")
 
-    # Create session
+    if method not in ("qr", "truewallet"):
+        raise HTTPException(status_code=400, detail="Invalid payment method")
+
+    # Generate a reference number that fits FFP's TEXT(15) limit
+    reference_no = _generate_reference_no()
+    
+    frontend_base = settings.cors_origin_list[0]
+    
+    # Use the request base URL for the webhook assuming the backend is publicly accessible.
+    # IMPORTANT: FFP's CloudFront WAF blocks any request containing "localhost" or "127.0.0.1" 
+    # to protect against SSRF. For local testing, use lvh.me (resolves to 127.0.0.1) for the webhooks.
+    api_base_url = str(request.base_url).rstrip("/")
+    if "localhost" in api_base_url or "127.0.0.1" in api_base_url:
+        api_base_url = api_base_url.replace("localhost", "lvh.me").replace("127.0.0.1", "lvh.me")
+        
+    frontend_base_safe = frontend_base
+    if "localhost" in frontend_base_safe or "127.0.0.1" in frontend_base_safe:
+        frontend_base_safe = frontend_base_safe.replace("localhost", "lvh.me").replace("127.0.0.1", "lvh.me")
+    
     try:
-        url = create_checkout_session(
-            stripe_price_id=package.stripe_price_id,
+        if method == "qr":
+            result = await create_qr_payment(
+                amount=float(package.price_thb),
+                reference_no=reference_no,
+                background_url=f"{api_base_url}/api/v1/payments/webhook",
+                user_id=user.id,
+                package_id=str(package.id),
+            )
+            
+        elif method == "truewallet":
+            # For TrueWallet, we need background and response URLs
+            # In a real app, you might expose the webhook on a public domain via ngrok for local dev
+            # For this MVP, we assume settings.FRONTEND_URL exists and the backend is on the same domain or known url
+            
+            result = await create_truewallet_payment(
+                amount=float(package.price_thb),
+                reference_no=reference_no,
+                response_url=f"{frontend_base_safe}/coins?status=processing&reference_no={reference_no}",
+                background_url=f"{api_base_url}/api/v1/payments/webhook",
+                user_id=user.id,
+                package_id=str(package.id),
+            )
+
+        # Pre-create a pending transaction log Only if API call is successful
+        # We leave balance_after = 0 to signify it's pending.
+        tx = Transaction(
+            id=reference_no,
             user_id=user.id,
+            type=TransactionType.COIN_PURCHASE,
+            amount=package.coins,
+            balance_after=0, 
+            ffp_reference_no=reference_no,
             package_id=str(package.id),
-            success_url=(
-                f"{settings.cors_origin_list[0]}/coins"
-                "?success=true&session_id={CHECKOUT_SESSION_ID}"
-            ),
-            cancel_url=f"{settings.cors_origin_list[0]}/coins?canceled=true",
+            note=f"Initiated {method} purchase of {package.name}"
         )
-        return {"url": url}
+        session.add(tx)
+        await session.commit()
+
+        return result
+            
+    except HTTPException as e:
+        # Re-raise known API exceptions so the frontend can display them directly
+        raise e
     except Exception as e:
         logger.error("Checkout error: %s", e)
         raise HTTPException(
@@ -185,43 +209,129 @@ async def create_checkout(
 
 @router.post("/webhook", include_in_schema=False)
 @limiter.limit("30/minute")
-async def stripe_webhook(request: Request, session: DBSession):
-    """Handle Stripe webhooks to fulfill orders."""
-    payload = await request.body()
-    sig_header = request.headers.get("stripe-signature")
-    if not sig_header:
-        raise HTTPException(status_code=400, detail="Missing signature")
-
+async def feelfreepay_webhook(request: Request, session: DBSession):
+    """Handle FeelFreePay webhooks to fulfill orders.
+    
+    Note: FeelFreePay TrueWallet posts JSON, QR may or may not use same structure.
+    """
     try:
-        event = verify_webhook_signature(payload, sig_header)
+        payload = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON payload")
+
+    result_code = payload.get("resultCode")
+    reference_no = payload.get("referenceNo")
+    
+    if not reference_no:
+        return {"status": "ignored", "reason": "missing referenceNo"}
+
+    # We only process if it tells us it's a success
+    if result_code != "00":
+        return {"status": "ignored", "reason": f"resultCode is {result_code}"}
+
+    # Security: Double check with Check Status API
+    try:
+        status_data = await check_payment_status(reference_no)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.error("Webhook verify failed for %s: %s", reference_no, e)
+        raise HTTPException(status_code=400, detail="Status verification failed")
+        
+    # Check Status API returns "00" for success and "S" for Settle
+    verify_result_code = status_data.get("resultCode")
+    verify_status = status_data.get("txn.status") or status_data.get("status")
+    
+    if verify_result_code != "00" or verify_status != "S":
+        logger.warning(
+            "Spoofed or incomplete webhook detected for %s (result: %s, status: %s)", 
+            reference_no, verify_result_code, verify_status
+        )
+        return {"status": "ignored", "reason": "verification_failed"}
+        
+    # Valid payment! Extract metadata
+    # We can use either the original payload or the verified status_data depending on FFP's exact response shape
+    # Try verified data first, fallback to payload (Works for TrueWallet)
+    user_id = status_data.get("txn.merchantDefined1") or payload.get("merchantDefined1")
+    package_id = status_data.get("txn.merchantDefined2") or payload.get("merchantDefined2")
+    ffp_txn_id = status_data.get("txn.ffpReferenceNo") or payload.get("ffpReferenceNo", "")
+    
+    # If missing (always the case for QR Codes), recover from our local database
+    if not user_id or not package_id:
+        existing_tx = (
+            await session.execute(
+                select(Transaction).where(Transaction.ffp_reference_no == reference_no)
+            )
+        ).scalar_one_or_none()
+        
+        if existing_tx:
+            user_id = user_id or existing_tx.user_id
+            package_id = package_id or existing_tx.package_id
+            
+    if not user_id or not package_id:
+         return {"status": "error", "reason": "cannot identify user or package"}
 
-    if event["type"] in {
-        "checkout.session.completed",
-        "checkout.session.async_payment_succeeded",
-    }:
-        session_data = event["data"]["object"]
-        return await _fulfill_checkout_session(session=session, session_data=session_data)
-
-    return {"status": "ignored", "reason": "event_not_handled"}
+    # Fulfill
+    return await _fulfill_payment(
+        session=session,
+        reference_no=reference_no,
+        user_id=user_id,
+        package_id=package_id,
+        ffp_txn_id=ffp_txn_id
+    )
 
 
 @router.post("/confirm")
 @limiter.limit("5/minute")
 async def confirm_checkout_payment(
     request: Request,
-    checkout_session_id: str,
+    reference_no: str,
     user: CurrentUser,
     session: DBSession,
 ):
-    """Confirm checkout result from frontend return URL when webhook is delayed."""
-    stripe_session = retrieve_checkout_session(checkout_session_id)
-    metadata = stripe_session.get("metadata", {})
+    """Confirm checkout result from frontend polling.
+    
+    If webhook is delayed, frontend calls this to trigger a manual check_status.
+    """
+    if not reference_no:
+        raise HTTPException(status_code=400, detail="Missing reference_no")
+        
+    try:
+        status_data = await check_payment_status(reference_no)
+    except Exception as e:
+        logger.error("Manual confirm verify failed for %s: %s", reference_no, e)
+        raise HTTPException(status_code=400, detail="Status verification failed")
+        
+    verify_result_code = status_data.get("resultCode")
+    verify_status = status_data.get("txn.status") or status_data.get("status")
 
-    # Prevent users from confirming someone else's checkout session.
-    if metadata.get("user_id") and metadata.get("user_id") != user.id:
+    if verify_result_code != "00" or verify_status != "S":
+        return {"status": "pending", "reason": "payment_not_settled"}
+        
+    user_id = status_data.get("txn.merchantDefined1")
+    package_id = status_data.get("txn.merchantDefined2")
+    ffp_txn_id = status_data.get("txn.ffpReferenceNo", "")
+    
+    # Fallback for QR Codes which lack metadata
+    if not user_id or not package_id:
+        existing_tx = (
+            await session.execute(
+                select(Transaction).where(Transaction.ffp_reference_no == reference_no)
+            )
+        ).scalar_one_or_none()
+        if existing_tx:
+            user_id = user_id or existing_tx.user_id
+            package_id = package_id or existing_tx.package_id
+
+    if user_id != user.id:
         raise HTTPException(
-            status_code=403, detail="Checkout session does not belong to this user")
+            status_code=403, detail="Transaction belongs to another user")
 
-    return await _fulfill_checkout_session(session=session, session_data=stripe_session)
+    if not package_id:
+        raise HTTPException(status_code=400, detail="Missing package information")
+
+    return await _fulfill_payment(
+        session=session,
+        reference_no=reference_no,
+        user_id=user.id,
+        package_id=package_id,
+        ffp_txn_id=ffp_txn_id
+    )

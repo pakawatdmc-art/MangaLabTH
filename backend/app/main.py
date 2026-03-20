@@ -13,6 +13,7 @@ from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from app.config import get_settings
 from app.database import init_db
 from app.api.v1 import router as v1_router
+from app.services.http_client import close_http_client
 
 settings = get_settings()
 
@@ -26,6 +27,8 @@ async def lifespan(app: FastAPI):
     if not settings.is_production:
         await init_db()
     yield
+    # Shutdown: close shared HTTP client
+    await close_http_client()
 
 
 app = FastAPI(

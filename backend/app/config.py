@@ -30,9 +30,11 @@ class Settings(BaseSettings):
     R2_BUCKET_NAME: str = "mangafactory"
     R2_PUBLIC_URL: str = ""
 
-    # ── Stripe ───────────────────────────────────
-    STRIPE_SECRET_KEY: str = ""
-    STRIPE_WEBHOOK_SECRET: str = ""
+    # ── FeelFreePay ────────────────────────────────
+    FFP_CUSTOMER_KEY: str = ""
+    FFP_PUBLIC_KEY: str = ""
+    FFP_SECRET_KEY: str = ""
+    FFP_BASE_URL: str = "https://api-test.feelfreepay.com"
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

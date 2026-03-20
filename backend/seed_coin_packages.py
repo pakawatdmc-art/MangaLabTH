@@ -70,7 +70,6 @@ async def seed():
                 name=pd["name"],
                 coins=pd["coins"],
                 price_thb=pd["price_thb"], # save satang
-                stripe_price_id=pd["stripe_id"],
                 sort_order=pd["sort_order"],
                 is_active=True
             )
