@@ -84,6 +84,7 @@ npm run deploy
 | `NEXT_PUBLIC_CLERK_SIGN_IN_URL` | `/sign-in` | Path สำหรับหน้า Login |
 | `NEXT_PUBLIC_CLERK_SIGN_UP_URL` | `/sign-up` | Path สำหรับหน้าสมัคร |
 | `NEXT_PUBLIC_API_URL` | `https://mangafactory-api.onrender.com/api/v1` | URL ของ Backend ที่ Deploy แล้ว (**ต้องลงท้ายด้วย `/api/v1`**) |
+| `NEXT_PUBLIC_SITE_URL` | `https://mangalabth.com` | Base URL ของเว็บไซต์ (สำหรับระบบ SEO / `robots.ts`) |
 | `NEXT_PUBLIC_R2_PUBLIC_URL` | `https://pub-xxxxx.r2.dev` | ค่าเดียวกับ Backend |
 
 > **สำคัญ:** ตัวแปรที่ขึ้นต้นด้วย `NEXT_PUBLIC_` จะถูก inline ตอน Build ดังนั้นต้องตั้งค่าใน **Build Variables and Secrets** ไม่ใช่ Runtime Variables
@@ -132,3 +133,4 @@ alembic upgrade head
 - [ ] CORS ไม่มี error ใน browser console
 - [ ] Admin pages เข้าถึงได้ (ต้อง login + role admin)
 - [ ] Stripe webhook endpoint ตั้งค่าชี้ไป Backend URL ใหม่
+- [ ] นำ `sitemap.xml` ไป Submit บน Google Search Console เพื่อทำดัชนี (SEO)

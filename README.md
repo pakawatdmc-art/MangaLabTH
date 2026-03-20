@@ -88,7 +88,7 @@ Google Cloud Run จะนำ `Dockerfile` ไปสร้าง Image และ
 - **Search** — Advanced filters (category, status, sort)
 - **Manga Detail** — Cover, info, chapter list with coin pricing
 - **Chapter Reader** — Vertical scroll, lazy load, progress bar, keyboard nav
-- **SEO & Metadata** — Dynamic Sitemap XML, JSON-LD Schema (ComicSeries) for Rich Snippets, Canonical URLs
+- **SEO & Metadata** — Dynamic Sitemap XML, `robots.ts` Crawler Rules, JSON-LD Schema (ComicSeries) for Rich Snippets, Canonical URLs
 - **Coins** — Purchase packages, transaction history
 - **Auth** — Clerk sign-in/sign-up with RBAC
 
@@ -97,7 +97,7 @@ Google Cloud Run จะนำ `Dockerfile` ไปสร้าง Image และ
 - **Manga CRUD** — Create, edit, delete manga
 - **Chapter CRUD** — Manage chapters and pricing (Premium UI: Glassmorphism + Gold accents)
 - **Upload** — อัพโหลดหน้าปกและภาพเนื้อเรื่อง พร้อมแปลงนามสกุลเป็น WebP ย่อส่วนอัตโนมัติก่อนส่งตรงขึ้น R2 (Parallel Upload)
-- **Users** — User management, coin grants (Secure: Admin balance bypass protection)
+- **Users** — User management, coin grants (Secure: สงวนสิทธิ์การให้เหรียญเฉพาะ **Admin Master** เท่านั้น)
 - **Transactions** — Revenue monitoring (Paginated)
 
 ## Environment Variables
@@ -134,6 +134,7 @@ Google Cloud Run จะนำ `Dockerfile` ไปสร้าง Image และ
 | `NEXT_PUBLIC_CLERK_SIGN_UP_URL` | Sign-up route (`/sign-up`) |
 | `NEXT_PUBLIC_API_URL` | Backend API base URL |
 | `NEXT_PUBLIC_R2_PUBLIC_URL` | R2 public bucket URL |
+| `NEXT_PUBLIC_SITE_URL` | Base URL ของเว็บไซต์จริง (เช่น `https://mangalabth.com` ใช้ใน robots.ts / SEO) |
 | `REVALIDATION_SECRET` | รหัสผ่านลับสำหรับยืนยันรับคำสั่ง เคลียร์ Cache |
 
 ## API Reference
