@@ -47,7 +47,7 @@ export default function AdminTransactionsPage() {
   // Summary calculations
   const totalIn = transactions.filter((t) => t.amount > 0).reduce((s, t) => s + t.amount, 0);
   const totalOut = transactions.filter((t) => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
-  const latestBalance = transactions.length > 0 ? transactions[0].balance_after : 0;
+  const latestBalance = totalIn - totalOut;
   const normalizedQuery = query.trim().toLowerCase();
   const filteredTransactions = transactions.filter((tx) => {
     const typeMatched = typeFilter === "all" || tx.type === typeFilter;
