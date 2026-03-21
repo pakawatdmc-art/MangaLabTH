@@ -262,43 +262,61 @@ export default function AdminUsersPage() {
 
       {/* Grant coins modal */}
       {grantTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="w-full max-w-sm rounded-2xl bg-surface-100 p-6 ring-1 ring-white/10">
-            <h3 className="mb-4 text-lg font-bold text-white">
-              <Coins className="mr-2 inline-block h-5 w-5 text-gold" />
-              เติมเหรียญ
-            </h3>
-            <p className="mb-3 text-sm text-gray-400">
-              ให้ @{getUsername(grantTarget)}
-            </p>
-            <input
-              type="number"
-              min={1}
-              value={grantAmount || ""}
-              onChange={(e) => setGrantAmount(Number(e.target.value))}
-              placeholder="จำนวนเหรียญ"
-              className="mb-3 h-10 w-full rounded-lg border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:outline-none"
-            />
-            <input
-              type="text"
-              value={grantNote}
-              onChange={(e) => setGrantNote(e.target.value)}
-              placeholder="หมายเหตุ (ไม่บังคับ)"
-              className="mb-4 h-10 w-full rounded-lg border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:outline-none"
-            />
-            <div className="flex gap-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-md transition-all duration-300 animate-in fade-in">
+          <div className="w-full max-w-sm rounded-[1.5rem] border border-white/10 bg-[linear-gradient(135deg,#1b2130_0%,#131826_100%)] p-6 sm:p-7 shadow-2xl ring-1 ring-gold/10 transition-all duration-300 animate-in zoom-in-95">
+            <div className="mb-6 flex items-center gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-gold/20 bg-gold/10 shadow-[0_0_15px_rgba(212,168,67,0.15)]">
+                <Coins className="h-6 w-6 text-gold" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white">เติมเหรียญ</h3>
+                <p className="text-sm text-gray-400">ให้ <span className="text-emerald-300">@{getUsername(grantTarget)}</span></p>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-gray-400 uppercase tracking-wide">จำนวนเหรียญ</label>
+                <div className="relative">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                    <Sparkles className="h-4 w-4 text-gold/50" />
+                  </div>
+                  <input
+                    type="number"
+                    min={1}
+                    value={grantAmount || ""}
+                    onChange={(e) => setGrantAmount(Number(e.target.value))}
+                    placeholder="0"
+                    className="h-12 w-full rounded-xl border border-white/10 bg-black/40 pl-11 pr-4 text-lg font-medium text-gold placeholder:text-gray-600 focus:border-gold/50 focus:bg-black/60 focus:outline-none focus:ring-1 focus:ring-gold/50 transition-all"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-gray-400 uppercase tracking-wide">หมายเหตุ (ไม่บังคับ)</label>
+                <input
+                  type="text"
+                  value={grantNote}
+                  onChange={(e) => setGrantNote(e.target.value)}
+                  placeholder="เช่น กิจกรรมพิเศษ..."
+                  className="h-11 w-full rounded-xl border border-white/10 bg-black/40 px-4 text-sm text-white placeholder:text-gray-600 focus:border-gold/50 focus:bg-black/60 focus:outline-none focus:ring-1 focus:ring-gold/50 transition-all"
+                />
+              </div>
+            </div>
+
+            <div className="mt-8 flex gap-3">
+              <button
+                onClick={() => setGrantTarget(null)}
+                className="flex-1 rounded-xl border border-white/10 bg-surface-200/50 py-3 text-sm font-semibold text-gray-300 transition hover:bg-surface-200 hover:text-white"
+              >
+                ยกเลิก
+              </button>
               <button
                 onClick={handleGrant}
                 disabled={granting || grantAmount <= 0}
-                className="flex-1 rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black transition hover:bg-gold-light disabled:opacity-50"
+                className="flex-1 rounded-xl bg-gold py-3 text-sm font-bold text-black shadow-[0_0_20px_rgba(212,168,67,0.25)] transition hover:bg-gold-light hover:shadow-[0_0_25px_rgba(212,168,67,0.4)] disabled:opacity-50 disabled:shadow-none"
               >
-                {granting ? "กำลังเติม..." : "เติมเหรียญ"}
-              </button>
-              <button
-                onClick={() => setGrantTarget(null)}
-                className="rounded-lg bg-surface-200 px-4 py-2 text-sm text-gray-300 transition hover:bg-surface-50"
-              >
-                ยกเลิก
+                {granting ? "กำลังเติม..." : "ยืนยันการเติม"}
               </button>
             </div>
           </div>
