@@ -246,17 +246,18 @@ export async function getStats(token: string) {
   }>("/users/stats", { token });
 }
 
-export async function getAnalyticsViews(token: string, days = 30) {
+export async function getMarketingAnalytics(token: string, days = 30) {
   return fetcher<{
     summary: {
-      today: number;
-      this_week: number;
-      this_month: number;
-      this_year: number;
-      all_time: number;
+      total_views: number;
+      total_users: number;
+      coins_earned_30d: number;
+      coins_spent_30d: number;
     };
-    chart_data: { date: string; views: number }[];
-  }>(`/analytics/views?days=${days}`, { token });
+    chart_data: { date: string; views: number; coins_purchased: number; coins_spent: number }[];
+    top_grossing_mangas: { id: string; title: string; slug: string; cover_image: string; coins_earned: number }[];
+    top_viewed_mangas: { id: string; title: string; slug: string; cover_image: string; total_views: number }[];
+  }>(`/admin-stats/overview?days=${days}`, { token });
 }
 
 export async function getTopManga(period: "weekly" | "monthly" | "all_time", limit = 10) {
