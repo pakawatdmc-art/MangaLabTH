@@ -178,12 +178,7 @@ async def admin_grant_coins(
     admin: AdminUser,
 ):
     """Admin: grant coins to a user."""
-    from app.api.deps import get_clerk_profile, _is_primary_admin_email
-    profile = await get_clerk_profile(admin.clerk_id)
-    effective_email = profile.get("email") or admin.email
-    is_master = _is_primary_admin_email(effective_email) or getattr(admin, "is_primary_admin", False)
-    
-    if not is_master:
+    if not admin.is_primary_admin:
         raise HTTPException(
             status_code=403, 
             detail="เฉพาะ Admin Master เท่านั้นที่สามารถแจกเหรียญได้"

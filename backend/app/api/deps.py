@@ -240,15 +240,6 @@ async def get_current_user(
             user.username = username
             changed = True
 
-        effective_email = email or user.email
-        if _is_primary_admin_email(effective_email) and user.role != UserRole.ADMIN:
-            user.role = UserRole.ADMIN
-            changed = True
-
-        if _is_primary_admin_email(effective_email) and not user.is_primary_admin:
-            user.is_primary_admin = True
-            changed = True
-
         if changed:
             session.add(user)
             await session.commit()

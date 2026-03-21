@@ -23,7 +23,7 @@ def _to_user_read(user: User, profile: Optional[Dict[str, str]] = None) -> UserR
     data = UserRead.model_validate(user)
     data.username = profile.get("username") or None
     data.email = effective_email
-    data.is_primary_admin = _is_primary_admin_email(effective_email)
+    data.is_primary_admin = user.is_primary_admin
     return data
 
 
@@ -95,7 +95,7 @@ async def admin_update_user(
     if (
         "role" in updates
         and updates["role"] != UserRole.ADMIN
-        and _is_primary_admin_email(effective_email)
+        and user.is_primary_admin
     ):
         raise HTTPException(
             status_code=403,
