@@ -76,6 +76,8 @@ async def _fulfill_payment(
     # If we created a pending transaction earlier, update it, otherwise create new
     if existing:
         existing.balance_after = new_balance
+        existing.amount = coins
+        existing.note = note
         existing.ffp_txn_id = ffp_txn_id
         session.add(existing)
     else:
@@ -187,7 +189,7 @@ async def create_checkout(
             id=reference_no,
             user_id=user.id,
             type=TransactionType.COIN_PURCHASE,
-            amount=package.coins,
+            amount=0,  # Mark as 0 until fulfilled
             balance_after=0, 
             ffp_reference_no=reference_no,
             package_id=str(package.id),

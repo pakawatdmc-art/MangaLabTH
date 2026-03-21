@@ -33,9 +33,12 @@ async def list_all_transactions(
     admin: AdminUser,
     limit: int = Query(200, ge=1, le=1000),
 ):
-    """Admin: list all transactions across all users."""
+    """Admin: list all transactions across all users (excluding pending)."""
     stmt = (
         select(Transaction)
+        .where(
+            ~((Transaction.type == TransactionType.COIN_PURCHASE) & (Transaction.balance_after == 0))
+        )
         .order_by(col(Transaction.created_at).desc())
         .limit(limit)
     )
