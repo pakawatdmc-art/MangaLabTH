@@ -77,7 +77,7 @@ export default function Navbar() {
     return () => window.removeEventListener("balance-update", handleUpdate);
   }, [isLoaded, isSignedIn, fetchUser]);
 
-  if (pathname.startsWith("/read/")) {
+  if (decodeURIComponent(pathname).includes("/ตอนที่-")) {
     return null;
   }
 

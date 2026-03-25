@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 export default function Footer() {
   const pathname = usePathname();
 
-  if (pathname.startsWith("/read/")) {
+  if (decodeURIComponent(pathname).includes("/ตอนที่-")) {
     return null;
   }
 

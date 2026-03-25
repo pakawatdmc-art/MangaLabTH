@@ -1,25 +1,33 @@
 import { auth } from "@clerk/nextjs/server";
-import { getChapter, getManga, getMe } from "@/lib/api";
+import { getChapter, getMangaBySlug, getMe } from "@/lib/api";
 import { notFound } from "next/navigation";
 import ChapterReaderClient from "./ChapterReaderClient";
 import ChapterAccessGate from "./ChapterAccessGate";
 
 interface Props {
-  params: Promise<{ chapterId: string }>;
+  params: Promise<{ slug: string; chapterSlug: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<import("next").Metadata> {
-  const { chapterId } = await params;
+  const { slug, chapterSlug } = await params;
+  const decodedSlug = decodeURIComponent(slug);
+  const decodedChapterSlug = decodeURIComponent(chapterSlug);
+  
   try {
-    const chapter = await getChapter(chapterId);
-    const manga = await getManga(chapter.manga_id);
-    const chTitle = chapter.title
-      ? `ตอนที่ ${chapter.number} — ${chapter.title}`
-      : `ตอนที่ ${chapter.number}`;
+    const manga = await getMangaBySlug(decodedSlug);
+    const chapterNumberMatch = decodedChapterSlug.match(/ตอนที่-([\d.]+)/);
+    if (!chapterNumberMatch) return { title: `${manga.title} — MangaLabTH` };
+    const chapterNumber = Number(chapterNumberMatch[1]);
+    const matchedChapter = manga.chapters?.find((c: any) => c.number === chapterNumber);
+    if (!matchedChapter) return { title: `${manga.title} — MangaLabTH` };
+
+    const chTitle = matchedChapter.title
+      ? `ตอนที่ ${matchedChapter.number} — ${matchedChapter.title}`
+      : `ตอนที่ ${matchedChapter.number}`;
     return {
       title: `${manga.title} ${chTitle}`,
       description: `อ่าน ${manga.title} ${chTitle} แปลไทย ออนไลน์ฟรี ภาพคมชัด — MangaLabTH`,
-      robots: { index: false, follow: true }, // reading pages shouldn't pollute search
+      robots: { index: false, follow: true },
     };
   } catch {
     return { title: "อ่านมังงะ — MangaLabTH" };
@@ -27,26 +35,36 @@ export async function generateMetadata({ params }: Props): Promise<import("next"
 }
 
 export default async function ChapterReadPage({ params }: Props) {
-  const { chapterId } = await params;
+  const { slug, chapterSlug } = await params;
+  const decodedSlug = decodeURIComponent(slug);
+  const decodedChapterSlug = decodeURIComponent(chapterSlug);
+
   const { getToken } = await auth();
   const token = await getToken();
 
-  let chapter;
-  try {
-    chapter = await getChapter(chapterId, token || undefined);
-  } catch {
-    notFound();
-  }
-
   let manga;
   try {
-    manga = await getManga(chapter.manga_id);
+    manga = await getMangaBySlug(decodedSlug);
   } catch {
     notFound();
   }
 
-  const allChapters = manga.chapters.sort((a, b) => a.number - b.number);
-  const currentIdx = allChapters.findIndex((c) => c.id === chapterId);
+  const chapterNumberMatch = decodedChapterSlug.match(/ตอนที่-([\d.]+)/);
+  if (!chapterNumberMatch) notFound();
+  const chapterNumber = Number(chapterNumberMatch[1]);
+
+  const allChapters = (manga.chapters || []).sort((a: any, b: any) => a.number - b.number);
+  const matchedChapter = allChapters.find((c: any) => c.number === chapterNumber);
+  if (!matchedChapter) notFound();
+
+  let chapter;
+  try {
+    chapter = await getChapter(matchedChapter.id, token || undefined);
+  } catch {
+    notFound();
+  }
+
+  const currentIdx = allChapters.findIndex((c: any) => c.id === matchedChapter.id);
   const prevChapter = currentIdx > 0 ? allChapters[currentIdx - 1] : null;
   const nextChapter = currentIdx < allChapters.length - 1 ? allChapters[currentIdx + 1] : null;
 

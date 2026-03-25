@@ -3,6 +3,23 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import Image from "next/image";
 import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent,
+} from "@dnd-kit/core";
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    rectSortingStrategy,
+    useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
     AlertCircle,
     CheckCircle,
     ChevronDown,
@@ -30,6 +47,124 @@ interface FileItem {
     originalHeight?: number;
 }
 
+interface SortableImageCardProps {
+    item: FileItem;
+    idx: number;
+    uploading: boolean;
+    totalFiles: number;
+    moveFile: (fromIndex: number, direction: -1 | 1) => void;
+    removeFile: (index: number) => void;
+}
+
+function SortableImageCard({ item, idx, uploading, totalFiles, moveFile, removeFile }: SortableImageCardProps) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({ id: item.id, disabled: uploading });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? 50 : "auto",
+        opacity: isDragging ? 0.8 : 1,
+    };
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            {...attributes}
+            {...listeners}
+            className={cn(
+                "group relative aspect-[2/3] overflow-hidden rounded-lg bg-surface-200 ring-1 ring-white/10 transition-all",
+                isDragging ? "ring-gold cursor-grabbing shadow-2xl scale-105" : "cursor-grab hover:ring-gold/50"
+            )}
+        >
+            <Image
+                src={item.preview}
+                alt={`Page ${idx + 1}`}
+                fill
+                unoptimized
+                sizes="(min-width: 1024px) 12vw, (min-width: 768px) 18vw, 45vw"
+                className="object-cover pointer-events-none"
+            />
+
+            <span className="absolute left-1.5 top-1.5 rounded bg-black/80 px-1.5 py-0.5 text-[10px] font-medium text-white shadow-sm pointer-events-none z-10">
+                {idx + 1}
+            </span>
+
+            {!uploading && (
+                <div 
+                    className="absolute left-1.5 right-1.5 top-7 flex items-center justify-between gap-1 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100 z-20"
+                    onPointerDown={(e) => e.stopPropagation()}
+                >
+                    <div className="flex gap-1" onPointerDown={(e) => e.stopPropagation()}>
+                        <button
+                            type="button"
+                            onClick={() => moveFile(idx, -1)}
+                            disabled={idx === 0}
+                            className="rounded bg-black/80 p-1 text-white hover:bg-black disabled:opacity-40"
+                            title="เลื่อนขึ้น"
+                        >
+                            <ChevronUp className="h-3 w-3 pointer-events-none" />
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => moveFile(idx, 1)}
+                            disabled={idx === totalFiles - 1}
+                            className="rounded bg-black/80 p-1 text-white hover:bg-black disabled:opacity-40"
+                            title="เลื่อนลง"
+                        >
+                            <ChevronDown className="h-3 w-3 pointer-events-none" />
+                        </button>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => removeFile(idx)}
+                        className="rounded bg-red-500/90 p-1 text-white hover:bg-red-500"
+                        title="ลบ"
+                        onPointerDown={(e) => e.stopPropagation()}
+                    >
+                        <Trash2 className="h-3 w-3 pointer-events-none" />
+                    </button>
+                </div>
+            )}
+
+            {/* Status Indicators */}
+            {item.status === "uploading" && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/65 backdrop-blur-sm z-30">
+                    <Loader2 className="h-5 w-5 animate-spin text-gold" />
+                </div>
+            )}
+            {item.status === "existing" && (
+                <div className="absolute right-1.5 top-1.5 rounded bg-emerald-500/20 px-1 py-0.5 text-[8px] text-emerald-400 z-10 pointer-events-none">
+                    ภาพเดิม
+                </div>
+            )}
+            {item.status === "done" && (
+                <div className="absolute right-1.5 top-1.5 z-10 pointer-events-none">
+                    <CheckCircle className="h-4 w-4 text-emerald-400 drop-shadow-md" />
+                </div>
+            )}
+            {item.status === "error" && (
+                <div className="absolute right-1.5 top-1.5 pointer-events-none z-10">
+                    <AlertCircle className="h-4 w-4 text-red-400 drop-shadow-md" />
+                </div>
+            )}
+
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent px-2 pb-1.5 pt-4 pointer-events-none z-10">
+                <p className="truncate text-[9px] text-gray-300">
+                    {item.file ? item.file.name : `หน้า ${idx + 1} (เดิม)`}
+                </p>
+            </div>
+        </div>
+    );
+}
+
 export function ChapterImageManager({
     manga,
     chapter,
@@ -48,9 +183,33 @@ export function ChapterImageManager({
     const filesRef = useRef<FileItem[]>([]);
     const [isDragging, setIsDragging] = useState(false);
     const [loadingInitial, setLoadingInitial] = useState(false);
+    
+    // Sortable sensors
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 5,
+            },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (over && active.id !== over.id) {
+            setFiles((items) => {
+                const oldIndex = items.findIndex((i) => i.id === active.id);
+                const newIndex = items.findIndex((i) => i.id === over.id);
+                return arrayMove(items, oldIndex, newIndex);
+            });
+        }
+    };
 
     // Upload state
     const [uploading, setUploading] = useState(false);
+    const uploadingRef = useRef(false);
     const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
     const [error, setError] = useState("");
     const [successMsg, setSuccessMsg] = useState("");
@@ -180,6 +339,10 @@ export function ChapterImageManager({
             setError("กรุณาเลือกไฟล์อย่างน้อย 1 ภาพก่อนบันทึก");
             return;
         }
+        
+        // Prevent double click race conditions
+        if (uploadingRef.current) return;
+        uploadingRef.current = true;
 
         setUploading(true);
         setError("");
@@ -273,6 +436,7 @@ export function ChapterImageManager({
             setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการบันทึก");
         } finally {
             setUploading(false);
+            uploadingRef.current = false;
         }
     };
 
@@ -376,91 +540,36 @@ export function ChapterImageManager({
                             </div>
 
                             {/* Grid */}
-                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
-                                {files.length === 0 ? (
-                                    <div className="col-span-full py-8 text-center text-sm text-gray-600">
-                                        ยังไม่มีรูปภาพสำหรับตอนนี้
-                                    </div>
-                                ) : (
-                                    files.map((item, idx) => (
-                                        <div
-                                            key={item.id}
-                                            className="group relative aspect-[2/3] overflow-hidden rounded-lg bg-surface-200 ring-1 ring-white/10"
-                                        >
-                                            <Image
-                                                src={item.preview}
-                                                alt={`Page ${idx + 1}`}
-                                                fill
-                                                unoptimized
-                                                sizes="(min-width: 1024px) 12vw, (min-width: 768px) 18vw, 45vw"
-                                                className="object-cover"
-                                            />
-
-                                            <span className="absolute left-1.5 top-1.5 rounded bg-black/80 px-1.5 py-0.5 text-[10px] font-medium text-white shadow-sm">
-                                                {idx + 1}
-                                            </span>
-
-                                            {!uploading && (
-                                                <div className="absolute left-1.5 right-1.5 top-7 flex items-center justify-between gap-1 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100">
-                                                    <div className="flex gap-1">
-                                                        <button
-                                                            onClick={() => moveFile(idx, -1)}
-                                                            disabled={idx === 0}
-                                                            className="rounded bg-black/80 p-1 text-white hover:bg-black disabled:opacity-40"
-                                                            title="เลื่อนขึ้น"
-                                                        >
-                                                            <ChevronUp className="h-3 w-3" />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => moveFile(idx, 1)}
-                                                            disabled={idx === files.length - 1}
-                                                            className="rounded bg-black/80 p-1 text-white hover:bg-black disabled:opacity-40"
-                                                            title="เลื่อนลง"
-                                                        >
-                                                            <ChevronDown className="h-3 w-3" />
-                                                        </button>
-                                                    </div>
-                                                    <button
-                                                        onClick={() => removeFile(idx)}
-                                                        className="rounded bg-red-500/90 p-1 text-white hover:bg-red-500"
-                                                        title="ลบ"
-                                                    >
-                                                        <Trash2 className="h-3 w-3" />
-                                                    </button>
-                                                </div>
-                                            )}
-
-                                            {/* Status Indicators */}
-                                            {item.status === "uploading" && (
-                                                <div className="absolute inset-0 flex items-center justify-center bg-black/65 backdrop-blur-sm">
-                                                    <Loader2 className="h-5 w-5 animate-spin text-gold" />
-                                                </div>
-                                            )}
-                                            {item.status === "existing" && (
-                                                <div className="absolute right-1.5 top-1.5 rounded bg-emerald-500/20 px-1 py-0.5 text-[8px] text-emerald-400">
-                                                    ภาพเดิม
-                                                </div>
-                                            )}
-                                            {item.status === "done" && (
-                                                <div className="absolute right-1.5 top-1.5">
-                                                    <CheckCircle className="h-4 w-4 text-emerald-400 drop-shadow-md" />
-                                                </div>
-                                            )}
-                                            {item.status === "error" && (
-                                                <div className="absolute right-1.5 top-1.5">
-                                                    <AlertCircle className="h-4 w-4 text-red-400 drop-shadow-md" />
-                                                </div>
-                                            )}
-
-                                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent px-2 pb-1.5 pt-4">
-                                                <p className="truncate text-[9px] text-gray-300">
-                                                    {item.file ? item.file.name : `หน้า ${idx + 1} (เดิม)`}
-                                                </p>
+                            <DndContext 
+                                sensors={sensors}
+                                collisionDetection={closestCenter}
+                                onDragEnd={handleDragEnd}
+                            >
+                                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
+                                    <SortableContext 
+                                        items={files.map((f) => f.id)}
+                                        strategy={rectSortingStrategy}
+                                    >
+                                        {files.length === 0 ? (
+                                            <div className="col-span-full py-8 text-center text-sm text-gray-600">
+                                                ยังไม่มีรูปภาพสำหรับตอนนี้
                                             </div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
+                                        ) : (
+                                            files.map((item, idx) => (
+                                                <SortableImageCard
+                                                    key={item.id}
+                                                    item={item}
+                                                    idx={idx}
+                                                    uploading={uploading}
+                                                    totalFiles={files.length}
+                                                    moveFile={moveFile}
+                                                    removeFile={removeFile}
+                                                />
+                                            ))
+                                        )}
+                                    </SortableContext>
+                                </div>
+                            </DndContext>
                         </>
                     )}
                 </div>

@@ -93,6 +93,9 @@ async def get_chapter(
     detail.page_count = len(chapter.pages)
 
     is_locked = (not chapter.is_free) and chapter.coin_price > 0
+    if is_locked and user is not None and getattr(user, "role", "") == "admin":
+        is_locked = False
+
     if is_locked:
         if user is None:
             detail.can_read = False

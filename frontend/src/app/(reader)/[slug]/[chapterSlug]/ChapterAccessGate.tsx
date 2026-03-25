@@ -44,8 +44,8 @@ export default function ChapterAccessGate({
   }, [getToken]);
 
   const signInHref = useMemo(
-    () => `/sign-in?redirect_url=${encodeURIComponent(`/read/${chapterId}`)}`,
-    [chapterId]
+    () => `/sign-in?redirect_url=${encodeURIComponent(`/${manga.slug}/ตอนที่-${chapterNumber}`)}`,
+    [chapterNumber, manga.slug]
   );
 
   const handleUnlock = async () => {

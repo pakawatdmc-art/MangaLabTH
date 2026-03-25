@@ -184,7 +184,7 @@ export default async function MangaDetailPage({ params }: Props) {
             <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:gap-3">
               {firstChapter && (
                 <Link
-                  href={`/read/${firstChapter.id}`}
+                  href={`/${manga.slug}/ตอนที่-${firstChapter.number}`}
                   className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-gold px-5 text-sm font-semibold text-black transition hover:bg-gold-light sm:w-auto"
                 >
                   <BookOpen className="h-4 w-4" />
@@ -193,7 +193,7 @@ export default async function MangaDetailPage({ params }: Props) {
               )}
               {latestChapter && latestChapter.id !== firstChapter?.id && (
                 <Link
-                  href={`/read/${latestChapter.id}`}
+                  href={`/${manga.slug}/ตอนที่-${latestChapter.number}`}
                   className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-surface-50 px-5 text-sm font-medium text-white ring-1 ring-white/10 transition hover:bg-surface-100 sm:w-auto"
                 >
                   อ่านตอนล่าสุด
@@ -203,7 +203,7 @@ export default async function MangaDetailPage({ params }: Props) {
           </div>
         </div>
 
-        <ChapterListClient chapters={sortedChapters} freeChapterCount={freeChapterCount} />
+        <ChapterListClient chapters={sortedChapters} freeChapterCount={freeChapterCount} mangaSlug={manga.slug} />
       </div>
     </div>
   );

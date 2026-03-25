@@ -19,9 +19,10 @@ interface Chapter {
 interface ChapterListClientProps {
     chapters: Chapter[];
     freeChapterCount: number;
+    mangaSlug: string;
 }
 
-export function ChapterListClient({ chapters, freeChapterCount }: ChapterListClientProps) {
+export function ChapterListClient({ chapters, freeChapterCount, mangaSlug }: ChapterListClientProps) {
     const [readChapters, setReadChapters] = useState<string[]>([]);
 
     useEffect(() => {
@@ -53,7 +54,7 @@ export function ChapterListClient({ chapters, freeChapterCount }: ChapterListCli
                     return (
                         <Link
                             key={ch.id}
-                            href={`/read/${ch.id}`}
+                            href={`/${mangaSlug}/ตอนที่-${ch.number}`}
                             className={`flex items-start justify-between gap-3 rounded-xl px-3 py-3 ring-1 transition sm:items-center sm:px-4 ${isRead
                                 ? "bg-black/40 ring-white/5 opacity-60 hover:bg-black/60 hover:opacity-100" // สไตล์จางๆ สำหรับตอนที่อ่านแล้ว
                                 : "bg-black/25 ring-white/10 hover:bg-surface-50 hover:ring-gold/30"

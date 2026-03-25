@@ -63,7 +63,7 @@ export default function ChapterReaderClient({
       localStorage.setItem(
         `mangalabth:lastRead:${manga.id}`,
         JSON.stringify({
-          url: `/read/${chapter.id}`,
+          url: `/${manga.slug}/ตอนที่-${chapter.number}`,
           mangaTitle: manga.title,
           mangaDetailUrl: `/manga/${manga.slug}`,
           chapterLabel: `ตอนที่ ${formatChapterNumber(chapter.number)}`,
@@ -92,9 +92,11 @@ export default function ChapterReaderClient({
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "ArrowLeft" && prevChapterId) {
-        router.push(`/read/${prevChapterId}`);
+        const pNum = allChapters.find(c => c.id === prevChapterId)?.number;
+        router.push(`/${manga.slug}/ตอนที่-${pNum}`);
       } else if (e.key === "ArrowRight" && nextChapterId) {
-        router.push(`/read/${nextChapterId}`);
+        const nNum = allChapters.find(c => c.id === nextChapterId)?.number;
+        router.push(`/${manga.slug}/ตอนที่-${nNum}`);
       }
     }
     window.addEventListener("keydown", onKey);
@@ -196,7 +198,7 @@ export default function ChapterReaderClient({
                   return (
                     <Link
                       key={c.id}
-                      href={`/read/${c.id}`}
+                      href={`/${manga.slug}/ตอนที่-${c.number}`}
                       onClick={() => setShowChapterMenu(false)}
                       className={`flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm transition ${isCurrent
                         ? "bg-gold/15 text-gold"
@@ -249,7 +251,7 @@ export default function ChapterReaderClient({
             <div className="hidden items-center gap-0.5 ml-1 sm:flex">
               {prevChapterId ? (
                 <Link
-                  href={`/read/${prevChapterId}`}
+                  href={`/${manga.slug}/ตอนที่-${allChapters.find(c => c.id === prevChapterId)?.number}`}
                   className="rounded-lg p-1.5 text-gray-400 transition hover:bg-white/10 hover:text-white"
                   title="ตอนก่อนหน้า (←)"
                 >
@@ -262,7 +264,7 @@ export default function ChapterReaderClient({
               )}
               {nextChapterId ? (
                 <Link
-                  href={`/read/${nextChapterId}`}
+                  href={`/${manga.slug}/ตอนที่-${allChapters.find(c => c.id === nextChapterId)?.number}`}
                   className="rounded-lg p-1.5 text-gray-400 transition hover:bg-white/10 hover:text-white"
                   title="ตอนถัดไป (→)"
                 >
@@ -304,7 +306,7 @@ export default function ChapterReaderClient({
         <div className="flex items-center justify-center gap-3">
           {prevChapterId && (
             <Link
-              href={`/read/${prevChapterId}`}
+              href={`/${manga.slug}/ตอนที่-${allChapters.find(c => c.id === prevChapterId)?.number}`}
               className="inline-flex h-10 items-center gap-2 rounded-lg bg-surface-100 px-4 text-sm text-gray-300 ring-1 ring-white/10 transition hover:bg-surface-50"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -313,7 +315,7 @@ export default function ChapterReaderClient({
           )}
           {nextChapterId && (
             <Link
-              href={`/read/${nextChapterId}`}
+              href={`/${manga.slug}/ตอนที่-${allChapters.find(c => c.id === nextChapterId)?.number}`}
               className="inline-flex h-10 items-center gap-2 rounded-lg bg-gold px-5 text-sm font-semibold text-black transition hover:bg-gold-light"
             >
               ตอนถัดไป
@@ -342,7 +344,7 @@ export default function ChapterReaderClient({
 
           {prevChapterId ? (
             <Link
-              href={`/read/${prevChapterId}`}
+              href={`/${manga.slug}/ตอนที่-${allChapters.find(c => c.id === prevChapterId)?.number}`}
               className="flex flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-gray-300 transition hover:bg-white/5 hover:text-white"
             >
               <ChevronLeft className="h-5 w-5" />
@@ -365,7 +367,7 @@ export default function ChapterReaderClient({
 
           {nextChapterId ? (
             <Link
-              href={`/read/${nextChapterId}`}
+              href={`/${manga.slug}/ตอนที่-${allChapters.find(c => c.id === nextChapterId)?.number}`}
               className="flex flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-gold transition hover:bg-white/5 hover:text-gold-light"
             >
               <ChevronRight className="h-5 w-5" />

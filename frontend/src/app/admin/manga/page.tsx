@@ -88,7 +88,7 @@ export default function AdminMangaPage() {
       const title = (form.get("title") as string).trim();
       const slug = title
         .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/[^a-z0-9\u0E00-\u0E7F\s-]/g, "")
         .replace(/\s+/g, "-")
         .replace(/-+/g, "-")
         .replace(/^-|-$/g, "");
