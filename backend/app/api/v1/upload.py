@@ -38,7 +38,9 @@ def _validate_image_bytes(data: bytes) -> bool:
 
 
 # ── V5: Path traversal prevention ────────────────
-_SAFE_KEY_PATTERN = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_./-]{0,500}$")
+# Allow Unicode letters, Thai combining marks, digits, hyphens, dots, slashes, underscores.
+# Block only dangerous filesystem/URL chars. Other checks (null bytes, .., absolute paths) handled below.
+_SAFE_KEY_PATTERN = re.compile(r"^[^\x00-\x1f\\:*?\"<>|]{1,500}$")
 
 
 def _validate_storage_key(key: str) -> None:
