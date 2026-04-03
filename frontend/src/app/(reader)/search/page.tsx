@@ -1,4 +1,5 @@
 import { getMangaList } from "@/lib/api";
+import type { Metadata } from "next";
 import type { MangaCategory, MangaStatus } from "@/lib/types";
 import { CATEGORY_LABELS, STATUS_LABELS } from "@/lib/types";
 import MangaCard from "@/components/MangaCard";
@@ -13,6 +14,29 @@ interface Props {
     q?: string;
     sort?: string;
   }>;
+}
+
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const params = await searchParams;
+  const q = params.q;
+  const category = params.category as MangaCategory | undefined;
+
+  let title = "ค้นหามังงะ";
+  let description = "ค้นหามังงะแปลไทยที่คุณต้องการอ่าน ครบทุกหมวดหมู่ — MangaLabTH";
+
+  if (q) {
+    title = `ค้นหา "${q}"`;
+    description = `ผลการค้นหามังงะ "${q}" บน MangaLabTH — อ่านออนไลน์ฟรี ภาพคมชัด`;
+  } else if (category && CATEGORY_LABELS[category]) {
+    title = `มังงะ${CATEGORY_LABELS[category]}`;
+    description = `รวมมังงะแนว${CATEGORY_LABELS[category]} แปลไทย อ่านออนไลน์ฟรี อัปเดตตอนใหม่ล่าสุด — MangaLabTH`;
+  }
+
+  return {
+    title,
+    description,
+    robots: { index: !q, follow: true },
+  };
 }
 
 export default async function SearchPage({ searchParams }: Props) {

@@ -7,6 +7,7 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException, status, Request
 from sqlmodel import select, col
 
 from app.services.analytics import record_manga_view_task
+from app.services.google_notify import notify_google_updated
 
 from app.api.deps import AdminUser, DBSession, OptionalUser
 from app.models.manga import Chapter, Manga, Page
@@ -155,6 +156,9 @@ async def create_chapter(
     data = ChapterRead.model_validate(chapter)
     data.page_count = 0
     background_tasks.add_task(revalidate_paths, ["/"])
+    background_tasks.add_task(
+        notify_google_updated, [f"/manga/{manga.slug}", "/"]
+    )
     return data
 
 
@@ -271,6 +275,9 @@ async def replace_pages(
         pass
 
     background_tasks.add_task(revalidate_paths, ["/"])
+    background_tasks.add_task(
+        notify_google_updated, [f"/manga/{chapter.manga.slug}"]
+    )
     return [PageRead.model_validate(pg) for pg in created]
 
 
@@ -308,4 +315,7 @@ async def add_pages(
         await session.refresh(pg)
 
     background_tasks.add_task(revalidate_paths, ["/"])
+    background_tasks.add_task(
+        notify_google_updated, [f"/manga/{chapter.manga.slug}"]
+    )
     return [PageRead.model_validate(pg) for pg in created]

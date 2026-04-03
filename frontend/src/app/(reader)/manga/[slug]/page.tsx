@@ -69,6 +69,8 @@ export default async function MangaDetailPage({ params }: Props) {
   const freeChapterCount = manga.chapters.filter((ch) => ch.is_free || ch.coin_price === 0).length;
   const premiumChapterCount = manga.chapters.length - freeChapterCount;
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ComicSeries",
@@ -76,11 +78,30 @@ export default async function MangaDetailPage({ params }: Props) {
     description: manga.description || `อ่าน ${manga.title} มังงะแปลไทย ออนไลน์ฟรี ภาพคมชัด`,
     author: { "@type": "Person", "name": manga.author || "Unknown" },
     image: manga.cover_url || "",
-    url: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/manga/${manga.slug}`,
+    url: `${siteUrl}/manga/${manga.slug}`,
     datePublished: manga.created_at ? new Date(manga.created_at + "Z").toISOString() : undefined,
     dateModified: (manga.last_chapter_updated_at || manga.created_at) 
       ? new Date((manga.last_chapter_updated_at || manga.created_at) + "Z").toISOString() 
       : undefined,
+  };
+
+  const jsonLdBreadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "หน้าแรก",
+        item: siteUrl,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: manga.title,
+        item: `${siteUrl}/manga/${manga.slug}`,
+      },
+    ],
   };
 
   return (
@@ -88,6 +109,10 @@ export default async function MangaDetailPage({ params }: Props) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}
       />
       {/* Hero backdrop */}
       <div className="relative h-64 sm:h-80">

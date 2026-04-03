@@ -17,6 +17,7 @@ from app.models.transaction import Transaction, TransactionType
 from app.services.storage import delete_object, delete_objects, r2_url_to_key, get_client_ip
 from app.services.revalidate import revalidate_paths
 from app.services.analytics import record_manga_view_task
+from app.services.google_notify import notify_google_updated
 from app.schemas.manga import (
     MangaCreate,
     MangaDetail,
@@ -256,6 +257,9 @@ async def create_manga(
     await session.commit()
     await session.refresh(manga)
     background_tasks.add_task(revalidate_paths, ["/"])
+    background_tasks.add_task(
+        notify_google_updated, [f"/manga/{manga.slug}", "/"]
+    )
     return MangaRead.model_validate(manga)
 
 
@@ -290,6 +294,9 @@ async def update_manga(
     await session.commit()
     await session.refresh(manga)
     background_tasks.add_task(revalidate_paths, ["/"])
+    background_tasks.add_task(
+        notify_google_updated, [f"/manga/{manga.slug}"]
+    )
     return MangaRead.model_validate(manga)
 
 

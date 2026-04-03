@@ -42,12 +42,21 @@ export const metadata: Metadata = {
     siteName: "MangaLabTH",
     locale: "th_TH",
     type: "website",
+    images: [
+      {
+        url: "/og-default.png",
+        width: 1200,
+        height: 630,
+        alt: "MangaLabTH — อ่านมังงะแปลไทยออนไลน์ฟรี",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "MangaLabTH — อ่านมังงะออนไลน์",
     description:
       "แพลตฟอร์มอ่านมังงะออนไลน์ อัปเดตเร็ว ภาพคมชัดอ่านง่ายบนมือถือ",
+    images: ["/og-default.png"],
   },
   robots: {
     index: true,
@@ -58,6 +67,28 @@ export const metadata: Metadata = {
       "max-image-preview": "large",
       "max-snippet": -1,
     },
+  },
+};
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
+const jsonLdOrganization = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "MangaLabTH",
+  url: siteUrl,
+  logo: `${siteUrl}/logo.webp`,
+};
+
+const jsonLdWebSite = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "MangaLabTH",
+  url: siteUrl,
+  potentialAction: {
+    "@type": "SearchAction",
+    target: `${siteUrl}/search?q={search_term_string}`,
+    "query-input": "required name=search_term_string",
   },
 };
 
@@ -89,6 +120,18 @@ export default function RootLayout({
         <body
           className={`${inter.variable} ${notoThai.variable} font-sans antialiased`}
         >
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify(jsonLdOrganization),
+            }}
+          />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify(jsonLdWebSite),
+            }}
+          />
           <DeviceDetector />
           <ThemeProvider>
             {children}

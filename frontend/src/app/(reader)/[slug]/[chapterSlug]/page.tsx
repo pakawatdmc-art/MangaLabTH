@@ -12,6 +12,7 @@ export async function generateMetadata({ params }: Props): Promise<import("next"
   const { slug, chapterSlug } = await params;
   const decodedSlug = decodeURIComponent(slug);
   const decodedChapterSlug = decodeURIComponent(chapterSlug);
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   
   try {
     const manga = await getMangaBySlug(decodedSlug);
@@ -28,6 +29,9 @@ export async function generateMetadata({ params }: Props): Promise<import("next"
       title: `${manga.title} ${chTitle}`,
       description: `อ่าน ${manga.title} ${chTitle} แปลไทย ออนไลน์ฟรี ภาพคมชัด — MangaLabTH`,
       robots: { index: false, follow: true },
+      alternates: {
+        canonical: `${siteUrl}/${decodedSlug}/ตอนที่-${matchedChapter.number}`,
+      },
     };
   } catch {
     return { title: "อ่านมังงะ — MangaLabTH" };
@@ -76,6 +80,33 @@ export default async function ChapterReadPage({ params }: Props) {
     } catch { }
   }
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
+  const jsonLdBreadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "หน้าแรก",
+        item: siteUrl,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: manga.title,
+        item: `${siteUrl}/manga/${manga.slug}`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: `ตอนที่ ${chapterNumber}`,
+        item: `${siteUrl}/${manga.slug}/ตอนที่-${chapterNumber}`,
+      },
+    ],
+  };
+
   if (chapter.can_read === false) {
     return (
       <ChapterAccessGate
@@ -90,13 +121,19 @@ export default async function ChapterReadPage({ params }: Props) {
   }
 
   return (
-    <ChapterReaderClient
-      chapter={chapter}
-      manga={{ id: manga.id, title: manga.title, slug: manga.slug }}
-      allChapters={allChapters}
-      prevChapterId={prevChapter?.id || null}
-      nextChapterId={nextChapter?.id || null}
-      coinBalance={coinBalance}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}
+      />
+      <ChapterReaderClient
+        chapter={chapter}
+        manga={{ id: manga.id, title: manga.title, slug: manga.slug }}
+        allChapters={allChapters}
+        prevChapterId={prevChapter?.id || null}
+        nextChapterId={nextChapter?.id || null}
+        coinBalance={coinBalance}
+      />
+    </>
   );
 }

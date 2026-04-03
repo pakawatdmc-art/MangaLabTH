@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     R2_BUCKET_NAME: str = "mangafactory"
     R2_PUBLIC_URL: str = ""
 
+    # ── SEO / Google Notification ─────────────────
+    SITE_URL: str = ""  # e.g. https://mangalab-th.com
+
     # ── FeelFreePay ────────────────────────────────
     FFP_CUSTOMER_KEY: str = ""
     FFP_PUBLIC_KEY: str = ""
