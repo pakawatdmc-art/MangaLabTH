@@ -22,6 +22,7 @@ boto3==1.36.4
 slowapi==0.1.9
 
 # Utilities
+requests==2.31.0
 pydantic[email]==2.10.4
 pydantic-settings==2.7.1
 python-multipart==0.0.20
