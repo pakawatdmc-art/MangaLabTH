@@ -25,12 +25,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             changeFrequency: "weekly",
             priority: 0.5,
         },
-        {
-            url: `${baseUrl}/coins`,
-            lastModified: new Date(),
-            changeFrequency: "monthly",
-            priority: 0.3,
-        },
     ];
 
     // Category pages
@@ -46,10 +40,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Dynamic manga pages
     let mangaPages: MetadataRoute.Sitemap = [];
     try {
-        const res = await getMangaList({ per_page: 100 });
-        mangaPages = res.items.map((manga) => ({
-            url: `${baseUrl}/manga/${manga.slug}`,
-            lastModified: new Date(manga.last_chapter_updated_at || manga.created_at),
+        // Fetch all pages to ensure no manga is missing from sitemap
+        const allItems = [];
+        let currentPage = 1;
+        let totalPages = 1;
+        do {
+            const res = await getMangaList({ page: currentPage, per_page: 100 });
+            allItems.push(...res.items);
+            totalPages = res.pages;
+            currentPage++;
+        } while (currentPage <= totalPages);
+
+        mangaPages = allItems.map((manga) => ({
+            url: `${baseUrl}/manga/${encodeURIComponent(manga.slug)}`,
+            lastModified: new Date((manga.last_chapter_updated_at || manga.created_at) + "Z"),
             changeFrequency: "weekly" as const,
             priority: 0.8,
         }));

@@ -58,6 +58,12 @@ export const metadata: Metadata = {
       "แพลตฟอร์มอ่านมังงะออนไลน์ อัปเดตเร็ว ภาพคมชัดอ่านง่ายบนมือถือ",
     images: ["/og-default.png"],
   },
+  alternates: {
+    canonical: process.env.NEXT_PUBLIC_SITE_URL || "https://mangalab-th.com",
+    languages: {
+      "th": process.env.NEXT_PUBLIC_SITE_URL || "https://mangalab-th.com",
+    },
+  },
   robots: {
     index: true,
     follow: true,

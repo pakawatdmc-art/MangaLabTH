@@ -92,6 +92,7 @@ class MangaRead(BaseModel):
     title: str
     slug: str
     description: str
+    author: str
     artist: str
     category: MangaCategory
     sub_category: MangaCategory
