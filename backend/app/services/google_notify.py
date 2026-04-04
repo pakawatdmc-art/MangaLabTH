@@ -1,9 +1,9 @@
 """Auto-notify Google when content is updated.
 
-Uses two mechanisms:
-1. Ping Sitemap — sends a GET request to Google's ping endpoint.
-2. Google Indexing API — for VIP, real-time URL notification 
-   (Requires Service Account or base64 JSON in env).
+Uses Google Indexing API for real-time URL notification.
+Requires a Service Account JSON (base64-encoded or raw) in
+the GOOGLE_INDEXING_CREDENTIALS env var, or Application Default
+Credentials when running on Google Cloud Run.
 
 This module is designed to be called as a FastAPI background task
 so it never blocks the API response.
@@ -12,11 +12,10 @@ so it never blocks the API response.
 import base64
 import json
 import logging
-from typing import Optional
 
 import httpx
 import google.auth
-from google.auth.transport.urllib3 import Request
+from google.auth.transport.requests import Request as GoogleAuthRequest
 from google.oauth2 import service_account
 
 from app.config import get_settings
@@ -27,108 +26,88 @@ INDEXING_API_URL = "https://indexing.googleapis.com/v3/urlNotifications:publish"
 SCOPES = ["https://www.googleapis.com/auth/indexing"]
 
 
-def get_google_credentials():
-    """Retrieve Google Auth Credentials via Env Var or Application Default Credentials."""
+def _get_google_credentials():
+    """Build Google credentials from env var or Application Default Credentials."""
     settings = get_settings()
-    
-    # 1. Try from environment variable (Base64 JSON string)
-    if settings.GOOGLE_INDEXING_CREDENTIALS:
+
+    # --- Priority 1: explicit env var ---
+    raw = settings.GOOGLE_INDEXING_CREDENTIALS
+    if raw:
         try:
-            raw_creds = settings.GOOGLE_INDEXING_CREDENTIALS
-            # Attempt to decode base64
+            # Try base64 first, fall back to raw JSON
             try:
-                decoded = base64.b64decode(raw_creds).decode("utf-8")
-                creds_info = json.loads(decoded)
+                creds_info = json.loads(
+                    base64.b64decode(raw).decode("utf-8")
+                )
             except Exception:
-                # Fallback to plain JSON string
-                creds_info = json.loads(raw_creds)
-                
-            return service_account.Credentials.from_service_account_info(
+                creds_info = json.loads(raw)
+
+            creds = service_account.Credentials.from_service_account_info(
                 creds_info, scopes=SCOPES
             )
+            logger.info("✅ Loaded Google credentials from GOOGLE_INDEXING_CREDENTIALS")
+            return creds
         except Exception as e:
-            logger.error(f"Failed to load GOOGLE_INDEXING_CREDENTIALS: {e}")
+            logger.error(f"❌ Failed to parse GOOGLE_INDEXING_CREDENTIALS: {e}")
             return None
 
-    # 2. Try Application Default Credentials (e.g. Cloud Run bound service account)
+    # --- Priority 2: Application Default Credentials (Cloud Run) ---
     try:
-        credentials, _ = google.auth.default(scopes=SCOPES)
-        return credentials
-    except Exception as e:
-        logger.debug(f"No Application Default Credentials found: {e}")
+        creds, _ = google.auth.default(scopes=SCOPES)
+        logger.info("✅ Loaded Google credentials from Application Default Credentials")
+        return creds
+    except Exception:
         return None
 
 
-async def publish_to_indexing_api(url: str, request_type: str = "URL_UPDATED") -> None:
-    """Send a direct ping to Google Indexing API."""
-    credentials = get_google_credentials()
-    if not credentials:
-        # This is not an error, the user might intentionally not have set this up yet
-        return
+async def _publish_url(url: str, action: str = "URL_UPDATED") -> bool:
+    """Publish a single URL to the Google Indexing API.
 
-    # Refresh token if expired
-    if not credentials.valid:
-        try:
-            import urllib3
-            http = urllib3.PoolManager()
-            credentials.refresh(Request(http))
-        except Exception as e:
-            logger.error(f"Failed to refresh Google token: {e}")
-            return
+    Returns True on success, False otherwise.
+    """
+    creds = _get_google_credentials()
+    if creds is None:
+        logger.warning("⏭️ No Google credentials available — skipping Indexing API")
+        return False
+
+    # Refresh the access token (sync, but very fast — just an HTTP call)
+    try:
+        creds.refresh(GoogleAuthRequest())
+    except Exception as e:
+        logger.error(f"❌ Failed to refresh Google token: {e}")
+        return False
 
     headers = {
-        "Authorization": f"Bearer {credentials.token}",
-        "Content-Type": "application/json"
+        "Authorization": f"Bearer {creds.token}",
+        "Content-Type": "application/json",
     }
-    
-    payload = {
-        "url": url,
-        "type": request_type
-    }
-
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        try:
-            response = await client.post(INDEXING_API_URL, headers=headers, json=payload)
-            if response.status_code == 200:
-                logger.info(f"⚡ Indexing API VIP success: {url}")
-            else:
-                logger.warning(
-                    f"⚠️ Indexing API failed ({response.status_code}): {response.text[:200]}"
-                )
-        except Exception as e:
-            logger.error(f"❌ Indexing API request failed: {e}")
-
-
-async def ping_google_sitemap(sitemap_url: Optional[str] = None) -> None:
-    """Ping Google to re-crawl the sitemap."""
-    settings = get_settings()
-    site_url = settings.SITE_URL
-
-    if not site_url:
-        return
-
-    if sitemap_url is None:
-        sitemap_url = f"{site_url.rstrip('/')}/sitemap.xml"
-
-    google_ping_url = f"https://www.google.com/ping?sitemap={sitemap_url}"
+    payload = {"url": url, "type": action}
 
     async with httpx.AsyncClient(timeout=15.0) as client:
         try:
-            response = await client.get(google_ping_url)
-            if response.status_code == 200:
-                logger.info(f"✅ Google sitemap ping successful: {sitemap_url}")
+            resp = await client.post(
+                INDEXING_API_URL, headers=headers, json=payload
+            )
+            if resp.status_code == 200:
+                logger.info(f"⚡ Indexing API success: {url}")
+                return True
             else:
                 logger.warning(
-                    f"⚠️ Google sitemap ping returned {response.status_code}: {response.text[:200]}"
+                    f"⚠️ Indexing API {resp.status_code}: {resp.text[:300]}"
                 )
+                return False
         except Exception as e:
-            logger.error(f"❌ Google sitemap ping failed: {e}")
+            logger.error(f"❌ Indexing API request error: {e}")
+            return False
 
 
 async def notify_google_updated(updated_paths: list[str]) -> None:
     """Notify Google about content updates.
 
-    Called as a background task.
+    Called as a FastAPI background task after manga/chapter changes.
+
+    Args:
+        updated_paths: e.g. ["/manga/solo-leveling", "/"]
     """
     settings = get_settings()
     site_url = settings.SITE_URL
@@ -137,13 +116,7 @@ async def notify_google_updated(updated_paths: list[str]) -> None:
         logger.warning("SITE_URL not set — skipping Google notification")
         return
 
-    # 1. Ping the entire sitemap just in case
-    await ping_google_sitemap()
-
-    # 2. Fire direct VIP request for each specific changed path
     for path in updated_paths:
         full_url = f"{site_url.rstrip('/')}{path}"
         logger.info(f"📢 Content updated: {full_url}")
-        
-        # Fire VIP Indexing API request
-        await publish_to_indexing_api(full_url, "URL_UPDATED")
+        await _publish_url(full_url, "URL_UPDATED")
