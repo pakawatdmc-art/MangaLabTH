@@ -124,6 +124,7 @@ Google Cloud Run จะนำ `Dockerfile` ไปสร้าง Image และ
 | `CORS_ORIGINS` | Comma-separated allowed origins (URL ของ Vercel) |
 | `FRONTEND_URL` | URL ของ Vercel (สำหรับการสั่ง Revalidate Cache) |
 | `REVALIDATION_SECRET` | รหัสผ่านลับสำหรับสั่งเคลียร์ Cache |
+| `SITE_URL` | URL ของเว็บไซต์จริง เช่น `https://mangalab-th.com` (ใช้สำหรับ Auto Google Ping — **ต้องตั้งค่าบน Cloud Run**) |
 
 ### Frontend (`frontend/.env.local`)
 
@@ -213,6 +214,50 @@ Google Cloud Run จะนำ `Dockerfile` ไปสร้าง Image และ
 | `POST` | `/v1/settings/theme` | Admin | Set global theme |
 
 </details>
+
+## SEO & Google Indexing
+
+### สิ่งที่ทำไปแล้ว ✅
+
+| ฟีเจอร์ | ไฟล์ที่เกี่ยวข้อง | รายละเอียด |
+|---------|-------------------|------------|
+| **Auto Google Ping** | `backend/app/services/google_notify.py` | เมื่อเพิ่มมังงะ / ตอนใหม่ / แก้ไขหน้า → ระบบจะ Ping Google Sitemap อัตโนมัติผ่าน Background Task (ไม่บล็อก API) |
+| **Dynamic Sitemap** | `frontend/src/app/sitemap.ts` | สร้าง XML แบบ Dynamic (force-dynamic + ISR 60s) ดึงมังงะทั้งหมดจาก API ครบทุกเรื่อง + หมวดหมู่ + static pages |
+| **Robots.txt** | `frontend/src/app/robots.ts` | Disallow: `/admin/`, `/api/`, `/_next/`, `/account/`, `/profile/` |
+| **JSON-LD Organization + WebSite** | `frontend/src/app/layout.tsx` | SearchAction (กล่องค้นหาใน Google), Organization schema |
+| **JSON-LD ComicSeries** | `frontend/src/app/(reader)/manga/[slug]/page.tsx` | Schema สำหรับ rich snippets เมื่อค้นหาชื่อการ์ตูน |
+| **JSON-LD BreadcrumbList** | manga detail, chapter reader, category pages | โครงสร้างนำทางใน Google Search Results |
+| **Canonical URLs** | chapter reader + manga detail + category pages | ป้องกัน Duplicate Content จาก URL encoding ภาษาไทย |
+| **OG Image** | `frontend/public/og-default.png` | ภาพ Preview เวลาแชร์ลิงก์ใน Social Media |
+| **Category Pages** | `frontend/src/app/(reader)/category/[slug]/page.tsx` | หน้าเฉพาะสำหรับแต่ละหมวดหมู่ พร้อม SEO metadata + SSG |
+| **Footer SEO Links** | `frontend/src/components/Footer.tsx` | Server Component + Internal links ไปหาทุกหมวดหมู่ |
+| **Search noindex** | `frontend/src/app/(reader)/search/page.tsx` | หน้าค้นหาที่มี query string จะ `noindex` ป้องกัน Google เก็บซ้ำ |
+
+### Auto Google Notification Flow
+
+```
+Admin อัปโหลดตอนใหม่
+  → Backend API ตอบ 201 Created ทันที
+  → Background Task: revalidate_paths (เคลียร์ Cache Vercel)
+  → Background Task: notify_google_updated
+      → ping_google_sitemap("https://mangalab-th.com/sitemap.xml")
+      → Google Bot เข้ามาดึง sitemap → เจอตอนใหม่ → จัดเข้า Index
+```
+
+### Deployment Checklist (สำคัญ — ต้องทำ)
+
+- [ ] **ตั้งค่า `SITE_URL` บน Google Cloud Run** — ค่าต้องเป็น `https://mangalab-th.com` (ถ้าไม่ตั้ง ระบบ Auto Ping จะข้ามการทำงาน)
+- [ ] **ยืนยันเว็บบน Google Search Console** — ไปที่ [search.google.com/search-console](https://search.google.com/search-console) → เพิ่ม Property `https://mangalab-th.com` → ยืนยันตัวตน
+- [ ] **ส่ง Sitemap** — ใน Search Console → เมนู Sitemaps → กรอก `sitemap.xml` → กด Submit
+- [ ] **ตรวจสอบว่า Sitemap แสดงมังงะครบ** — เปิด `https://mangalab-th.com/sitemap.xml` ต้องเห็นรายการมังงะทุกเรื่อง
+
+### TODO ในอนาคต 📋
+
+- [ ] **Sitemap Pagination** — เมื่อมังงะเกิน 100 เรื่อง ต้องเพิ่ม logic ดึงหลายหน้าใน sitemap (ปัจจุบัน `per_page=100`)
+- [ ] **Google Indexing API** — อัปเกรดจาก Ping Sitemap เป็น Google Indexing API ด้วย Service Account เพื่อให้แจ้ง Google ได้ตรงหน้าที่อัปเดต (เร็วกว่า)
+- [ ] **Blog/Article Section** — สร้างหน้าบทความ "แนะนำมังงะ" เพื่อดักจับ keyword ยาวๆ (Long-tail SEO)
+- [ ] **Review/Rating Schema** — เพิ่ม AggregateRating ใน JSON-LD เพื่อแสดงดาวคะแนนบน Google
+- [ ] **Structured Data Testing** — ทดสอบเว็บผ่าน [Google Rich Results Test](https://search.google.com/test/rich-results) เป็นประจำ
 
 ## Security Features
 
