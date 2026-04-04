@@ -32,6 +32,7 @@ class Settings(BaseSettings):
 
     # ── SEO / Google Notification ─────────────────
     SITE_URL: str = ""  # e.g. https://mangalab-th.com
+    GOOGLE_INDEXING_CREDENTIALS: str = "" # Base64 encoded Service Account JSON or path
 
     # ── FeelFreePay ────────────────────────────────
     FFP_CUSTOMER_KEY: str = ""

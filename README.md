@@ -125,6 +125,7 @@ Google Cloud Run จะนำ `Dockerfile` ไปสร้าง Image และ
 | `FRONTEND_URL` | URL ของ Vercel (สำหรับการสั่ง Revalidate Cache) |
 | `REVALIDATION_SECRET` | รหัสผ่านลับสำหรับสั่งเคลียร์ Cache |
 | `SITE_URL` | URL ของเว็บไซต์จริง เช่น `https://mangalab-th.com` (ใช้สำหรับ Auto Google Ping — **ต้องตั้งค่าบน Cloud Run**) |
+| `GOOGLE_INDEXING_CREDENTIALS` | ข้อมูลจากไฟล์ Service Account (.json) เพื่อใช้ระบบลัดคิว Google Indexing API |
 
 ### Frontend (`frontend/.env.local`)
 
@@ -232,6 +233,7 @@ Google Cloud Run จะนำ `Dockerfile` ไปสร้าง Image และ
 | **Category Pages** | `frontend/src/app/(reader)/category/[slug]/page.tsx` | หน้าเฉพาะสำหรับแต่ละหมวดหมู่ พร้อม SEO metadata + SSG |
 | **Footer SEO Links** | `frontend/src/components/Footer.tsx` | Server Component + Internal links ไปหาทุกหมวดหมู่ |
 | **Search noindex** | `frontend/src/app/(reader)/search/page.tsx` | หน้าค้นหาที่มี query string จะ `noindex` ป้องกัน Google เก็บซ้ำ |
+| **Google Indexing API (VIP)** | `backend/app/services/google_notify.py` | ยิง POST ผ่าน Service Account แทรกคิวเข้าไปที่ Google โดยตรงเมื่อมีการแก้ไขมังงะ/ตอนใหม่ |
 
 ### Auto Google Notification Flow
 
@@ -240,8 +242,8 @@ Admin อัปโหลดตอนใหม่
   → Backend API ตอบ 201 Created ทันที
   → Background Task: revalidate_paths (เคลียร์ Cache Vercel)
   → Background Task: notify_google_updated
+      → ⚡ publish_to_indexing_api (ยิงคำสั่ง URL_UPDATED ขอ Google อัปเดตทันที)
       → ping_google_sitemap("https://mangalab-th.com/sitemap.xml")
-      → Google Bot เข้ามาดึง sitemap → เจอตอนใหม่ → จัดเข้า Index
 ```
 
 ### Deployment Checklist (สำคัญ — ต้องทำ)
@@ -250,11 +252,11 @@ Admin อัปโหลดตอนใหม่
 - [ ] **ยืนยันเว็บบน Google Search Console** — ไปที่ [search.google.com/search-console](https://search.google.com/search-console) → เพิ่ม Property `https://mangalab-th.com` → ยืนยันตัวตน
 - [ ] **ส่ง Sitemap** — ใน Search Console → เมนู Sitemaps → กรอก `sitemap.xml` → กด Submit
 - [ ] **ตรวจสอบว่า Sitemap แสดงมังงะครบ** — เปิด `https://mangalab-th.com/sitemap.xml` ต้องเห็นรายการมังงะทุกเรื่อง
+- [ ] **ตั้งค่า Google Indexing API** — ใส่ค่า `GOOGLE_INDEXING_CREDENTIALS` (JSON string) ลงใน Environment Variable ของ Cloud Run และต้องเอา Email ของ Service Account ไปแอดเป็น "Owner" ใน Search Console ด้วย
 
 ### TODO ในอนาคต 📋
 
 - [ ] **Sitemap Pagination** — เมื่อมังงะเกิน 100 เรื่อง ต้องเพิ่ม logic ดึงหลายหน้าใน sitemap (ปัจจุบัน `per_page=100`)
-- [ ] **Google Indexing API** — อัปเกรดจาก Ping Sitemap เป็น Google Indexing API ด้วย Service Account เพื่อให้แจ้ง Google ได้ตรงหน้าที่อัปเดต (เร็วกว่า)
 - [ ] **Blog/Article Section** — สร้างหน้าบทความ "แนะนำมังงะ" เพื่อดักจับ keyword ยาวๆ (Long-tail SEO)
 - [ ] **Review/Rating Schema** — เพิ่ม AggregateRating ใน JSON-LD เพื่อแสดงดาวคะแนนบน Google
 - [ ] **Structured Data Testing** — ทดสอบเว็บผ่าน [Google Rich Results Test](https://search.google.com/test/rich-results) เป็นประจำ
