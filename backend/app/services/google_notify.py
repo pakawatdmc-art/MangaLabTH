@@ -21,6 +21,7 @@ from google.oauth2 import service_account
 from app.config import get_settings
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 INDEXING_API_URL = "https://indexing.googleapis.com/v3/urlNotifications:publish"
 SCOPES = ["https://www.googleapis.com/auth/indexing"]
