@@ -69,7 +69,9 @@ async def publish_to_indexing_api(url: str, request_type: str = "URL_UPDATED") -
     # Refresh token if expired
     if not credentials.valid:
         try:
-            credentials.refresh(Request())
+            import urllib3
+            http = urllib3.PoolManager()
+            credentials.refresh(Request(http))
         except Exception as e:
             logger.error(f"Failed to refresh Google token: {e}")
             return
