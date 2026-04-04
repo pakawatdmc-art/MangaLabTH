@@ -2,6 +2,11 @@ import { MetadataRoute } from "next";
 import { getMangaList } from "@/lib/api";
 import { CATEGORY_LABELS } from "@/lib/types";
 
+// Force dynamic rendering so the sitemap always reflects the latest data
+// instead of being cached at build time (when the API may be unreachable).
+export const dynamic = "force-dynamic";
+export const revalidate = 60; // ISR: regenerate at most every 60 seconds
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl =
         process.env.NEXT_PUBLIC_SITE_URL || "https://mangalab-th.com";
@@ -38,25 +43,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         })
     );
 
-    // Dynamic manga pages + free chapter pages
+    // Dynamic manga pages
     let mangaPages: MetadataRoute.Sitemap = [];
-    let chapterPages: MetadataRoute.Sitemap = [];
     try {
-        const res = await getMangaList({ per_page: 1000 });
+        const res = await getMangaList({ per_page: 100 });
         mangaPages = res.items.map((manga) => ({
             url: `${baseUrl}/manga/${manga.slug}`,
             lastModified: new Date(manga.last_chapter_updated_at || manga.created_at),
             changeFrequency: "weekly" as const,
             priority: 0.8,
         }));
-
-        // For each manga, fetch detail to get free chapters for sitemap
-        // We use the list data which includes chapter_count but not individual chapters
-        // So we construct chapter URLs based on known patterns
-        // Note: Only free chapters should be in sitemap (paid = noindex)
-    } catch {
+    } catch (err) {
         // API unavailable — return only static pages
+        console.error("[sitemap] Failed to fetch manga list:", err);
     }
 
-    return [...staticPages, ...categoryPages, ...mangaPages, ...chapterPages];
+    return [...staticPages, ...categoryPages, ...mangaPages];
 }
