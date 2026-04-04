@@ -103,7 +103,7 @@ class Transaction(SQLModel, table=True):
 
 
 class CoinPackage(SQLModel, table=True):
-    """Predefined coin packages available for purchase via Stripe."""
+    """Predefined coin packages available for purchase."""
 
     __tablename__ = "coin_packages"
 

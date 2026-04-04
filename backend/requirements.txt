@@ -17,7 +17,6 @@ httpx==0.28.1
 boto3==1.36.4
 
 # Payments
-stripe==11.4.1
 
 # Rate Limiting
 slowapi==0.1.9

@@ -9,7 +9,7 @@ FastAPI backend สำหรับ MangaLabTH — แพลตฟอร์มอ
 - **Database:** Supabase PostgreSQL
 - **Storage:** Cloudflare R2 (S3-compatible via boto3)
 - **Auth:** Clerk JWT (RS256 + JWKS)
-- **Payments:** Stripe Checkout + Webhooks
+- **Payments:** FeelFreePay (PromptPay QR / TrueWallet)
 - **Image Processing:** Pillow (WebP auto-conversion)
 - **Deployment:** Google Cloud Run (Docker)
 
@@ -52,14 +52,14 @@ app/
 │       ├── upload.py    # R2 upload (presigned + proxy)
 │       ├── users.py     # User management
 │       ├── transactions.py  # Coin economy (atomic)
-│       ├── payments.py  # Stripe integration
+│       ├── payments.py  # FeelFreePay integration
 │       ├── analytics.py # View tracking dashboard
 │       └── settings.py  # Global theme
 └── services/
     ├── storage.py       # R2 operations + shared utilities
     ├── image.py         # WebP conversion
     ├── revalidate.py    # Frontend ISR cache purge
-    ├── stripe_service.py # Stripe API wrapper
+    ├── feelfreepay_service.py # FeelFreePay API wrapper
     └── analytics.py     # Background view recording
 ```
 

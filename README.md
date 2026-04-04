@@ -32,7 +32,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 cp .env.example .env
-# Edit .env — fill in Supabase, Clerk, R2, Stripe credentials
+# Edit .env — fill in Supabase, Clerk, R2, FFP credentials
 
 alembic upgrade head
 uvicorn app.main:app --reload --port 8000
@@ -65,7 +65,7 @@ Google Cloud Run จะนำ `Dockerfile` ไปสร้าง Image และ
    ```
 4. เลือก Region (เช่น `asia-southeast1` สิงคโปร์)
 5. กดยอมรับการอนุญาตเข้าถึงแบบ Unauthenticated (สาธารณะ)
-6. ใส่ Environment Variables (เช่น `DATABASE_URL`, `CLERK_SECRET_KEY`, `R2_...`, `STRIPE_...`) ผ่าน Cloud Console หรือ CLI argument
+6. ใส่ Environment Variables (เช่น `DATABASE_URL`, `CLERK_SECRET_KEY`, `R2_...`, `FFP_...`) ผ่าน Cloud Console หรือ CLI argument
 7. *หมายเหตุ:* ตัว Backend ถูกตั้งค่า `ProxyHeadersMiddleware` ไว้แล้ว ทำให้ใช้งานกับระบบตรวจจับ IP ของเน็ตเวิร์ค Google (Load Balancer) ได้อย่างไม่มีปัญหา
 
 ### Frontend → Vercel
@@ -297,7 +297,7 @@ system_settings
 | `pages` | Page images (R2 URLs, dimensions, order) |
 | `users` | User profiles linked to Clerk (roles, coin balance) |
 | `transactions` | Immutable ledger for all coin movements |
-| `coin_packages` | Predefined Stripe purchase packages |
+| `coin_packages` | Predefined FeelFreePay purchase packages |
 | `daily_manga_views` | Per-manga per-day view aggregation |
 | `system_settings` | Key-value store (global theme) |
 
