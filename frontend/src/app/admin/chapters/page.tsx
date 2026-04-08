@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { ImagePlus, Loader2, Pencil, Plus, Sparkles, Trash2, Layers } from "lucide-react";
+import { ImagePlus, Loader2, Pencil, Plus, Sparkles, Trash2, Layers, Clock } from "lucide-react";
 import type { Chapter, Manga } from "@/lib/types";
 import { formatChapterNumber } from "@/lib/utils";
 import {
@@ -27,6 +27,9 @@ export default function AdminChaptersPage() {
   const [editingChapter, setEditingChapter] = useState<Chapter | null>(null);
   const [updating, setUpdating] = useState(false);
   const [managingChapter, setManagingChapter] = useState<Chapter | null>(null);
+  const [createIsFree, setCreateIsFree] = useState(true);
+  const [editIsFree, setEditIsFree] = useState(false);
+  const [now, setNow] = useState(() => new Date());
 
   const selectedManga = mangas.find((m) => m.id === selectedMangaId) || null;
   const filteredChapters = selectedMangaId
@@ -60,11 +63,25 @@ export default function AdminChaptersPage() {
     if (!editingChapter) return;
 
     const form = new FormData(e.currentTarget);
+    const unlocksAtStr = form.get("unlocks_at") as string;
+    const isFree = form.has("is_free");
+    
+    // Safely parse date and enforce business rule: only paid chapters have unlock timers
+    let unlocksAt = null;
+    if (!isFree && unlocksAtStr) {
+      try {
+        unlocksAt = new Date(unlocksAtStr).toISOString();
+      } catch (err) {
+        console.error("Invalid date", err);
+      }
+    }
+
     const data = {
       number: Number(form.get("number")),
       title: ((form.get("title") as string) || "").trim(),
       coin_price: Number(form.get("coin_price") || 0),
-      is_free: form.has("is_free"),
+      is_free: isFree,
+      unlocks_at: unlocksAt,
     };
 
     setUpdating(true);
@@ -87,6 +104,12 @@ export default function AdminChaptersPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Refresh countdown every 60 seconds
+  useEffect(() => {
+    const intv = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(intv);
+  }, []);
+
   const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!selectedMangaId) {
@@ -95,11 +118,25 @@ export default function AdminChaptersPage() {
     }
     setSaving(true);
     const form = new FormData(e.currentTarget);
+    const unlocksAtStr = form.get("unlocks_at") as string;
+    const isFree = form.has("is_free");
+
+    // Safely parse date and enforce business rule
+    let unlocksAt = null;
+    if (!isFree && unlocksAtStr) {
+      try {
+        unlocksAt = new Date(unlocksAtStr).toISOString();
+      } catch (err) {
+        console.error("Invalid date", err);
+      }
+    }
+
     const data = {
       number: Number(form.get("number")),
       title: (form.get("title") as string) || "",
       coin_price: Number(form.get("coin_price") || 0),
-      is_free: form.has("is_free"),
+      is_free: isFree,
+      unlocks_at: unlocksAt,
     };
     try {
       const token = await getToken();
@@ -299,23 +336,49 @@ export default function AdminChaptersPage() {
                 </div>
 
                 {/* Row 3: Is Free */}
-                <label className="mt-2 flex cursor-pointer items-center gap-3 rounded-xl border border-white/5 bg-white/[0.02] p-4 transition-colors hover:bg-white/[0.04]">
-                  <div className="relative flex items-center">
-                    <input
-                      type="checkbox"
-                      name="is_free"
-                      defaultChecked={editingChapter.is_free}
-                      className="peer h-5 w-5 cursor-pointer appearance-none rounded border border-white/20 bg-black/50 transition-all checked:border-gold checked:bg-gold"
-                    />
-                    <svg className="pointer-events-none absolute left-1/2 top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 text-black opacity-0 transition-opacity peer-checked:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium text-white">เปิดให้อ่านฟรี</span>
-                    <span className="text-xs text-gray-500">ผู้อ่านไม่ต้องใช้เหรียญเพื่ออ่านตอนนี้</span>
-                  </div>
-                </label>
+                <div className="mt-2 rounded-xl border border-white/5 bg-white/[0.02] p-4 transition-colors">
+                  <label className="flex cursor-pointer items-center gap-3">
+                    <div className="relative flex items-center">
+                      <input
+                        type="checkbox"
+                        name="is_free"
+                        checked={editIsFree}
+                        onChange={(e) => setEditIsFree(e.target.checked)}
+                        className="peer h-5 w-5 cursor-pointer appearance-none rounded border border-white/20 bg-black/50 transition-all checked:border-gold checked:bg-gold"
+                      />
+                      <svg className="pointer-events-none absolute left-1/2 top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 text-black opacity-0 transition-opacity peer-checked:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-white">เปิดให้อ่านฟรี</span>
+                      <span className="text-xs text-gray-500">ผู้อ่านไม่ต้องใช้เหรียญเพื่ออ่านตอนนี้</span>
+                    </div>
+                  </label>
+
+                  {!editIsFree && (
+                    <div className="mt-4 border-t border-white/5 pt-4">
+                      <label className="mb-2 block text-xs font-medium tracking-wide text-gray-400">
+                        ตั้งเวลาเปิดให้อ่านฟรีอัติโนมัติ <span className="font-normal text-gray-500">(ถ้ามี)</span>
+                      </label>
+                      <input
+                        type="datetime-local"
+                        name="unlocks_at"
+                        defaultValue={
+                          editingChapter.unlocks_at
+                            ? new Date(
+                                new Date(editingChapter.unlocks_at + "Z").getTime() -
+                                  new Date().getTimezoneOffset() * 60000
+                              )
+                                .toISOString()
+                                .slice(0, 16)
+                            : ""
+                        }
+                        className="h-11 w-full rounded-xl border border-white/5 bg-white/[0.03] px-3.5 text-sm font-medium text-white transition focus:border-gold/50 focus:bg-white/[0.05] focus:ring-1 focus:ring-gold/50 focus:outline-none [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:bg-gold [&::-webkit-calendar-picker-indicator]:p-1 [&::-webkit-calendar-picker-indicator]:rounded-md [&::-webkit-calendar-picker-indicator]:cursor-pointer hover:[&::-webkit-calendar-picker-indicator]:bg-gold-light"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Actions */}
@@ -379,10 +442,27 @@ export default function AdminChaptersPage() {
             </div>
             <div className="flex items-end">
               <label className="flex items-center gap-2 text-sm text-gray-300">
-                <input type="checkbox" name="is_free" defaultChecked className="rounded" />
+                <input
+                  type="checkbox"
+                  name="is_free"
+                  checked={createIsFree}
+                  onChange={(e) => setCreateIsFree(e.target.checked)}
+                  className="rounded"
+                />
                 ตอนฟรี
               </label>
             </div>
+            
+            {!createIsFree && (
+              <div className="col-span-1 sm:col-span-3 border-t border-white/10 pt-3">
+                 <label className="mb-2 block text-xs text-gray-400">ตั้งเวลาเปิดให้อ่านฟรีอัติโนมัติ (ไม่บังคับ)</label>
+                 <input
+                   type="datetime-local"
+                   name="unlocks_at"
+                   className="h-10 w-full sm:w-1/3 rounded-xl border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:outline-none [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:bg-gold [&::-webkit-calendar-picker-indicator]:p-1 [&::-webkit-calendar-picker-indicator]:rounded-md [&::-webkit-calendar-picker-indicator]:cursor-pointer hover:[&::-webkit-calendar-picker-indicator]:bg-gold-light"
+                 />
+              </div>
+            )}
             <div className="flex items-end gap-2">
               <button
                 type="submit"
@@ -429,7 +509,29 @@ export default function AdminChaptersPage() {
                 </td>
               </tr>
             ) : (
-              filteredChapters.map((ch) => (
+              filteredChapters.map((ch) => {
+                let unlockText = null;
+                if (!ch.is_free && ch.unlocks_at) {
+                    const unlocksAt = new Date(ch.unlocks_at + "Z");
+                    if (unlocksAt > now) {
+                        const diffMs = unlocksAt.getTime() - now.getTime();
+                        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                        const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                        
+                        if (diffDays > 0) {
+                            unlockText = `อ่านฟรีในอีก ${diffDays} วัน ${diffHours} ชั่วโมง ${diffMins} นาที`;
+                        } else if (diffHours > 0) {
+                            unlockText = `อ่านฟรีในอีก ${diffHours} ชั่วโมง ${diffMins} นาที`;
+                        } else {
+                            unlockText = `อ่านฟรีในอีก ${diffMins} นาที`;
+                        }
+                    } else {
+                        unlockText = `ฟรีแล้ว (รีเฟรชอัปเดต)`;
+                    }
+                }
+
+                return (
                 <tr key={ch.id} className="border-b border-white/5 hover:bg-white/[0.03]">
                   <td className="px-4 py-2.5 font-medium text-white">
                     {formatChapterNumber(ch.number)}
@@ -454,9 +556,21 @@ export default function AdminChaptersPage() {
                         })
                       : "—"}
                   </td>
-                  <td className="px-4 py-2.5 text-right">
+                  <td className="px-4 py-2.5 text-right whitespace-nowrap">
+                    {unlockText && (
+                        <span 
+                            title={`ปลดล็อกให้อ่านฟรีวันที่ ${new Date(ch.unlocks_at! + "Z").toLocaleString("th-TH")}`}
+                            className="mr-3 inline-flex items-center gap-1 rounded-full bg-gold/10 px-2 py-0.5 text-[11px] text-gold/90 border border-gold/20"
+                        >
+                            <Clock className="h-3 w-3" />
+                            {unlockText}
+                        </span>
+                    )}
                     <button
-                      onClick={() => setEditingChapter(ch)}
+                      onClick={() => {
+                        setEditingChapter(ch);
+                        setEditIsFree(ch.is_free);
+                      }}
                       className="mr-2 rounded-md border border-white/10 bg-surface-200 px-2.5 py-1 text-xs text-gray-300 transition hover:border-white/20 hover:text-white"
                     >
                       <Pencil className="mr-1 inline-block h-3 w-3" />
@@ -477,7 +591,8 @@ export default function AdminChaptersPage() {
                     </button>
                   </td>
                 </tr>
-              ))
+              )
+            })
             )}
           </tbody>
         </table>

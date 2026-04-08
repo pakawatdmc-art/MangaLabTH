@@ -154,7 +154,7 @@ export async function deleteManga(id: string, token: string) {
 
 export async function createChapter(
   mangaId: string,
-  data: { number: number; title?: string; coin_price?: number; is_free?: boolean },
+  data: { number: number; title?: string; coin_price?: number; is_free?: boolean; unlocks_at?: string | null },
   token: string
 ) {
   return fetcher<Chapter>(`/chapters/manga/${mangaId}`, {
@@ -182,7 +182,7 @@ export async function deleteChapter(id: string, token: string) {
 
 export async function updateChapter(
   chapterId: string,
-  data: { number?: number; title?: string; coin_price?: number; is_free?: boolean },
+  data: { number?: number; title?: string; coin_price?: number; is_free?: boolean; unlocks_at?: string | null },
   token: string
 ) {
   return fetcher<Chapter>(`/chapters/${chapterId}`, {

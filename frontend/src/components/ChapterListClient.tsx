@@ -14,6 +14,7 @@ interface Chapter {
     is_free: boolean;
     coin_price: number;
     is_unlocked?: boolean;
+    unlocks_at?: string | null;
 }
 
 interface ChapterListClientProps {
@@ -24,6 +25,7 @@ interface ChapterListClientProps {
 
 export function ChapterListClient({ chapters, freeChapterCount, mangaSlug }: ChapterListClientProps) {
     const [readChapters, setReadChapters] = useState<string[]>([]);
+    const [now, setNow] = useState(() => new Date());
 
     useEffect(() => {
         try {
@@ -35,6 +37,12 @@ export function ChapterListClient({ chapters, freeChapterCount, mangaSlug }: Cha
         } catch (e) {
             console.error("Failed to load read chapters", e);
         }
+    }, []);
+
+    // Refresh countdown every 60 seconds
+    useEffect(() => {
+        const intv = setInterval(() => setNow(new Date()), 60000);
+        return () => clearInterval(intv);
     }, []);
 
     return (
@@ -50,6 +58,27 @@ export function ChapterListClient({ chapters, freeChapterCount, mangaSlug }: Cha
             <div className="space-y-1.5">
                 {chapters.map((ch) => {
                     const isRead = readChapters.includes(ch.id);
+                    
+                    let unlockText = null;
+                    if (!ch.is_free && ch.unlocks_at) {
+                        const unlocksAt = new Date(ch.unlocks_at + "Z");
+                        if (unlocksAt > now) {
+                            const diffMs = unlocksAt.getTime() - now.getTime();
+                            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                            const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                            const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                            
+                            if (diffDays > 0) {
+                                unlockText = `อ่านฟรีในอีก ${diffDays} วัน ${diffHours} ชั่วโมง ${diffMins} นาที`;
+                            } else if (diffHours > 0) {
+                                unlockText = `อ่านฟรีในอีก ${diffHours} ชั่วโมง ${diffMins} นาที`;
+                            } else {
+                                unlockText = `อ่านฟรีในอีก ${diffMins} นาที`;
+                            }
+                        } else {
+                            unlockText = `ปลดล็อกแล้ว (รีเฟรช)`;
+                        }
+                    }
 
                     return (
                         <Link
@@ -75,9 +104,24 @@ export function ChapterListClient({ chapters, freeChapterCount, mangaSlug }: Cha
                                         {formatDateTime(ch.published_at + "Z")}
                                         {ch.page_count ? ` · ${ch.page_count} หน้า` : ""}
                                     </p>
+                                    {unlockText && (
+                                        <p className="mt-0.5 flex items-center gap-1 text-[11px] font-medium text-gold/90">
+                                            <Clock className="h-3 w-3 text-gold/70" />
+                                            {unlockText}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                             <div className="flex shrink-0 items-center gap-2 pt-0.5 sm:pt-0">
+                                {unlockText && (
+                                    <span 
+                                        title={`ปลดล็อกให้อ่านฟรีวันที่ ${new Date(ch.unlocks_at! + "Z").toLocaleString("th-TH")}`}
+                                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] ${isRead ? "text-gray-500 bg-white/5" : "text-gray-400 bg-surface-50 border border-white/5"}`}
+                                    >
+                                        <Clock className="h-2.5 w-2.5" />
+                                        {unlockText}
+                                    </span>
+                                )}
                                 {!ch.is_free && ch.coin_price > 0 ? (
                                     ch.is_unlocked ? (
                                         <span className={`rounded-full px-2 py-0.5 text-xs ${isRead ? "bg-emerald-500/5 text-emerald-500/70" : "bg-emerald-500/10 text-emerald-400"}`}>

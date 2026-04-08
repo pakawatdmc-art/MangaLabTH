@@ -38,10 +38,23 @@ async def list_all_chapters(
     stmt = select(Chapter).order_by(col(Chapter.created_at).desc())
     results = (await session.execute(stmt)).scalars().all()
     items = []
+    now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+    need_commit = False
     for ch in results:
         data = ChapterRead.model_validate(ch)
         data.page_count = len(ch.pages) if ch.pages else 0
+        if data.unlocks_at and data.unlocks_at <= now_utc:
+            data.is_free = True
+            # Persist auto-unlock to DB
+            if not ch.is_free:
+                ch.is_free = True
+                ch.coin_price = 0
+                ch.unlocks_at = None
+                session.add(ch)
+                need_commit = True
         items.append(data)
+    if need_commit:
+        await session.commit()
     return items
 
 
@@ -49,7 +62,12 @@ async def list_all_chapters(
 
 
 @router.get("/manga/{manga_id}", response_model=List[ChapterRead])
-async def list_chapters(manga_id: str, session: DBSession, user: OptionalUser):
+async def list_chapters(
+    manga_id: str, 
+    session: DBSession, 
+    user: OptionalUser,
+    background_tasks: BackgroundTasks
+):
     """List all chapters for a manga, ordered by number."""
     stmt = (
         select(Chapter)
@@ -67,13 +85,35 @@ async def list_chapters(manga_id: str, session: DBSession, user: OptionalUser):
         )
         unlocked_ids = set((await session.execute(unlock_stmt)).scalars().all())
 
+    now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
     items = []
+    need_commit = False
     for ch in results:
         data = ChapterRead.model_validate(ch)
         data.page_count = len(ch.pages) if ch.pages else 0
         if ch.id in unlocked_ids:
             data.is_unlocked = True
+            
+        if data.unlocks_at and data.unlocks_at <= now_utc:
+            data.is_free = True
+            data.is_unlocked = True
+            # Persist auto-unlock to DB
+            if not ch.is_free:
+                ch.is_free = True
+                ch.coin_price = 0
+                ch.unlocks_at = None
+                session.add(ch)
+                need_commit = True
+            
         items.append(data)
+    if need_commit:
+        await session.commit()
+        # Ping Google for the manga page so index updates (some chapters just became free)
+        manga = await session.get(Manga, manga_id)
+        if manga:
+            background_tasks.add_task(revalidate_paths, ["/", f"/manga/{manga.slug}"])
+            background_tasks.add_task(notify_google_updated, ["/", f"/manga/{manga.slug}"])
+            
     return items
 
 
@@ -92,8 +132,28 @@ async def get_chapter(
 
     detail = ChapterDetail.model_validate(chapter)
     detail.page_count = len(chapter.pages)
+    
+    now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+    if detail.unlocks_at and detail.unlocks_at <= now_utc:
+        detail.is_free = True
+        # Persist auto-unlock to DB
+        if not chapter.is_free:
+            chapter.is_free = True
+            chapter.coin_price = 0
+            chapter.unlocks_at = None
+            session.add(chapter)
+            await session.commit()
+            await session.refresh(chapter)
 
-    is_locked = (not chapter.is_free) and chapter.coin_price > 0
+            # Ping Google & Next.js cache to immediately index the newly freed chapter
+            manga = await session.get(Manga, chapter.manga_id)
+            if manga:
+                chapter_url = f"/{manga.slug}/ตอนที่-{chapter.number}"
+                paths = ["/", f"/manga/{manga.slug}", chapter_url]
+                background_tasks.add_task(revalidate_paths, paths)
+                background_tasks.add_task(notify_google_updated, paths)
+
+    is_locked = (not detail.is_free) and detail.coin_price > 0
     if is_locked and user is not None and getattr(user, "role", "") == "admin":
         is_locked = False
 
@@ -154,10 +214,10 @@ async def create_chapter(
     await session.commit()
     await session.refresh(chapter)
     data = ChapterRead.model_validate(chapter)
-    data.page_count = 0
-    background_tasks.add_task(revalidate_paths, ["/", f"/manga/{manga.slug}"])
+    chapter_url = f"/{manga.slug}/ตอนที่-{chapter.number}"
+    background_tasks.add_task(revalidate_paths, ["/", f"/manga/{manga.slug}", chapter_url])
     background_tasks.add_task(
-        notify_google_updated, [f"/manga/{manga.slug}", "/"]
+        notify_google_updated, [f"/manga/{manga.slug}", "/", chapter_url]
     )
     return data
 
@@ -183,7 +243,14 @@ async def update_chapter(
     data = ChapterRead.model_validate(chapter)
     data.page_count = len(chapter.pages) if chapter.pages else 0
     manga = await session.get(Manga, chapter.manga_id)
-    background_tasks.add_task(revalidate_paths, ["/"] + ([f"/manga/{manga.slug}"] if manga else []))
+    
+    paths_to_revalidate = ["/"]
+    if manga:
+        chapter_url = f"/{manga.slug}/ตอนที่-{chapter.number}"
+        paths_to_revalidate.extend([f"/manga/{manga.slug}", chapter_url])
+        background_tasks.add_task(notify_google_updated, paths_to_revalidate)
+        
+    background_tasks.add_task(revalidate_paths, paths_to_revalidate)
     return data
 
 

@@ -42,6 +42,7 @@ class ChapterRead(BaseModel):
     published_at: datetime
     page_count: Optional[int] = None
     is_unlocked: bool = False
+    unlocks_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
 
@@ -57,13 +58,19 @@ class ChapterCreate(BaseModel):
     title: str = ""
     coin_price: int = Field(0, ge=0)
     is_free: bool = True
+    unlocks_at: Optional[datetime] = None
 
     def model_post_init(self, __context: Any) -> None:
         """Auto-sync is_free ↔ coin_price to prevent conflicting state."""
         if self.is_free:
             object.__setattr__(self, "coin_price", 0)
+            object.__setattr__(self, "unlocks_at", None)
         elif self.coin_price == 0:
             object.__setattr__(self, "is_free", True)
+            object.__setattr__(self, "unlocks_at", None)
+
+        if self.unlocks_at and self.unlocks_at.tzinfo:
+            object.__setattr__(self, "unlocks_at", self.unlocks_at.replace(tzinfo=None))
 
 
 class ChapterUpdate(BaseModel):
@@ -71,17 +78,26 @@ class ChapterUpdate(BaseModel):
     title: Optional[str] = None
     coin_price: Optional[int] = Field(None, ge=0)
     is_free: Optional[bool] = None
+    unlocks_at: Optional[datetime] = None
 
     def model_post_init(self, __context: Any) -> None:
         """Auto-sync is_free ↔ coin_price when both are provided."""
         if self.is_free is True and self.coin_price is None:
             object.__setattr__(self, "coin_price", 0)
+            object.__setattr__(self, "unlocks_at", None)
         elif self.is_free is True and self.coin_price is not None and self.coin_price > 0:
+            # Admin explicitly set is_free=True → override price and clear timer
             object.__setattr__(self, "coin_price", 0)
+            object.__setattr__(self, "unlocks_at", None)
         elif self.coin_price is not None and self.coin_price > 0 and self.is_free is None:
             object.__setattr__(self, "is_free", False)
+            # Keep unlocks_at — paid chapters can have timed unlock
         elif self.coin_price == 0 and self.is_free is None:
             object.__setattr__(self, "is_free", True)
+            object.__setattr__(self, "unlocks_at", None)
+
+        if self.unlocks_at and self.unlocks_at.tzinfo:
+            object.__setattr__(self, "unlocks_at", self.unlocks_at.replace(tzinfo=None))
 
 
 # ── Manga ────────────────────────────────────────

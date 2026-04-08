@@ -105,6 +105,11 @@ class Chapter(SQLModel, table=True):
         description="Coins required to unlock. 0 = free chapter.",
     )
     is_free: bool = Field(default=True, index=True)
+    unlocks_at: Optional[datetime] = Field(
+        default=None,
+        index=True,
+        description="Auto-unlock the chapter at this exact time (max 30 days)",
+    )
     total_views: int = Field(default=0, ge=0)
 
     published_at: datetime = Field(

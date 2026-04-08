@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
-import { ArrowLeft, Coins, Loader2, Lock, LogIn, Sparkles } from "lucide-react";
+import { ArrowLeft, Clock, Coins, Loader2, Lock, LogIn, Sparkles } from "lucide-react";
 import { getMe, unlockChapter } from "@/lib/api";
 import { formatChapterNumber } from "@/lib/utils";
 
@@ -15,6 +15,7 @@ interface Props {
   coinPrice: number;
   requiresLogin: boolean;
   manga: { title: string; slug: string };
+  unlocksAt?: string | null;
 }
 
 export default function ChapterAccessGate({
@@ -24,12 +25,46 @@ export default function ChapterAccessGate({
   coinPrice,
   requiresLogin,
   manga,
+  unlocksAt,
 }: Props) {
   const router = useRouter();
   const { getToken, isSignedIn } = useAuth();
   const [unlocking, setUnlocking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [balance, setBalance] = useState<number | null>(null);
+  const [countdownText, setCountdownText] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (unlocksAt) {
+      const target = new Date(unlocksAt + "Z").getTime();
+      let intv: ReturnType<typeof setInterval>;
+      const updateCountdown = () => {
+        const now = new Date().getTime();
+        const diffMs = target - now;
+        if (diffMs > 0) {
+          const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+          const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+          if (diffDays > 0) {
+            setCountdownText(`อ่านฟรีได้ในอีก ${diffDays} วัน ${diffHours} ชั่วโมง ${diffMins} นาที`);
+          } else if (diffHours > 0) {
+            setCountdownText(`อ่านฟรีได้ในอีก ${diffHours} ชั่วโมง ${diffMins} นาที`);
+          } else {
+            setCountdownText(`อ่านฟรีได้ในอีก ${diffMins} นาที`);
+          }
+        } else {
+          setCountdownText("ถึงเวลาอ่านฟรีแล้ว! กำลังโหลดข้อมูล...");
+          clearInterval(intv);
+          setTimeout(() => {
+            router.refresh();
+          }, 1500);
+        }
+      };
+      updateCountdown();
+      intv = setInterval(updateCountdown, 1000);
+      return () => clearInterval(intv);
+    }
+  }, [unlocksAt]);
 
   useEffect(() => {
     (async () => {
@@ -126,6 +161,28 @@ export default function ChapterAccessGate({
                   <span className="text-xs text-red-400">(ไม่เพียงพอ)</span>
                 )}
               </p>
+            )}
+            
+            {unlocksAt && new Date(unlocksAt + "Z") > new Date() && (
+              <div className="mt-3 flex flex-col gap-2 rounded-xl bg-black/20 p-3 outline outline-1 outline-white/5">
+                 <div className="flex items-center gap-2 text-sm text-gray-300">
+                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/5">
+                     <Clock className="h-3 w-3" />
+                   </div>
+                   <div className="flex flex-col">
+                      <span className="text-xs text-gray-500">กำหนดการปลดล็อกฟรี:</span>
+                      <span className="font-semibold text-white/90">
+                        {new Date(unlocksAt + "Z").toLocaleDateString("th-TH", { day: 'numeric', month: 'long', year: 'numeric' })} เวลา {new Date(unlocksAt + "Z").toLocaleTimeString("th-TH", { hour: '2-digit', minute: '2-digit' })} น.
+                      </span>
+                   </div>
+                 </div>
+                 {countdownText && (
+                   <div className="mt-1 flex items-center gap-1.5 px-8 text-xs text-gold/80">
+                      <Sparkles className="h-3 w-3" />
+                      {countdownText}
+                   </div>
+                 )}
+              </div>
             )}
           </div>
 

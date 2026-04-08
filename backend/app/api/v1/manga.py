@@ -1,7 +1,7 @@
 """Manga CRUD endpoints."""
 
 import re
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime, timezone
 from math import ceil
 from typing import Any, Optional, List
 from cachetools import TTLCache  # type: ignore
@@ -203,6 +203,12 @@ async def _build_manga_detail(
     detail = MangaDetail.model_validate(manga)
     detail.chapter_count = int(max((c.number for c in manga.chapters), default=0)) if manga.chapters else 0
     detail.chapters.sort(key=lambda c: c.number)
+
+    now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+    for ch in detail.chapters:
+        if ch.unlocks_at and ch.unlocks_at <= now_utc:
+            ch.is_free = True
+            ch.is_unlocked = True
 
     if user and detail.chapters:
         chapter_ids = [c.id for c in detail.chapters]
