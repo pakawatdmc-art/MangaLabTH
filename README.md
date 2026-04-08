@@ -1,16 +1,16 @@
-# MangaLabTH - Premium Manga Ecosystem & Coin Economy
+# MangaLabTH - แพลตฟอร์มมังงะระดับพรีเมียมและระบบเศรษฐกิจเหรียญ (Coin Economy)
 
-**MangaLabTH** is a high-performance, full-stack digital content platform designed for modern web standards. This project showcases enterprise-grade engineering decisions, including real-time automation, atomic transaction handling, and cloud-native architecture.
+**MangaLabTH** คือแพลตฟอร์มเนื้อหาดิจิทัลแบบ Full-Stack ประสิทธิภาพสูงที่ออกแบบตามมาตรฐานเว็บสมัยใหม่ โปรเจกต์นี้แสดงถึงการตัดสินใจทางวิศวกรรมซอฟต์แวร์ระดับ Enterprise รวมถึงระบบอัตโนมัติแบบ Real-time, การจัดการธุรกรรมแบบ Atomic และสถาปัตยกรรมแบบ Cloud-native
 
 ---
 
-## 🚀 Professional Engineering Highlights
+## 🚀 จุดเด่นทางวิศวกรรมซอฟต์แวร์ (Engineering Highlights)
 
-- **Near Real-time Search & Discovery**: Optimized metadata orchestration using Next.js 16 Server Components and ISR (Incremental Static Regeneration), achieving sub-second LCP (Largest Contentful Paint).
-- **Atomic Financial Transactions**: Distributed coin economy implemented with PostgreSQL `SELECT FOR UPDATE` locking to guarantee data integrity and prevent double-spending in high-concurrency scenarios.
-- **Automated Cloud Pipelines**: Seamless image processing pipeline that auto-converts assets to WebP upon upload, served directly via S3-compatible Cloudflare R2 for global scalability.
-- **Advanced SEO Orchestration**: Integrated **Google Indexing API (Service Accounts)** for instant search-engine notification, coupled with dynamic JSON-LD structured data mapping.
-- **Timed Content Dispatcher**: Sophisticated UTC-synchronized scheduling system for automated content release (Timed Chapter Unlocks) with real-time frontend hydration.
+- **การค้นหาและแสดงผลแบบ Real-time**: ปรับแต่งการดึงข้อมูล Metadata ด้วย Next.js 16 Server Components และ ISR (Incremental Static Regeneration) ทำให้ได้ค่า LCP (Largest Contentful Paint) ต่ำกว่า 1 วินาที
+- **ธุรกรรมการเงินที่แม่นยำ (Atomic Transactions)**: ระบบเหรียญ (Coin Economy) ที่ใช้ PostgreSQL `SELECT FOR UPDATE` เพื่อล็อคข้อมูลขณะทำธุรกรรม รับประกันความถูกต้องของข้อมูล (Data Integrity) และป้องกันปัญหาการจ่ายเงินซ้ำซ้อน (Double-spending) ในสภาวะที่มีการใช้งานพร้อมกันจำนวนมาก
+- **ระบบจัดการทรัพยากรบน Cloud อัตโนมัติ**: Pipeline จัดการรูปภาพที่แปลงไฟล์เป็น WebP ทันทีที่อัปโหลด และให้บริการผ่าน Cloudflare R2 (S3-compatible) เพื่อความรวดเร็วในการโหลดและการขยายตัว (Scalability) ระดับสากล
+- **การบูรณาการ SEO ขั้นสูง**: เชื่อมต่อ Google Indexing API (ผ่าน Service Accounts) เพื่อแจ้งเตือน Google Bot ให้เข้ามาเก็บข้อมูลทันทีที่มีการอัปเดต พร้อมระบบ JSON-LD Structured Data ที่สมบูรณ์
+- **ระบบปลดล็อคเนื้อหาตามเวลาอัตโนมัติ**: ระบบวางแผนการเผยแพร่เนื้อหาที่ซิงค์เวลามาตรฐาน UTC อย่างซับซ้อน (Timed Chapter Unlocks) พร้อมระบบ Hydration หน้าบ้านแบบ Real-time
 
 ---
 
@@ -96,22 +96,22 @@ Google Cloud Run จะนำ `Dockerfile` ไปสร้าง Image และ
 ## Features
 
 ### Reader (หน้าผู้อ่าน)
-- **Home** — Hero, manga grid, search, filters, pagination (Premium Floating UI & Mobile-friendly horizontal scroll)
-- **Search** — Advanced filters (category, status, sort)
-- **Manga Detail** — Cover, info, chapter list with coin pricing and **Real-time Mobile-responsive Countdown UI** for upcoming free chapters.
-- **Chapter Reader** — Vertical scroll, lazy load, progress bar, keyboard nav, and Premium Access Gate with countdown auto-refresh.
-- **SEO & Metadata** — Comprehensive SEO strategy: Category-specific dedicated pages (`/category/[slug]`), dynamic Sitemap XML supporting all directories, JSON-LD Schemas, Canonical linkages, Auto-generating Open Graph banners, and **Premium Chapter Indexing (allow crawling locked chapters to attract traffic)**.
-- **Coins** — Purchase packages, transaction history
-- **Auth** — Clerk sign-in/sign-up with RBAC
+- **Home** — หน้าแรก — Hero, manga grid, ค้นหา, กรองข้อมูล, แบ่งหน้า (Premium Floating UI และรองรับการไถจอแนวนอนในมือถือ)
+- **Search** — ระบบค้นหา — กรองข้อมูลขั้นสูง (หมวดหมู่, สถานะ, การเรียงลำดับ)
+- **Manga Detail** — รายละเอียดมังงะ — ปก, ข้อมูล, รายชื่อตอนพร้อมระบบราคาเหรียญ และ UI นับถอยหลังอ่านฟรีแบบ Real-time ที่รองรับมือถือ
+- **Chapter Reader** — หน้าอ่านมังงะ — ไถจอแนวตั้ง, ระบบโหลดภาพแบบ Lazy Load, แถบสถานะการอ่าน, รองรับคีย์บอร์ด และระบบกั้นเนื้อหา (Premium Gate) พร้อมนับถอยหลังรีเฟรชอัตโนมัติ
+- **SEO & Metadata** — กลยุทธ์ SEO ครบวงจร — หน้าเฉพาะตามหมวดหมู่, Sitemap XML แบบ Dynamic, JSON-LD Schemas, ระบบ Canonical links, ป้ายแบนเนอร์ Open Graph อัตโนมัติ และระบบ Indexing สำหรับตอนติดเหรียญเพื่อดักจับ Traffic
+- **Coins** — ระบบเหรียญ — แพ็กเกจการซื้อ, ประวัติการทำรายการ
+- **Auth** — ระบบยืนยันตัวตน — Clerk sign-in/sign-up พร้อมระบบแบ่งสิทธิ์ (RBAC)
 
 ### Admin (แอดมิน)
-- **Dashboard** — Stats overview
-- **Manga CRUD** — Create, edit, delete manga
-- **Chapter CRUD** — Manage chapters, pricing, and **Timed Auto-Unlock scheduling** (Premium UI: Glassmorphism + Gold accents + CSS Native Calendar override).
-- **Upload Pipeline** — High-concurrency upload system with client-side parallel processing and server-side WebP transcoding before R2 ingestion.
-- **User Governance** — Robust RBAC (Role-Based Access Control) system with specific escalation paths for master administrators.
-- **Real-time Data Observation** — Comprehensive view analytics and revenue monitoring with aggregated time-series data.
-- **RPA Indexing Automation** — Integrated background worker threads for instant Google Search Console updates via Service Account JWTs.
+- **Dashboard** — แผงควบคุม — ภาพรวมสถิติ
+- **Manga CRUD** — จัดการมังงะ — สร้าง, แก้ไข, ลบข้อมูลมังงะ
+- **Chapter CRUD** — จัดการตอน — จัดการเนื้อหา, ราคา และระบบตั้งเวลาปลดล็อคอ่านฟรีอัตโนมัติ (UI พรีเมียม: Glassmorphism + สีทอง + ปฏิทินที่ปรับแต่งพิเศษ)
+- **Upload Pipeline** — ระบบอัปโหลดขั้นสูง — รองรับการอัปโหลดแบบขนาน (Parallel Processing) และการแปลงไฟล์เป็น WebP บนเซิร์ฟเวอร์ก่อนส่งขึ้น R2
+- **User Governance** — การจัดการผู้ใช้ — ระบบแบ่งสิทธิ์ (RBAC) ที่แข็งแกร่ง พร้อมลำดับขั้นการอนุมัติสำหรับ Master Admin
+- **Real-time Data Observation** — การตรวจสอบข้อมูลแบบ Real-time — วิเคราะห์ยอดขายและยอดการเข้าชมผ่านข้อมูลอนุกรมเวลา (Time-series data)
+- **RPA Indexing Automation** — ระบบแจ้งเตือนบอทอัตโนมัติ — ใช้ Background Worker ในการอัปเดต Google Search Console ทันทีผ่าน Service Account JWTs.
 
 ## Environment Variables
 
