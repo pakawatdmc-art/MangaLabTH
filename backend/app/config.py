@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     REVALIDATION_SECRET: str = "super-secret-mangalabth"
     SQL_ECHO: bool = False
 
-    # ── Database (Neon PostgreSQL) ───────────────
+    # ── Database (Supabase PostgreSQL) ─────────
     DATABASE_URL: str
 
     # ── Clerk Auth ───────────────────────────────

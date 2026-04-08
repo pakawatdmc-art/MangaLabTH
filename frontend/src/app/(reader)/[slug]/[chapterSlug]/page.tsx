@@ -25,10 +25,11 @@ export async function generateMetadata({ params }: Props): Promise<import("next"
     const chTitle = matchedChapter.title
       ? `ตอนที่ ${matchedChapter.number} — ${matchedChapter.title}`
       : `ตอนที่ ${matchedChapter.number}`;
+    const isFreeChapter = matchedChapter.is_free || matchedChapter.coin_price === 0;
     return {
       title: `${manga.title} ${chTitle}`,
       description: `อ่าน ${manga.title} ${chTitle} แปลไทย ออนไลน์ฟรี ภาพคมชัด — MangaLabTH`,
-      robots: { index: false, follow: true },
+      robots: { index: isFreeChapter, follow: true },
       alternates: {
         canonical: `${siteUrl}/${decodedSlug}/ตอนที่-${matchedChapter.number}`,
       },

@@ -155,7 +155,7 @@ async def create_chapter(
     await session.refresh(chapter)
     data = ChapterRead.model_validate(chapter)
     data.page_count = 0
-    background_tasks.add_task(revalidate_paths, ["/"])
+    background_tasks.add_task(revalidate_paths, ["/", f"/manga/{manga.slug}"])
     background_tasks.add_task(
         notify_google_updated, [f"/manga/{manga.slug}", "/"]
     )
@@ -182,7 +182,8 @@ async def update_chapter(
     await session.refresh(chapter)
     data = ChapterRead.model_validate(chapter)
     data.page_count = len(chapter.pages) if chapter.pages else 0
-    background_tasks.add_task(revalidate_paths, ["/"])
+    manga = await session.get(Manga, chapter.manga_id)
+    background_tasks.add_task(revalidate_paths, ["/"] + ([f"/manga/{manga.slug}"] if manga else []))
     return data
 
 
@@ -215,6 +216,7 @@ async def delete_chapter(
         pass
 
     background_tasks.add_task(revalidate_paths, ["/"])
+    # Note: chapter was already deleted, manga slug not easily available here
 
 
 # ── Pages (Admin batch create) ───────────────────
@@ -274,10 +276,12 @@ async def replace_pages(
     except Exception:
         pass
 
-    background_tasks.add_task(revalidate_paths, ["/"])
-    background_tasks.add_task(
-        notify_google_updated, [f"/manga/{chapter.manga.slug}"]
-    )
+    manga = await session.get(Manga, chapter.manga_id)
+    background_tasks.add_task(revalidate_paths, ["/"] + ([f"/manga/{manga.slug}"] if manga else []))
+    if manga:
+        background_tasks.add_task(
+            notify_google_updated, [f"/manga/{manga.slug}"]
+        )
     return [PageRead.model_validate(pg) for pg in created]
 
 
@@ -314,8 +318,10 @@ async def add_pages(
     for pg in created:
         await session.refresh(pg)
 
-    background_tasks.add_task(revalidate_paths, ["/"])
-    background_tasks.add_task(
-        notify_google_updated, [f"/manga/{chapter.manga.slug}"]
-    )
+    manga = await session.get(Manga, chapter.manga_id)
+    background_tasks.add_task(revalidate_paths, ["/"] + ([f"/manga/{manga.slug}"] if manga else []))
+    if manga:
+        background_tasks.add_task(
+            notify_google_updated, [f"/manga/{manga.slug}"]
+        )
     return [PageRead.model_validate(pg) for pg in created]
