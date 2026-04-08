@@ -105,7 +105,7 @@ export function ChapterListClient({ chapters, freeChapterCount, mangaSlug }: Cha
                                         {ch.page_count ? ` · ${ch.page_count} หน้า` : ""}
                                     </p>
                                     {unlockText && (
-                                        <p className="mt-0.5 flex items-center gap-1 text-[11px] font-medium text-gold/90">
+                                        <p className="mt-0.5 sm:hidden flex items-center gap-1 text-[11px] font-medium text-gold/90">
                                             <Clock className="h-3 w-3 text-gold/70" />
                                             {unlockText}
                                         </p>
@@ -116,7 +116,7 @@ export function ChapterListClient({ chapters, freeChapterCount, mangaSlug }: Cha
                                 {unlockText && (
                                     <span 
                                         title={`ปลดล็อกให้อ่านฟรีวันที่ ${new Date(ch.unlocks_at! + "Z").toLocaleString("th-TH")}`}
-                                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] ${isRead ? "text-gray-500 bg-white/5" : "text-gray-400 bg-surface-50 border border-white/5"}`}
+                                        className={`hidden sm:inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] ${isRead ? "text-gray-500 bg-white/5" : "text-gray-400 bg-surface-50 border border-white/5"}`}
                                     >
                                         <Clock className="h-2.5 w-2.5" />
                                         {unlockText}
