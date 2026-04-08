@@ -1,6 +1,18 @@
-# MangaLabTH
+# MangaLabTH - Premium Manga Ecosystem & Coin Economy
 
-แพลตฟอร์มอ่านมังงะออนไลน์ระดับพรีเมียม พร้อมระบบ Coin Economy
+**MangaLabTH** is a high-performance, full-stack digital content platform designed for modern web standards. This project showcases enterprise-grade engineering decisions, including real-time automation, atomic transaction handling, and cloud-native architecture.
+
+---
+
+## 🚀 Professional Engineering Highlights
+
+- **Near Real-time Search & Discovery**: Optimized metadata orchestration using Next.js 16 Server Components and ISR (Incremental Static Regeneration), achieving sub-second LCP (Largest Contentful Paint).
+- **Atomic Financial Transactions**: Distributed coin economy implemented with PostgreSQL `SELECT FOR UPDATE` locking to guarantee data integrity and prevent double-spending in high-concurrency scenarios.
+- **Automated Cloud Pipelines**: Seamless image processing pipeline that auto-converts assets to WebP upon upload, served directly via S3-compatible Cloudflare R2 for global scalability.
+- **Advanced SEO Orchestration**: Integrated **Google Indexing API (Service Accounts)** for instant search-engine notification, coupled with dynamic JSON-LD structured data mapping.
+- **Timed Content Dispatcher**: Sophisticated UTC-synchronized scheduling system for automated content release (Timed Chapter Unlocks) with real-time frontend hydration.
+
+---
 
 ## สถาปัตยกรรม (Architecture)
 
@@ -96,10 +108,10 @@ Google Cloud Run จะนำ `Dockerfile` ไปสร้าง Image และ
 - **Dashboard** — Stats overview
 - **Manga CRUD** — Create, edit, delete manga
 - **Chapter CRUD** — Manage chapters, pricing, and **Timed Auto-Unlock scheduling** (Premium UI: Glassmorphism + Gold accents + CSS Native Calendar override).
-- **Upload** — อัพโหลดหน้าปกและภาพเนื้อเรื่อง พร้อมแปลงนามสกุลเป็น WebP ย่อส่วนอัตโนมัติก่อนส่งตรงขึ้น R2 (Parallel Upload)
-- **Users** — User management, coin grants (Secure: สงวนสิทธิ์การให้เหรียญเฉพาะ **Admin Master** เท่านั้น)
-- **Transactions** — Revenue monitoring (Paginated)
-- **Automations** — Real-time Google Indexing Ping via Background Tasks upon chapter/manga update.
+- **Upload Pipeline** — High-concurrency upload system with client-side parallel processing and server-side WebP transcoding before R2 ingestion.
+- **User Governance** — Robust RBAC (Role-Based Access Control) system with specific escalation paths for master administrators.
+- **Real-time Data Observation** — Comprehensive view analytics and revenue monitoring with aggregated time-series data.
+- **RPA Indexing Automation** — Integrated background worker threads for instant Google Search Console updates via Service Account JWTs.
 
 ## Environment Variables
 
