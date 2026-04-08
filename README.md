@@ -86,16 +86,16 @@ Google Cloud Run จะนำ `Dockerfile` ไปสร้าง Image และ
 ### Reader (หน้าผู้อ่าน)
 - **Home** — Hero, manga grid, search, filters, pagination (Premium Floating UI & Mobile-friendly horizontal scroll)
 - **Search** — Advanced filters (category, status, sort)
-- **Manga Detail** — Cover, info, chapter list with coin pricing
-- **Chapter Reader** — Vertical scroll, lazy load, progress bar, keyboard nav
-- **SEO & Metadata** — Comprehensive SEO strategy: Category-specific dedicated pages (`/category/[slug]`), dynamic Sitemap XML supporting all directories, JSON-LD Schemas (WebSite, Organization, ComicSeries, BreadcrumbList), Canonical linkages, and Auto-generating Open Graph banners.
+- **Manga Detail** — Cover, info, chapter list with coin pricing and **Real-time Mobile-responsive Countdown UI** for upcoming free chapters.
+- **Chapter Reader** — Vertical scroll, lazy load, progress bar, keyboard nav, and Premium Access Gate with countdown auto-refresh.
+- **SEO & Metadata** — Comprehensive SEO strategy: Category-specific dedicated pages (`/category/[slug]`), dynamic Sitemap XML supporting all directories, JSON-LD Schemas, Canonical linkages, Auto-generating Open Graph banners, and **Premium Chapter Indexing (allow crawling locked chapters to attract traffic)**.
 - **Coins** — Purchase packages, transaction history
 - **Auth** — Clerk sign-in/sign-up with RBAC
 
 ### Admin (แอดมิน)
 - **Dashboard** — Stats overview
 - **Manga CRUD** — Create, edit, delete manga
-- **Chapter CRUD** — Manage chapters and pricing (Premium UI: Glassmorphism + Gold accents)
+- **Chapter CRUD** — Manage chapters, pricing, and **Timed Auto-Unlock scheduling** (Premium UI: Glassmorphism + Gold accents + CSS Native Calendar override).
 - **Upload** — อัพโหลดหน้าปกและภาพเนื้อเรื่อง พร้อมแปลงนามสกุลเป็น WebP ย่อส่วนอัตโนมัติก่อนส่งตรงขึ้น R2 (Parallel Upload)
 - **Users** — User management, coin grants (Secure: สงวนสิทธิ์การให้เหรียญเฉพาะ **Admin Master** เท่านั้น)
 - **Transactions** — Revenue monitoring (Paginated)
@@ -231,9 +231,11 @@ Google Cloud Run จะนำ `Dockerfile` ไปสร้าง Image และ
 | **Canonical URLs** | chapter reader + manga detail + category pages | ป้องกัน Duplicate Content จาก URL encoding ภาษาไทย |
 | **OG Image** | `frontend/public/og-default.png` | ภาพ Preview เวลาแชร์ลิงก์ใน Social Media |
 | **Category Pages** | `frontend/src/app/(reader)/category/[slug]/page.tsx` | หน้าเฉพาะสำหรับแต่ละหมวดหมู่ พร้อม SEO metadata + SSG |
-| **Footer SEO Links** | `frontend/src/components/Footer.tsx` | Server Component + Internal links ไปหาทุกหมวดหมู่ |
+| **Footer SEO Links** | `frontend/src/components/Footer.tsx` | Server Component + Internal links ไปหาทุกหมวดหมู่ (Mobile 2-Column Responsive Layout) |
 | **Search noindex** | `frontend/src/app/(reader)/search/page.tsx` | หน้าค้นหาที่มี query string จะ `noindex` ป้องกัน Google เก็บซ้ำ |
+| **Premium Chapter Indexing**| `frontend/src/app/(reader)/[slug]/[chapterSlug]/page.tsx` | เปิดให้ Google ค้นเจอหน้าตอนที่ต้องเสียเงินซื้อ เพื่อดึงดูดคนอ่านให้เข้ามาเปย์ล่วงหน้า (กระตุ้น Traffic) |
 | **Google Indexing API (VIP)** | `backend/app/services/google_notify.py` | ยิง POST ผ่าน Service Account แทรกคิวเข้าไปที่ Google โดยตรงเมื่อมีการแก้ไขมังงะ/ตอนใหม่ |
+| **Real-time Free Unlock Ping**| `backend/app/api/v1/chapters.py` | ทันทีที่การนับถอยหลังของตอนสิ้นสุดลง ระบบหน้าบ้านจะ Ping ไปบอก Backend ให้ยิงแจ้ง Google อัตโนมัติ (Background Task) ว่าตอนนี้ฟรีแล้ว! |
 
 ### Auto Google Notification Flow
 
@@ -277,8 +279,9 @@ Admin อัปโหลดตอนใหม่
 - **FeelFreePay:** Secure webhook verification and payment processing integration
 - **Performance:**
   - **Clerk Caching:** TTLCache on backend for user profiles (reduces external API calls)
-  - **Frontend API Logic:** Exponential backoff retry for transient network errors
-- **IP Detection:** X-Forwarded-For aware (for accurate analytics behind Cloud Run LB)
+  - **Database Resilience:** Systemic scrubbing of timezone logic mapping across Pydantic schemas -> PostgreSQL naive format (`replace(tzinfo=None)`) ensuring 100% stable UTC operations.
+- **Frontend API Logic:** Exponential backoff retry for transient network errors.
+- **IP Detection:** X-Forwarded-For aware (for accurate analytics behind Cloud Run LB).
 
 ## Database Schema
 
@@ -293,7 +296,7 @@ system_settings
 | Table | Description |
 |-------|-------------|
 | `mangas` | Manga metadata (title, slug, category, cover, views) |
-| `chapters` | Chapter data (number, coin_price, is_free) |
+| `chapters` | Chapter data (number, coin_price, is_free, **unlocks_at**) |
 | `pages` | Page images (R2 URLs, dimensions, order) |
 | `users` | User profiles linked to Clerk (roles, coin balance) |
 | `transactions` | Immutable ledger for all coin movements |
