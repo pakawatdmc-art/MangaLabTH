@@ -9,9 +9,9 @@ export default function Footer() {
     <footer className="border-t border-white/5 bg-surface-300 pb-20 md:pb-0">
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
         {/* Top section — brand + links */}
-        <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-5">
           {/* Brand */}
-          <div className="col-span-2 lg:col-span-1">
+          <div className="col-span-2 md:col-span-3 lg:col-span-1">
             <Link href="/" className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition">
               <BookOpen className="h-4 w-4 text-gold/50" />
               <span>
@@ -25,11 +25,11 @@ export default function Footer() {
           </div>
 
           {/* Categories */}
-          <nav aria-label="หมวดหมู่มังงะ" className="col-span-1">
+          <nav aria-label="หมวดหมู่มังงะ" className="col-span-2 sm:col-span-1 lg:col-span-2">
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
               หมวดหมู่
             </h3>
-            <ul className="space-y-2">
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-2">
               {FOOTER_CATEGORIES.map(([key, label]) => (
                 <li key={key}>
                   <Link
