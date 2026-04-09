@@ -60,6 +60,7 @@ export interface Manga {
   is_visible: boolean;
   total_views: number;
   chapter_count?: number;
+  latest_chapter_number?: number;
   last_chapter_updated_at?: string;
   created_at: string;
 }

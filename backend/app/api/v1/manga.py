@@ -97,6 +97,7 @@ async def list_manga(
     for m in results:
         data = MangaRead.model_validate(m)
         data.chapter_count = len(m.chapters) if m.chapters else 0
+        data.latest_chapter_number = max((c.number for c in m.chapters), default=None) if m.chapters else None
         items.append(data)
 
     return PaginatedResponse(
@@ -138,6 +139,7 @@ async def get_manga_ranking(
         for m in results:
             d = MangaRead.model_validate(m)
             d.chapter_count = len(m.chapters) if m.chapters else 0
+            d.latest_chapter_number = max((c.number for c in m.chapters), default=None) if m.chapters else None
             data.append(d)
 
         if data:
@@ -184,6 +186,7 @@ async def get_manga_ranking(
     for m in sorted_mangas:
         d = MangaRead.model_validate(m)
         d.chapter_count = len(m.chapters) if m.chapters else 0
+        d.latest_chapter_number = max((c.number for c in m.chapters), default=None) if m.chapters else None
         data.append(d)
     if data:
         _ranking_cache[cache_key] = data

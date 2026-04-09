@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { CATEGORY_LABELS, STATUS_LABELS } from "@/lib/types";
 import type { Manga } from "@/lib/types";
-import { parseUTCDate } from "@/lib/utils";
+import { parseUTCDate, formatChapterNumber } from "@/lib/utils";
 
 interface Props {
   manga: Manga;
@@ -62,7 +62,7 @@ export default function MangaCard({ manga }: Props) {
         <div className="mt-1.5 flex flex-col gap-0.5">
           <div className="flex items-center justify-between">
             <span className="font-semibold text-xs text-emerald-400">
-              ตอนที่ {manga.chapter_count ?? 0}
+              ตอนที่ {manga.latest_chapter_number != null ? formatChapterNumber(manga.latest_chapter_number) : (manga.chapter_count ?? 0)}
             </span>
             <span className="text-[10px] font-bold text-gold shrink-0">
               {STATUS_LABELS[manga.status] || manga.status}

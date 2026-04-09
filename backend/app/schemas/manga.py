@@ -118,6 +118,7 @@ class MangaRead(BaseModel):
     is_visible: bool
     total_views: int
     chapter_count: Optional[int] = None
+    latest_chapter_number: Optional[float] = None
     last_chapter_updated_at: Optional[datetime] = None
     created_at: datetime
 
