@@ -1,6 +1,7 @@
 import { MetadataRoute } from "next";
-import { getMangaList } from "@/lib/api";
+import { getMangaList, getMangaBySlug } from "@/lib/api";
 import { CATEGORY_LABELS } from "@/lib/types";
+import { parseUTCDate } from "@/lib/utils";
 
 // Force dynamic rendering so the sitemap always reflects the latest data
 // instead of being cached at build time (when the API may be unreachable).
@@ -25,6 +26,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             changeFrequency: "weekly",
             priority: 0.5,
         },
+        {
+            url: `${baseUrl}/coins`,
+            lastModified: new Date(),
+            changeFrequency: "monthly",
+            priority: 0.4,
+        },
     ];
 
     // Category pages
@@ -37,10 +44,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         })
     );
 
-    // Dynamic manga pages
+    // Dynamic manga + chapter pages
     let mangaPages: MetadataRoute.Sitemap = [];
+    let chapterPages: MetadataRoute.Sitemap = [];
     try {
-        // Fetch all pages to ensure no manga is missing from sitemap
+        // Fetch all manga (paginated)
         const allItems = [];
         let currentPage = 1;
         let totalPages = 1;
@@ -53,14 +61,37 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
         mangaPages = allItems.map((manga) => ({
             url: `${baseUrl}/manga/${encodeURIComponent(manga.slug)}`,
-            lastModified: new Date((manga.last_chapter_updated_at || manga.created_at) + "Z"),
+            lastModified: parseUTCDate(manga.last_chapter_updated_at || manga.created_at),
             changeFrequency: "weekly" as const,
             priority: 0.8,
         }));
+
+        // Fetch chapter details in parallel batches for chapter URLs
+        const BATCH_SIZE = 10;
+        for (let i = 0; i < allItems.length; i += BATCH_SIZE) {
+            const batch = allItems.slice(i, i + BATCH_SIZE);
+            const results = await Promise.allSettled(
+                batch.map((m) => getMangaBySlug(m.slug))
+            );
+
+            for (const result of results) {
+                if (result.status === "fulfilled") {
+                    const manga = result.value;
+                    for (const ch of manga.chapters || []) {
+                        chapterPages.push({
+                            url: `${baseUrl}/${encodeURIComponent(manga.slug)}/ตอนที่-${ch.number}`,
+                            lastModified: parseUTCDate(ch.published_at),
+                            changeFrequency: "monthly" as const,
+                            priority: 0.6,
+                        });
+                    }
+                }
+            }
+        }
     } catch (err) {
         // API unavailable — return only static pages
         console.error("[sitemap] Failed to fetch manga list:", err);
     }
 
-    return [...staticPages, ...categoryPages, ...mangaPages];
+    return [...staticPages, ...categoryPages, ...mangaPages, ...chapterPages];
 }

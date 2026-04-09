@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { ArrowLeft, Clock, Coins, Loader2, Lock, LogIn, Sparkles } from "lucide-react";
 import { getMe, unlockChapter } from "@/lib/api";
-import { formatChapterNumber } from "@/lib/utils";
+import { formatChapterNumber, parseUTCDate } from "@/lib/utils";
 
 interface Props {
   chapterId: string;
@@ -36,7 +36,7 @@ export default function ChapterAccessGate({
 
   useEffect(() => {
     if (unlocksAt) {
-      const target = new Date(unlocksAt + "Z").getTime();
+      const target = parseUTCDate(unlocksAt).getTime();
       let intv: ReturnType<typeof setInterval>;
       const updateCountdown = () => {
         const now = new Date().getTime();
@@ -163,7 +163,7 @@ export default function ChapterAccessGate({
               </p>
             )}
             
-            {unlocksAt && new Date(unlocksAt + "Z") > new Date() && (
+            {unlocksAt && parseUTCDate(unlocksAt) > new Date() && (
               <div className="mt-3 flex flex-col gap-2 rounded-xl bg-black/20 p-3 outline outline-1 outline-white/5">
                  <div className="flex items-center gap-2 text-sm text-gray-300">
                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/5">
@@ -172,7 +172,7 @@ export default function ChapterAccessGate({
                    <div className="flex flex-col">
                       <span className="text-xs text-gray-500">กำหนดการปลดล็อกฟรี:</span>
                       <span className="font-semibold text-white/90">
-                        {new Date(unlocksAt + "Z").toLocaleDateString("th-TH", { day: 'numeric', month: 'long', year: 'numeric' })} เวลา {new Date(unlocksAt + "Z").toLocaleTimeString("th-TH", { hour: '2-digit', minute: '2-digit' })} น.
+                         {parseUTCDate(unlocksAt).toLocaleDateString("th-TH", { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Bangkok' })} เวลา {parseUTCDate(unlocksAt).toLocaleTimeString("th-TH", { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' })} น.
                       </span>
                    </div>
                  </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { formatChapterNumber, formatDateTime } from "@/lib/utils";
+import { formatChapterNumber, formatDateTime, parseUTCDate } from "@/lib/utils";
 import { Clock, Lock } from "lucide-react";
 
 interface Chapter {
@@ -61,7 +61,7 @@ export function ChapterListClient({ chapters, freeChapterCount, mangaSlug }: Cha
                     
                     let unlockText = null;
                     if (!ch.is_free && ch.unlocks_at) {
-                        const unlocksAt = new Date(ch.unlocks_at + "Z");
+                        const unlocksAt = parseUTCDate(ch.unlocks_at);
                         if (unlocksAt > now) {
                             const diffMs = unlocksAt.getTime() - now.getTime();
                             const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
@@ -101,7 +101,7 @@ export function ChapterListClient({ chapters, freeChapterCount, mangaSlug }: Cha
                                     </p>
                                     <p className={`text-[11px] ${isRead ? "text-gray-500" : "text-gray-400"}`}>
                                         <Clock className="mr-0.5 inline-block h-3 w-3" />
-                                        {formatDateTime(ch.published_at + "Z")}
+                                        {formatDateTime(ch.published_at)}
                                         {ch.page_count ? ` · ${ch.page_count} หน้า` : ""}
                                     </p>
                                     {unlockText && (
@@ -115,7 +115,7 @@ export function ChapterListClient({ chapters, freeChapterCount, mangaSlug }: Cha
                             <div className="flex shrink-0 items-center gap-2 pt-0.5 sm:pt-0">
                                 {unlockText && (
                                     <span 
-                                        title={`ปลดล็อกให้อ่านฟรีวันที่ ${new Date(ch.unlocks_at! + "Z").toLocaleString("th-TH")}`}
+                                        title={`ปลดล็อกให้อ่านฟรีวันที่ ${parseUTCDate(ch.unlocks_at!).toLocaleString("th-TH", { timeZone: "Asia/Bangkok" })}`}
                                         className={`hidden sm:inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] ${isRead ? "text-gray-500 bg-white/5" : "text-gray-400 bg-surface-50 border border-white/5"}`}
                                     >
                                         <Clock className="h-2.5 w-2.5" />

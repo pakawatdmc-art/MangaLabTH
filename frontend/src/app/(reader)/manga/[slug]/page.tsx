@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { getMangaBySlug } from "@/lib/api";
 import { CATEGORY_LABELS, STATUS_LABELS } from "@/lib/types";
-import { formatNumber, formatDateTime } from "@/lib/utils";
+import { formatNumber, formatDateTime, parseUTCDate } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -77,11 +77,12 @@ export default async function MangaDetailPage({ params }: Props) {
     name: manga.title,
     description: manga.description || `อ่าน ${manga.title} มังงะแปลไทย ออนไลน์ฟรี ภาพคมชัด`,
     author: { "@type": "Person", "name": manga.author || "Unknown" },
+    genre: CATEGORY_LABELS[manga.category],
     image: manga.cover_url || "",
     url: `${siteUrl}/manga/${manga.slug}`,
-    datePublished: manga.created_at ? new Date(manga.created_at + "Z").toISOString() : undefined,
+    datePublished: manga.created_at ? parseUTCDate(manga.created_at).toISOString() : undefined,
     dateModified: (manga.last_chapter_updated_at || manga.created_at) 
-      ? new Date((manga.last_chapter_updated_at || manga.created_at) + "Z").toISOString() 
+      ? parseUTCDate(manga.last_chapter_updated_at || manga.created_at).toISOString() 
       : undefined,
   };
 
@@ -173,7 +174,7 @@ export default async function MangaDetailPage({ params }: Props) {
                 <Calendar className="h-3 w-3" />
                 {(() => {
                   const d = manga.last_chapter_updated_at || manga.created_at;
-                  return d ? formatDateTime(d + "Z") : "";
+                  return d ? formatDateTime(d) : "";
                 })()}
               </span>
             </div>

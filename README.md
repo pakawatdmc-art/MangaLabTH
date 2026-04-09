@@ -9,8 +9,9 @@
 - **การค้นหาและแสดงผลแบบ Real-time**: ปรับแต่งการดึงข้อมูล Metadata ด้วย Next.js 16 Server Components และ ISR (Incremental Static Regeneration) ทำให้ได้ค่า LCP (Largest Contentful Paint) ต่ำกว่า 1 วินาที
 - **ธุรกรรมการเงินที่แม่นยำ (Atomic Transactions)**: ระบบเหรียญ (Coin Economy) ที่ใช้ PostgreSQL `SELECT FOR UPDATE` เพื่อล็อคข้อมูลขณะทำธุรกรรม รับประกันความถูกต้องของข้อมูล (Data Integrity) และป้องกันปัญหาการจ่ายเงินซ้ำซ้อน (Double-spending) ในสภาวะที่มีการใช้งานพร้อมกันจำนวนมาก
 - **ระบบจัดการทรัพยากรบน Cloud อัตโนมัติ**: Pipeline จัดการรูปภาพที่แปลงไฟล์เป็น WebP ทันทีที่อัปโหลด และให้บริการผ่าน Cloudflare R2 (S3-compatible) เพื่อความรวดเร็วในการโหลดและการขยายตัว (Scalability) ระดับสากล
-- **การบูรณาการ SEO ขั้นสูง**: เชื่อมต่อ Google Indexing API (ผ่าน Service Accounts) เพื่อแจ้งเตือน Google Bot ให้เข้ามาเก็บข้อมูลทันทีที่มีการอัปเดต พร้อมระบบ JSON-LD Structured Data ที่สมบูรณ์
-- **ระบบปลดล็อคเนื้อหาตามเวลาอัตโนมัติ**: ระบบวางแผนการเผยแพร่เนื้อหาที่ซิงค์เวลามาตรฐาน UTC อย่างซับซ้อน (Timed Chapter Unlocks) พร้อมระบบ Hydration หน้าบ้านแบบ Real-time
+- **การบูรณาการ SEO ขั้นสูง**: เชื่อมต่อ Google Indexing API (ผ่าน Service Accounts) เพื่อแจ้งเตือน Google Bot ให้เข้ามาเก็บข้อมูลทันทีที่มีการอัปเดต พร้อมระบบ JSON-LD Structured Data ที่สมบูรณ์ + Sitemap ครอบคลุมทุกตอนมังงะ
+- **ระบบปลดล็อคเนื้อหาตามเวลาอัตโนมัติ**: ระบบวางแผนการเผยแพร่เนื้อหาที่ซิงค์เวลามาตรฐาน UTC อย่างซับซ้อน (Timed Chapter Unlocks) พร้อมระบบ Hydration หน้าบ้านแบบ Real-time และ persist ลง DB อัตโนมัติเมื่อถึงเวลา
+- **Timezone Standardization (Asia/Bangkok)**: ระบบแสดงวันที่/เวลาทั้งหมดเป็นเวลาไทย (UTC+7) โดยใช้ `parseUTCDate()` utility กลาง + `thaiDatetimeToUTC()` สำหรับ Admin form → ไม่ขึ้นกับ browser timezone
 
 ---
 
@@ -235,15 +236,17 @@ Google Cloud Run จะนำ `Dockerfile` ไปสร้าง Image และ
 | ฟีเจอร์ | ไฟล์ที่เกี่ยวข้อง | รายละเอียด |
 |---------|-------------------|------------|
 | **Auto Google Ping** | `backend/app/services/google_notify.py` | เมื่อเพิ่มมังงะ / ตอนใหม่ / แก้ไขหน้า → ระบบจะ Ping Google Sitemap อัตโนมัติผ่าน Background Task (ไม่บล็อก API) |
-| **Dynamic Sitemap** | `frontend/src/app/sitemap.ts` | สร้าง XML แบบ Dynamic (force-dynamic + ISR 60s) ดึงมังงะทั้งหมดจาก API ครบทุกเรื่อง + หมวดหมู่ + static pages |
-| **Robots.txt** | `frontend/src/app/robots.ts` | Disallow: `/admin/`, `/api/`, `/_next/`, `/account/`, `/profile/` |
+| **Dynamic Sitemap** | `frontend/src/app/sitemap.ts` | สร้าง XML แบบ Dynamic (force-dynamic + ISR 60s) ดึงมังงะ + **ตอนมังงะทุกตอน** จาก API ครบถ้วน (parallel batch) + หมวดหมู่ + static pages + `/coins` |
+| **Robots.txt** | `frontend/src/app/robots.ts` | Disallow: `/admin/`, `/api/`, `/_next/`, `/account/`, `/profile/`, `/sign-in/`, `/sign-up/` |
 | **JSON-LD Organization + WebSite** | `frontend/src/app/layout.tsx` | SearchAction (กล่องค้นหาใน Google), Organization schema |
-| **JSON-LD ComicSeries** | `frontend/src/app/(reader)/manga/[slug]/page.tsx` | Schema สำหรับ rich snippets เมื่อค้นหาชื่อการ์ตูน |
+| **JSON-LD ComicSeries** | `frontend/src/app/(reader)/manga/[slug]/page.tsx` | Schema สำหรับ rich snippets เมื่อค้นหาชื่อการ์ตูน (รวม `genre` + `datePublished` + `dateModified`) |
 | **JSON-LD BreadcrumbList** | manga detail, chapter reader, category pages | โครงสร้างนำทางใน Google Search Results |
 | **Canonical URLs** | chapter reader + manga detail + category pages | ป้องกัน Duplicate Content จาก URL encoding ภาษาไทย |
-| **OG Image** | `frontend/public/og-default.png` | ภาพ Preview เวลาแชร์ลิงก์ใน Social Media |
+| **OG + Twitter Card (Manga)** | `frontend/src/app/(reader)/manga/[slug]/page.tsx` | ภาพ Preview ปกมังงะเวลาแชร์ลิงก์หน้า manga detail |
+| **OG + Twitter Card (Chapter)** | `frontend/src/app/(reader)/[slug]/[chapterSlug]/page.tsx` | ภาพ Preview ปกมังงะเวลาแชร์ลิงก์ตอนมังงะ |
+| **OG Image** | `frontend/public/og-default.png` | ภาพ Preview fallback เวลาแชร์ลิงก์ใน Social Media |
 | **Category Pages** | `frontend/src/app/(reader)/category/[slug]/page.tsx` | หน้าเฉพาะสำหรับแต่ละหมวดหมู่ พร้อม SEO metadata + SSG |
-| **Footer SEO Links** | `frontend/src/components/Footer.tsx` | Server Component + Internal links ไปหาทุกหมวดหมู่ (Mobile 2-Column Responsive Layout) |
+| **Footer SEO Links** | `frontend/src/components/Footer.tsx` | Server Component + Internal links ไปหา**ทุกหมวดหมู่ (11 หมวด)** (Mobile 2-Column Responsive Layout) |
 | **Search noindex** | `frontend/src/app/(reader)/search/page.tsx` | หน้าค้นหาที่มี query string จะ `noindex` ป้องกัน Google เก็บซ้ำ |
 | **Premium Chapter Indexing**| `frontend/src/app/(reader)/[slug]/[chapterSlug]/page.tsx` | เปิดให้ Google ค้นเจอหน้าตอนที่ต้องเสียเงินซื้อ เพื่อดึงดูดคนอ่านให้เข้ามาเปย์ล่วงหน้า (กระตุ้น Traffic) |
 | **Google Indexing API (VIP)** | `backend/app/services/google_notify.py` | ยิง POST ผ่าน Service Account แทรกคิวเข้าไปที่ Google โดยตรงเมื่อมีการแก้ไขมังงะ/ตอนใหม่ |
@@ -257,7 +260,12 @@ Admin อัปโหลดตอนใหม่
   → Background Task: revalidate_paths (เคลียร์ Cache Vercel)
   → Background Task: notify_google_updated
       → ⚡ publish_to_indexing_api (ยิงคำสั่ง URL_UPDATED ขอ Google อัปเดตทันที)
-      → ping_google_sitemap("https://mangalab-th.com/sitemap.xml")
+
+ตอนมังงะหมดเวลา Timed Unlock
+  → Frontend countdown ถึง 0 → router.refresh()
+  → Backend GET /chapters/{id} → persist is_free=true ลง DB
+  → Background Task: revalidate_paths + notify_google_updated
+      → ⚡ Google ได้รับแจ้งว่าตอนนี้ฟรีแล้ว
 ```
 
 ### Deployment Checklist (สำคัญ — ต้องทำ)
@@ -265,12 +273,13 @@ Admin อัปโหลดตอนใหม่
 - [ ] **ตั้งค่า `SITE_URL` บน Google Cloud Run** — ค่าต้องเป็น `https://mangalab-th.com` (ถ้าไม่ตั้ง ระบบ Auto Ping จะข้ามการทำงาน)
 - [ ] **ยืนยันเว็บบน Google Search Console** — ไปที่ [search.google.com/search-console](https://search.google.com/search-console) → เพิ่ม Property `https://mangalab-th.com` → ยืนยันตัวตน
 - [ ] **ส่ง Sitemap** — ใน Search Console → เมนู Sitemaps → กรอก `sitemap.xml` → กด Submit
-- [ ] **ตรวจสอบว่า Sitemap แสดงมังงะครบ** — เปิด `https://mangalab-th.com/sitemap.xml` ต้องเห็นรายการมังงะทุกเรื่อง
+- [ ] **ตรวจสอบว่า Sitemap แสดงมังงะ + ตอนมังงะครบ** — เปิด `https://mangalab-th.com/sitemap.xml` ต้องเห็นรายการมังงะทุกเรื่อง + ทุกตอน
 - [ ] **ตั้งค่า Google Indexing API** — ใส่ค่า `GOOGLE_INDEXING_CREDENTIALS` (JSON string) ลงใน Environment Variable ของ Cloud Run และต้องเอา Email ของ Service Account ไปแอดเป็น "Owner" ใน Search Console ด้วย
 
 ### TODO ในอนาคต 📋
 
-- [ ] **Sitemap Pagination** — เมื่อมังงะเกิน 100 เรื่อง ต้องเพิ่ม logic ดึงหลายหน้าใน sitemap (ปัจจุบัน `per_page=100`)
+- [x] ~~**Sitemap Pagination** — เมื่อมังงะเกิน 100 เรื่อง ต้องเพิ่ม logic ดึงหลายหน้าใน sitemap~~ ✅ **เสร็จแล้ว** (paginated fetch + chapter-level URLs)
+- [ ] **Sitemap Index** — เมื่อ URLs รวมเกิน 50,000 (มังงะ × ตอน) ต้องแบ่งเป็น sitemap index + sitemap ย่อย
 - [ ] **Blog/Article Section** — สร้างหน้าบทความ "แนะนำมังงะ" เพื่อดักจับ keyword ยาวๆ (Long-tail SEO)
 - [ ] **Review/Rating Schema** — เพิ่ม AggregateRating ใน JSON-LD เพื่อแสดงดาวคะแนนบน Google
 - [ ] **Structured Data Testing** — ทดสอบเว็บผ่าน [Google Rich Results Test](https://search.google.com/test/rich-results) เป็นประจำ
@@ -292,6 +301,11 @@ Admin อัปโหลดตอนใหม่
 - **Performance:**
   - **Clerk Caching:** TTLCache on backend for user profiles (reduces external API calls)
   - **Database Resilience:** Systemic scrubbing of timezone logic mapping across Pydantic schemas -> PostgreSQL naive format (`replace(tzinfo=None)`) ensuring 100% stable UTC operations.
+- **Timezone Architecture:**
+  - **Backend:** เก็บ datetime เป็น UTC naive (standard) — Pydantic schemas strip tzinfo ก่อน save
+  - **Frontend → Display:** `parseUTCDate()` utility แปลง UTC naive → Date object + แสดงผลด้วย `timeZone: 'Asia/Bangkok'` เสมอ
+  - **Frontend → Admin Input:** `thaiDatetimeToUTC()` utility แปลง datetime-local (เวลาไทย) → UTC ISO string โดยไม่พึ่ง browser timezone
+  - **ไฟล์ที่เกี่ยวข้อง:** `frontend/src/lib/utils.ts` — ทุกไฟล์ใช้ utility กลาง ไม่มี `+ "Z"` กระจายอยู่
 - **Frontend API Logic:** Exponential backoff retry for transient network errors.
 - **IP Detection:** X-Forwarded-For aware (for accurate analytics behind Cloud Run LB).
 

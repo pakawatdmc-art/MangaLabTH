@@ -32,6 +32,18 @@ export async function generateMetadata({ params }: Props): Promise<import("next"
       alternates: {
         canonical: `${siteUrl}/${decodedSlug}/ตอนที่-${matchedChapter.number}`,
       },
+      openGraph: {
+        title: `${manga.title} ${chTitle} — MangaLabTH`,
+        description: `อ่าน ${manga.title} ${chTitle} แปลไทย ออนไลน์ฟรี ภาพคมชัด`,
+        images: manga.cover_url ? [{ url: manga.cover_url, width: 400, height: 600 }] : [],
+        type: "article",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: `${manga.title} ${chTitle} — MangaLabTH`,
+        description: `อ่าน ${manga.title} ${chTitle} แปลไทย ออนไลน์ฟรี ภาพคมชัด`,
+        images: manga.cover_url ? [manga.cover_url] : [],
+      },
     };
   } catch {
     return { title: "อ่านมังงะ — MangaLabTH" };

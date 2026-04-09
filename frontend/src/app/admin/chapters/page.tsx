@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { ImagePlus, Loader2, Pencil, Plus, Sparkles, Trash2, Layers, Clock } from "lucide-react";
 import type { Chapter, Manga } from "@/lib/types";
-import { formatChapterNumber } from "@/lib/utils";
+import { formatChapterNumber, parseUTCDate, thaiDatetimeToUTC } from "@/lib/utils";
 import {
   listAllChapters,
   getMangaList,
@@ -70,7 +70,7 @@ export default function AdminChaptersPage() {
     let unlocksAt = null;
     if (!isFree && unlocksAtStr) {
       try {
-        unlocksAt = new Date(unlocksAtStr).toISOString();
+        unlocksAt = thaiDatetimeToUTC(unlocksAtStr);
       } catch (err) {
         console.error("Invalid date", err);
       }
@@ -125,7 +125,7 @@ export default function AdminChaptersPage() {
     let unlocksAt = null;
     if (!isFree && unlocksAtStr) {
       try {
-        unlocksAt = new Date(unlocksAtStr).toISOString();
+        unlocksAt = thaiDatetimeToUTC(unlocksAtStr);
       } catch (err) {
         console.error("Invalid date", err);
       }
@@ -365,13 +365,13 @@ export default function AdminChaptersPage() {
                         type="datetime-local"
                         name="unlocks_at"
                         defaultValue={
-                          editingChapter.unlocks_at
-                            ? new Date(
-                                new Date(editingChapter.unlocks_at + "Z").getTime() -
-                                  new Date().getTimezoneOffset() * 60000
-                              )
-                                .toISOString()
-                                .slice(0, 16)
+                           editingChapter.unlocks_at
+                            ? (() => {
+                                const d = parseUTCDate(editingChapter.unlocks_at);
+                                // แปลงเป็นเวลาไทย (UTC+7) สำหรับ datetime-local input
+                                const thaiDate = new Date(d.getTime() + 7 * 60 * 60 * 1000);
+                                return thaiDate.toISOString().slice(0, 16);
+                              })()
                             : ""
                         }
                         className="h-11 w-full rounded-xl border border-white/5 bg-white/[0.03] px-3.5 text-sm font-medium text-white transition focus:border-gold/50 focus:bg-white/[0.05] focus:ring-1 focus:ring-gold/50 focus:outline-none [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:bg-gold [&::-webkit-calendar-picker-indicator]:p-1 [&::-webkit-calendar-picker-indicator]:rounded-md [&::-webkit-calendar-picker-indicator]:cursor-pointer hover:[&::-webkit-calendar-picker-indicator]:bg-gold-light"
@@ -512,7 +512,7 @@ export default function AdminChaptersPage() {
               filteredChapters.map((ch) => {
                 let unlockText = null;
                 if (!ch.is_free && ch.unlocks_at) {
-                    const unlocksAt = new Date(ch.unlocks_at + "Z");
+                    const unlocksAt = parseUTCDate(ch.unlocks_at);
                     if (unlocksAt > now) {
                         const diffMs = unlocksAt.getTime() - now.getTime();
                         const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
@@ -547,19 +547,20 @@ export default function AdminChaptersPage() {
                   <td className="px-4 py-2.5 text-gray-400">{ch.page_count ?? 0}</td>
                   <td className="px-4 py-2.5 text-xs text-gray-400">
                     {ch.published_at
-                      ? new Date(ch.published_at + "Z").toLocaleDateString("th-TH", {
+                      ? parseUTCDate(ch.published_at).toLocaleDateString("th-TH", {
                           year: "numeric",
                           month: "short",
                           day: "numeric",
                           hour: "2-digit",
                           minute: "2-digit",
+                          timeZone: "Asia/Bangkok",
                         })
                       : "—"}
                   </td>
                   <td className="px-4 py-2.5 text-right whitespace-nowrap">
                     {unlockText && (
                         <span 
-                            title={`ปลดล็อกให้อ่านฟรีวันที่ ${new Date(ch.unlocks_at! + "Z").toLocaleString("th-TH")}`}
+                            title={`ปลดล็อกให้อ่านฟรีวันที่ ${parseUTCDate(ch.unlocks_at!).toLocaleString("th-TH", { timeZone: "Asia/Bangkok" })}`}
                             className="mr-3 inline-flex items-center gap-1 rounded-full bg-gold/10 px-2 py-0.5 text-[11px] text-gold/90 border border-gold/20"
                         >
                             <Clock className="h-3 w-3" />

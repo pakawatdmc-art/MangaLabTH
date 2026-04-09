@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BookOpen } from "lucide-react";
 import { CATEGORY_LABELS } from "@/lib/types";
 
-const FOOTER_CATEGORIES = Object.entries(CATEGORY_LABELS).slice(0, 6);
+const FOOTER_CATEGORIES = Object.entries(CATEGORY_LABELS);
 
 export default function Footer() {
   return (

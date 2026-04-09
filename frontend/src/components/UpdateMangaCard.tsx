@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { CATEGORY_LABELS, Manga } from "@/lib/types";
+import { parseUTCDate } from "@/lib/utils";
 
 interface Props {
     manga: Manga;
@@ -10,18 +11,19 @@ export default function UpdateMangaCard({ manga }: Props) {
     // eslint-disable-next-line react-hooks/purity
     const now = Date.now();
     const isNew = manga.last_chapter_updated_at
-        ? new Date(manga.last_chapter_updated_at + "Z").getTime() > now - 7 * 24 * 60 * 60 * 1000
+        ? parseUTCDate(manga.last_chapter_updated_at).getTime() > now - 7 * 24 * 60 * 60 * 1000
         : false;
 
     const getFormattedDate = () => {
         const dateStr = manga.last_chapter_updated_at || manga.created_at;
         if (!dateStr) return "";
 
-        const date = new Date(dateStr + "Z");
+        const date = parseUTCDate(dateStr);
         return date.toLocaleDateString("th-TH", {
             year: "numeric",
             month: "short",
             day: "numeric",
+            timeZone: "Asia/Bangkok",
         });
     };
 

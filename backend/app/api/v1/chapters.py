@@ -265,6 +265,9 @@ async def delete_chapter(
     if not chapter:
         raise HTTPException(status_code=404, detail="Chapter not found")
 
+    # ดึง manga ก่อนลบเพื่อเก็บ slug สำหรับ revalidation
+    manga = await session.get(Manga, chapter.manga_id)
+
     # Collect R2 keys from page URLs before deleting from DB
     r2_keys = []
     for page in (chapter.pages or []):
@@ -282,8 +285,12 @@ async def delete_chapter(
     except Exception:
         pass
 
-    background_tasks.add_task(revalidate_paths, ["/"])
-    # Note: chapter was already deleted, manga slug not easily available here
+    paths = ["/"]
+    if manga:
+        paths.append(f"/manga/{manga.slug}")
+    background_tasks.add_task(revalidate_paths, paths)
+    if manga:
+        background_tasks.add_task(notify_google_updated, paths)
 
 
 # ── Pages (Admin batch create) ───────────────────

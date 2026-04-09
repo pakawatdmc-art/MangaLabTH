@@ -94,7 +94,7 @@ async def list_manga(
     items = []
     for m in results:
         data = MangaRead.model_validate(m)
-        data.chapter_count = int(max((c.number for c in m.chapters), default=0)) if m.chapters else 0
+        data.chapter_count = len(m.chapters) if m.chapters else 0
         items.append(data)
 
     return PaginatedResponse(
@@ -135,7 +135,7 @@ async def get_manga_ranking(
         data = []
         for m in results:
             d = MangaRead.model_validate(m)
-            d.chapter_count = int(max((c.number for c in m.chapters), default=0)) if m.chapters else 0
+            d.chapter_count = len(m.chapters) if m.chapters else 0
             data.append(d)
 
         if data:
@@ -180,7 +180,7 @@ async def get_manga_ranking(
     data = []
     for m in sorted_mangas:
         d = MangaRead.model_validate(m)
-        d.chapter_count = int(max((c.number for c in m.chapters), default=0)) if m.chapters else 0
+        d.chapter_count = len(m.chapters) if m.chapters else 0
         data.append(d)
     if data:
         _ranking_cache[cache_key] = data
@@ -201,14 +201,30 @@ async def _build_manga_detail(
         raise HTTPException(status_code=404, detail="Manga not found")
 
     detail = MangaDetail.model_validate(manga)
-    detail.chapter_count = int(max((c.number for c in manga.chapters), default=0)) if manga.chapters else 0
+    detail.chapter_count = len(manga.chapters) if manga.chapters else 0
     detail.chapters.sort(key=lambda c: c.number)
 
     now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+    need_commit = False
     for ch in detail.chapters:
         if ch.unlocks_at and ch.unlocks_at <= now_utc:
             ch.is_free = True
             ch.is_unlocked = True
+
+    # Persist auto-unlock for chapters that have passed their unlock time
+    if manga.chapters:
+        for db_ch in manga.chapters:
+            if not db_ch.is_free and db_ch.unlocks_at and db_ch.unlocks_at <= now_utc:
+                db_ch.is_free = True
+                db_ch.coin_price = 0
+                db_ch.unlocks_at = None
+                session.add(db_ch)
+                need_commit = True
+
+    if need_commit:
+        await session.commit()
+        background_tasks.add_task(revalidate_paths, ["/", f"/manga/{manga.slug}"])
+        background_tasks.add_task(notify_google_updated, ["/", f"/manga/{manga.slug}"])
 
     if user and detail.chapters:
         chapter_ids = [c.id for c in detail.chapters]
