@@ -131,7 +131,7 @@ class MangaDetail(MangaRead):
 class MangaCreate(BaseModel):
     title: str = Field(max_length=255)
     slug: str = Field(max_length=280)
-    description: str = ""
+    description: str = Field("", max_length=5000)
     author: str = Field("", max_length=255)
     artist: str = Field("", max_length=255)
     category: MangaCategory = MangaCategory.OTHER
@@ -145,7 +145,7 @@ class MangaCreate(BaseModel):
 class MangaUpdate(BaseModel):
     title: Optional[str] = Field(None, max_length=255)
     slug: Optional[str] = Field(None, max_length=280)
-    description: Optional[str] = None
+    description: Optional[str] = Field(None, max_length=5000)
     author: Optional[str] = Field(None, max_length=255)
     artist: Optional[str] = Field(None, max_length=255)
     category: Optional[MangaCategory] = None

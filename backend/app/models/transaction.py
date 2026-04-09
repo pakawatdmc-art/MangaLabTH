@@ -58,7 +58,9 @@ class Transaction(SQLModel, table=True):
     # Optional references for traceability
     chapter_id: Optional[str] = Field(
         default=None,
+        foreign_key="chapters.id",
         max_length=64,
+        sa_column_kwargs={"nullable": True},
         description="Chapter unlocked (for CHAPTER_UNLOCK type)",
     )
     ffp_reference_no: Optional[str] = Field(
@@ -74,7 +76,9 @@ class Transaction(SQLModel, table=True):
     )
     package_id: Optional[str] = Field(
         default=None,
+        foreign_key="coin_packages.id",
         max_length=64,
+        sa_column_kwargs={"nullable": True},
         description="ID of the coin package purchased (for webhook recovery)",
     )
     note: str = Field(default="", max_length=512)

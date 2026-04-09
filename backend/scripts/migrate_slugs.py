@@ -1,9 +1,20 @@
+"""Migrate all manga slugs to Thai-friendly format.
+
+Usage:
+    cd backend
+    python scripts/migrate_slugs.py
+"""
+
 import asyncio
 import re
 import sys
 import os
 
+# Ensure `app.*` imports work when running from `backend/`
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from dotenv import load_dotenv
+load_dotenv()
 
 from sqlmodel import select
 from app.database import async_session_factory

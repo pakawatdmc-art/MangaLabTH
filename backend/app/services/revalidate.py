@@ -24,8 +24,8 @@ async def revalidate_paths(paths: list[str]) -> None:
                 response = await client.post(url, headers=headers, json={"path": path})
                 if response.status_code != 200:
                     logger.error(
-                        f"Failed to revalidate {path}: {response.text}")
+                        "Failed to revalidate %s: %s", path, response.text)
                 else:
-                    logger.info(f"Successfully revalidated {path}")
+                    logger.info("Successfully revalidated %s", path)
             except Exception as e:
-                logger.error(f"Error revalidating {path}: {str(e)}")
+                logger.error("Error revalidating %s: %s", path, str(e))

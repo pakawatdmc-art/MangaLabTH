@@ -122,7 +122,7 @@ export default function TopMangaRanking() {
                             ))}
                         </div>
 
-                        {/* Rank 4-10 List */}
+                        {/* Rank 4-5 List */}
                         {others.length > 0 && (
                             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1">
                                 {others.map((manga, idx) => (

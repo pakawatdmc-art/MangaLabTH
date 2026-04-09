@@ -359,7 +359,7 @@ export default function AdminChaptersPage() {
                   {!editIsFree && (
                     <div className="mt-4 border-t border-white/5 pt-4">
                       <label className="mb-2 block text-xs font-medium tracking-wide text-gray-400">
-                        ตั้งเวลาเปิดให้อ่านฟรีอัติโนมัติ <span className="font-normal text-gray-500">(ถ้ามี)</span>
+                        ตั้งเวลาเปิดให้อ่านฟรีอัตโนมัติ <span className="font-normal text-gray-500">(ถ้ามี)</span>
                       </label>
                       <input
                         type="datetime-local"
@@ -455,7 +455,7 @@ export default function AdminChaptersPage() {
             
             {!createIsFree && (
               <div className="col-span-1 sm:col-span-3 border-t border-white/10 pt-3">
-                 <label className="mb-2 block text-xs text-gray-400">ตั้งเวลาเปิดให้อ่านฟรีอัติโนมัติ (ไม่บังคับ)</label>
+                 <label className="mb-2 block text-xs text-gray-400">ตั้งเวลาเปิดให้อ่านฟรีอัตโนมัติ (ไม่บังคับ)</label>
                  <input
                    type="datetime-local"
                    name="unlocks_at"

@@ -1,5 +1,6 @@
 """Upload endpoints — presigned URL generation & direct proxy upload for R2."""
 
+import logging
 import re
 import time
 from typing import List
@@ -14,6 +15,7 @@ from app.services.storage import generate_presigned_upload_url, upload_file_to_r
 from app.services.image import process_image_to_webp
 
 router = APIRouter(prefix="/upload", tags=["Upload"])
+logger = logging.getLogger(__name__)
 
 # ── Rate limiter (uses app.state.limiter from main) ──
 limiter = Limiter(key_func=get_remote_address)
@@ -144,8 +146,7 @@ async def upload_cover(
     try:
         contents, content_type = process_image_to_webp(contents)
     except Exception as e:
-        import logging
-        logging.getLogger(__name__).error("Cover image processing failed: %s", e)
+        logger.error("Cover image processing failed: %s", e)
         raise HTTPException(
             status_code=500, detail="เกิดข้อผิดพลาดในการประมวลผลรูปภาพ")
 
@@ -193,8 +194,7 @@ async def upload_chapter_page(
     try:
         contents, content_type = process_image_to_webp(contents)
     except Exception as e:
-        import logging
-        logging.getLogger(__name__).error("Chapter page processing failed: %s", e)
+        logger.error("Chapter page processing failed: %s", e)
         raise HTTPException(
             status_code=500, detail="เกิดข้อผิดพลาดในการประมวลผลรูปภาพ")
 

@@ -26,6 +26,16 @@ from app.schemas.manga import (
 router = APIRouter(prefix="/chapters", tags=["Chapters"])
 
 
+def _maybe_auto_unlock(ch: Chapter, now_utc: datetime) -> bool:
+    """If chapter's unlocks_at has passed, mark it as free. Returns True if DB row was mutated."""
+    if ch.unlocks_at and ch.unlocks_at <= now_utc and not ch.is_free:
+        ch.is_free = True
+        ch.coin_price = 0
+        ch.unlocks_at = None
+        return True
+    return False
+
+
 # ── Admin: list all chapters ─────────────────────
 
 
@@ -41,17 +51,13 @@ async def list_all_chapters(
     now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
     need_commit = False
     for ch in results:
+        if _maybe_auto_unlock(ch, now_utc):
+            session.add(ch)
+            need_commit = True
         data = ChapterRead.model_validate(ch)
         data.page_count = len(ch.pages) if ch.pages else 0
-        if data.unlocks_at and data.unlocks_at <= now_utc:
+        if ch.unlocks_at is None and data.unlocks_at:
             data.is_free = True
-            # Persist auto-unlock to DB
-            if not ch.is_free:
-                ch.is_free = True
-                ch.coin_price = 0
-                ch.unlocks_at = None
-                session.add(ch)
-                need_commit = True
         items.append(data)
     if need_commit:
         await session.commit()
@@ -89,22 +95,16 @@ async def list_chapters(
     items = []
     need_commit = False
     for ch in results:
+        if _maybe_auto_unlock(ch, now_utc):
+            session.add(ch)
+            need_commit = True
         data = ChapterRead.model_validate(ch)
         data.page_count = len(ch.pages) if ch.pages else 0
         if ch.id in unlocked_ids:
             data.is_unlocked = True
-            
-        if data.unlocks_at and data.unlocks_at <= now_utc:
+        if ch.unlocks_at is None and data.unlocks_at:
             data.is_free = True
             data.is_unlocked = True
-            # Persist auto-unlock to DB
-            if not ch.is_free:
-                ch.is_free = True
-                ch.coin_price = 0
-                ch.unlocks_at = None
-                session.add(ch)
-                need_commit = True
-            
         items.append(data)
     if need_commit:
         await session.commit()
@@ -134,24 +134,19 @@ async def get_chapter(
     detail.page_count = len(chapter.pages)
     
     now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
-    if detail.unlocks_at and detail.unlocks_at <= now_utc:
+    if _maybe_auto_unlock(chapter, now_utc):
+        session.add(chapter)
+        await session.commit()
+        await session.refresh(chapter)
         detail.is_free = True
-        # Persist auto-unlock to DB
-        if not chapter.is_free:
-            chapter.is_free = True
-            chapter.coin_price = 0
-            chapter.unlocks_at = None
-            session.add(chapter)
-            await session.commit()
-            await session.refresh(chapter)
 
-            # Ping Google & Next.js cache to immediately index the newly freed chapter
-            manga = await session.get(Manga, chapter.manga_id)
-            if manga:
-                chapter_url = f"/{manga.slug}/ตอนที่-{chapter.number}"
-                paths = ["/", f"/manga/{manga.slug}", chapter_url]
-                background_tasks.add_task(revalidate_paths, paths)
-                background_tasks.add_task(notify_google_updated, paths)
+        # Ping Google & Next.js cache to immediately index the newly freed chapter
+        manga = await session.get(Manga, chapter.manga_id)
+        if manga:
+            chapter_url = f"/{manga.slug}/ตอนที่-{chapter.number}"
+            paths = ["/", f"/manga/{manga.slug}", chapter_url]
+            background_tasks.add_task(revalidate_paths, paths)
+            background_tasks.add_task(notify_google_updated, paths)
 
     is_locked = (not detail.is_free) and detail.coin_price > 0
     if is_locked and user is not None and getattr(user, "role", "") == "admin":

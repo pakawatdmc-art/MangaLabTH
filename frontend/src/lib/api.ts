@@ -102,7 +102,9 @@ export async function getManga(id: string, token?: string) {
 export async function getMangaBySlug(slug: string, token?: string) {
   return fetcher<MangaDetail>(
     `/manga/slug/${slug}`,
-    token ? { token, cache: "no-store", next: { revalidate: 0 } } : undefined
+    token
+      ? { token, cache: "no-store", next: { revalidate: 0 } }
+      : { next: { revalidate: 60 } }
   );
 }
 

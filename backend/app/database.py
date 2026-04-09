@@ -1,4 +1,4 @@
-"""Async database engine and session factory for Neon PostgreSQL."""
+"""Async database engine and session factory for Supabase PostgreSQL."""
 
 from collections.abc import AsyncGenerator
 
@@ -37,17 +37,14 @@ async def seed_coin_packages(session: AsyncSession):
     if result.first():
         return
 
-    # 1 THB = 1 Coin (price_thb is in Thai Baht)
+    # Must match scripts/seed_coin_packages.py for consistency
     packages = [
-        CoinPackage(name="50 Coins", coins=50, price_thb=50, sort_order=1),
-        CoinPackage(name="100 Coins", coins=100,
-                    price_thb=100, sort_order=2),
-        CoinPackage(name="300 Coins", coins=300,
-                    price_thb=300, sort_order=3),
-        CoinPackage(name="500 Coins", coins=500,
-                    price_thb=500, sort_order=4),
-        CoinPackage(name="1,000 Coins", coins=1000,
-                    price_thb=1000, sort_order=5),
+        CoinPackage(name="แพ็กเกจ 49 เหรียญ", coins=49, price_thb=49, sort_order=1),
+        CoinPackage(name="แพ็กเกจ 104 เหรียญ", coins=104, price_thb=99, sort_order=2),
+        CoinPackage(name="แพ็กเกจ 157 เหรียญ", coins=157, price_thb=149, sort_order=3),
+        CoinPackage(name="แพ็กเกจ 214 เหรียญ", coins=214, price_thb=199, sort_order=4),
+        CoinPackage(name="แพ็กเกจ 262 เหรียญ", coins=262, price_thb=249, sort_order=5),
+        CoinPackage(name="แพ็กเกจ 549 เหรียญ", coins=549, price_thb=499, sort_order=6),
     ]
     for p in packages:
         session.add(p)

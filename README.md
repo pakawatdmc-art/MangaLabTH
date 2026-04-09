@@ -16,22 +16,10 @@
 
 ---
 
-## 🛠️ การยกระดับระบบเชิงลึก (Technical Audit & Hardening)
-
-โปรเจกต์นี้ได้รับการทำ **Technical Audit** และปรับปรุงสถาปัตยกรรมระดับลึก เพื่อให้มั่นใจในความเสถียรและความปลอดภัยสูงสุด (Production-Ready) ซึ่งครอบคลุมประเด็นระดับ Professional ดังนี้:
-
-- 🔒 **Webhook Security & Anti-Spoofing**: ป้องกันการยิง Webhook ปลอมจากผู้ไม่หวังดี (Spoofing) โดยการเข้ารหัสลับและยืนยัน Secret Key ระหว่าง Payment Gateway อย่าง FeelFreePay กับระบบ Backend มั่นใจได้ว่าทุกยอดเงินที่เข้าเป็นของจริงร้อยเปอร์เซ็นต์
-- 🌍 **Advanced SEO & Unicode Slugs**: ขีดสุดของการทำ SEO ในภาษาไทย! สร้างระบบ URL Slug ที่รองรับอักขระ Unicode แบบลึกซึ้ง (Thai Characters + Regex \p{L}\p{N}) ช่วยให้ Google อ่าน URL ภาษาไทยได้สวยงามและจัดทำดัชนี (Index) ได้มีประสิทธิภาพกว่าเดิม
-- 🚦 **Rate Limiter & Proxy Bypass Prevention**: อุดช่องโหว่การโจมตี DDoS/Spam โดยการเซ็ต `trusted_hosts` จับ IP ที่แท้จริงผ่าน Google Cloud Load Balancer (X-Forwarded-For) ป้องกันแฮกเกอร์ใช้ Proxy ปลอมเพื่อหลบหลีกระบบ Rate Limiter
-- 💾 **Data Integrity & Orphan Prevention**: ปกป้องโครงสร้าง Database ขั้นสุด! เมื่อมีการลบมังงะ ระบบจะใช้อัลกอริทึมเคลียร์ Orphan Transactions (ตั้งค่า Chapter ให้เป็น NULL) ควบคู่ไปกับการใช้ `SELECT FOR UPDATE` เพื่อไม่ให้เกิด Foreign Key Constraint Violations หรือข้อมูลขยะตกค้าง
-- ⚡ **API QoS & Query Limits**: ปกป้อง Backend จากอาการ Timeout หรือ Memory Overflow (DoS Prevention) โดยเพิ่ม Validation ให้ Query Date Range อัตโนมัติ (เช่น ขอดูสถิติย้อนหลังได้สูงสุด 365 วันเท่านั้น) ลดภาระ Database ได้อย่างมหาศาล
-
----
-
-เราเลือกใช้เครื่องมือที่ดีที่สุดในแต่ละด้าน เพื่อสร้างสถาปัตยกรรมที่แข็งแกร่งและดูแลรักษาง่าย:
+## 🏗️ สถาปัตยกรรมระบบ (Architecture)
 
 ```
-mangaFactory/
+MangaLabTH/
 ├── frontend/     # Next.js 16 (App Router) → Vercel
 ├── backend/      # FastAPI (Python) → Google Cloud Run
 ├── .gitignore
@@ -45,23 +33,66 @@ mangaFactory/
 | **Database** | PostgreSQL (IPv4 Session Pooler) | **Supabase** |
 | **Storage** | Cloudflare R2 (S3-compatible, boto3) | **Cloudflare R2** |
 | **Payments** | FeelFreePay (PromptPay QR / TrueWallet) | **FeelFreePay** |
-| **Auth** | Clerk (JWT + RBAC) | **Clerk** |
+| **Auth** | Clerk (JWT RS256 + JWKS + RBAC) | **Clerk** |
+| **SEO** | Google Indexing API (Service Account) | **Google Cloud** |
+| **CI/CD** | Cloud Build → Artifact Registry → Cloud Run | **Google Cloud Build** |
 
 ---
 
-## 🎯 ฟีเจอร์ชูโรง (Key Features)
+## 🎯 ฟีเจอร์ชูโรง (39 Features — Production-Audited ✅)
 
 ### 📖 ฝั่งผู้อ่าน (Reader Experience)
-- **UI/UX ดีไซน์พรีเมียม**: อินเทอร์เฟซสไตล์ Dark Mode หรูหรา (Glassmorphism + Gold accents) จัดเรียงเลย์เอาต์มาอย่างดีเพื่อให้ทุกการ "ไถจอ" ทั้งบนมือถือและคอมพิวเตอร์เป็นไปอย่างสะดวกลื่นไหล
-- **ระบบค้นหาและตัวกรองสุดล้ำ**: ค้นหาเรื่องที่ใช่ แนวที่ชอบ ได้ตรงใจและรวดเร็ว
-- **Premium Chapter Gate**: หน้าต่างแจ้งเตือนก่อนอ่านตอนติดเหรียญ พร้อมตัวจับเวลานับถอยหลังดีไซน์สวยงามที่จะรีเฟรชเปิดเนื้อหาให้ดูฟรีอัตโนมัติเมื่อหมดเวลา 
-- **ระบบสมาชิกที่สมบูรณ์แบบ**: ล็อกอินผ่านอีเมลหรือโซเชียลได้อย่างปลอดภัย เติมเหรียญ ดูประวัติการใช้จ่ายได้สบายใจไร้กังวล
+- **UI/UX ดีไซน์พรีเมียม** — Dark Mode, Glassmorphism, Gold accents, Responsive
+- **Chapter Reader ขั้นเทพ** — Progress bar, Keyboard navigation (←→), Mobile dock, Reading position memory
+- **Premium Chapter Gate** — Countdown timer → auto-refresh เมื่อถึงเวลา, แสดงราคา + ยอดเหรียญคงเหลือ
+- **ระบบค้นหาและตัวกรอง** — Multi-field search, Category/Status filter, Sort (ล่าสุด/ยอดวิว/อัปเดต), Pagination with state preservation
+- **Coin Economy** — เติมเหรียญผ่าน PromptPay QR / TrueWallet, ปลดล็อกตอน, ดูประวัติธุรกรรม
+- **Top Manga Rankings** — รายสัปดาห์/รายเดือน/ตลอดกาล (DailyMangaView aggregation)
+- **Theme System** — Server-synced global themes (ธีมเทศกาล เช่น สงกรานต์, คริสต์มาส)
 
 ### ⚙️ ฝั่งผู้ดูแลระบบ (Admin Superpowers)
-- **Dashboard สถิติครบจบในหน้าเดียว**: ติดตามยอดเข้าชมและยอดขายได้แบบ Real-time
-- **Master Upload Pipeline**: ประหยัดเวลาทำมาหากินไปได้เยอะ! ด้วยระบบอัปโหลดหน้าที่รองรับการทำงานแบบขนาน (Parallel Processing) ย่อขนาดและเรียงลำดับให้อัตโนมัติ
-- **ระบบตั้งเวลาปล่อยตอนล่วงหน้า**: บริหารงานง่ายๆ แค่ตั้งเวลากำหนดปล่อยให้อ่านฟรี ระบบจะจัดการอัปเดตสถานะและแจ้งเตือนผู้ใช้งานให้เสร็จสรรพ
-- **Auto-SEO Bot**: แอดมินมีหน้าที่แค่ลงเนื้อหา ที่เหลือระบบหลังบ้านจะวิ่งไปเคาะประตูเรียก Google ให้มา Index หน้าเว็บด้วยตัวเอง!
+- **Marketing Analytics Dashboard** — 3 chart types (Area, Donut, Dual Area), Growth comparison, Time range selector (7/30/90 วัน)
+- **Master Upload Pipeline** — Drag-drop reordering (dnd-kit), Concurrent upload (5 at a time), Auto WebP conversion, R2 orphan cleanup
+- **Manga CRUD** — สร้าง/แก้ไข/ลบ มังงะ, Auto-slug generation (Thai + English), Cover upload with magic byte validation
+- **Chapter Management** — ตั้งราคาเหรียญ, กำหนดเวลาปลดล็อกฟรี (Timed Unlock), Auto-sync is_free ↔ coin_price
+- **User Management** — Admin/Reader roles, Grant coins (Primary Admin only), Role toggle with safety guards
+- **Transaction Ledger** — Color-coded types, Dual filter (search + dropdown), Summary cards
+
+---
+
+## 🛠️ Production Hardening (Technical Audit — April 2026)
+
+โปรเจกต์ผ่านการทำ **Full Code Audit 39 ฟีเจอร์** + **Integration Audit 28 API Endpoints** + **Bug Review 14 Areas** พร้อม Production:
+
+### 🔒 Security
+| มาตรการ | รายละเอียด |
+|---------|-----------|
+| **JWT + JWKS** | Clerk RS256, cached signing keys (1hr), issuer validation |
+| **RBAC** | `AdminUser` / `CurrentUser` / `OptionalUser` dependencies |
+| **Primary Admin Protection** | Cannot demote, config-based (`PRIMARY_ADMIN_EMAIL`) |
+| **Rate Limiting** | SlowAPI 120/min default, 10/min checkout, 5/min confirm |
+| **CORS** | Restricted origins in production (`cors_origin_list`) |
+| **Webhook Security** | Secret-based verification + double-check via Status API |
+| **File Upload** | Magic byte validation, 10MB limit, path traversal prevention |
+| **Docs Disabled** | `/docs` and `/redoc` hidden in production |
+
+### ⚡ Performance
+| การปรับปรุง | รายละเอียด |
+|------------|-----------|
+| **ISR Caching** | `revalidate: 60` on manga lists, Backend → Frontend revalidation webhook |
+| **Connection Pooling** | Shared `httpx.AsyncClient` singleton (20 connections, 10 keepalive) |
+| **DB Pool** | `pool_size=5`, `max_overflow=10`, `pool_recycle=300`, `pool_pre_ping=True` |
+| **Ranking Cache** | TTLCache 5 minutes for weekly/monthly/all_time rankings |
+| **Clerk Profile Cache** | TTLCache 500 entries, 60s TTL |
+| **View Dedup** | IP-based TTLCache (20k entries, 1hr) → prevent duplicate view counting |
+| **localStorage Throttle** | ChapterReader writes position every 2s (not every scroll) |
+
+### 📊 Observability
+| การปรับปรุง | รายละเอียด |
+|------------|-----------|
+| **Logger** | All modules use `logging.getLogger(__name__)`, lazy `%s` formatting |
+| **Health Check** | `GET /health` → no env leak in production |
+| **Container Health** | Docker `HEALTHCHECK` every 30s |
 
 ---
 
@@ -78,7 +109,7 @@ pip install -r requirements.txt
 cp .env.example .env
 # ✏️ แก้ไขไฟล์ .env และใส่ค่า Credentials ต่างๆ (Supabase, Clerk, R2, FFP)
 
-alembic upgrade head
+alembic upgrade head       # สร้าง/อัปเดต database tables
 uvicorn app.main:app --reload --port 8000
 ```
 
@@ -94,59 +125,103 @@ cp .env.example .env.local
 npm run dev        # เริ่มรัน Next.js server (http://localhost:3000)
 ```
 
+### Environment Variables
+
+#### Backend (`.env`)
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DATABASE_URL` | ✅ | PostgreSQL connection string (asyncpg) |
+| `CLERK_JWKS_URL` | ✅ | Clerk JWKS endpoint |
+| `CLERK_SECRET_KEY` | ✅ | Clerk Backend API key |
+| `R2_ENDPOINT_URL` | ✅ | Cloudflare R2 S3-compatible endpoint |
+| `R2_ACCESS_KEY_ID` | ✅ | R2 access key |
+| `R2_SECRET_ACCESS_KEY` | ✅ | R2 secret key |
+| `R2_PUBLIC_URL` | ✅ | R2 public URL (e.g. `https://pub-xxx.r2.dev`) |
+| `R2_BUCKET_NAME` | ✅ | R2 bucket name |
+| `APP_ENV` | ❌ | `development` (default) or `production` |
+| `CORS_ORIGINS` | ❌ | Comma-separated origins |
+| `FRONTEND_URL` | ❌ | For ISR revalidation webhook |
+| `REVALIDATION_SECRET` | ❌ | Shared secret for revalidation |
+| `PRIMARY_ADMIN_EMAIL` | ❌ | Auto-assign admin role on first login |
+| `SITE_URL` | ❌ | For Google Indexing API notifications |
+| `GOOGLE_INDEXING_CREDENTIALS` | ❌ | Base64-encoded Service Account JSON |
+| `FFP_CUSTOMER_KEY` | ❌ | FeelFreePay customer key |
+| `FFP_PUBLIC_KEY` | ❌ | FeelFreePay public key |
+| `FFP_SECRET_KEY` | ❌ | FeelFreePay secret key |
+
+#### Frontend (`.env.local`)
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_API_URL` | ✅ | Backend API URL (e.g. `http://localhost:8000/api/v1`) |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | ✅ | Clerk publishable key |
+| `CLERK_SECRET_KEY` | ✅ | Clerk secret (for server-side) |
+| `NEXT_PUBLIC_SITE_URL` | ❌ | Canonical site URL for SEO |
+| `REVALIDATION_SECRET` | ❌ | Must match backend's secret |
+
 ---
 
-## 🚀 คู่มือการนำขึ้นสู่ Production (Deployment Workflow)
+## 🚀 คู่มือการนำขึ้นสู่ Production (Deployment)
 
 ### Backend → Google Cloud Run
-ระบบถูกออกแบบมาให้ทำ Containerization ได้อย่างสมบูรณ์ แค่สั่ง Deploy เซิร์ฟเวอร์ก็จะรันอัตโนมัติ:
 
-1. ล็อกอินเข้า Google Cloud: `gcloud auth login`
-2. สร้าง Google Cloud Project และตั้งค่า Billing
-3. เตรียมตัวสั่งขึ้น Cloud:
-   ```bash
-   cd backend
-   gcloud run deploy mangalabth-backend --source .
-   ```
-4. เลือก Region โปรด (แนะนำ `asia-southeast1` สิงคโปร์ เพื่อความแรงในไทย)
-5. เปิด Allow Unauthenticated เพื่อให้ Frontend ดึงข้อมูลได้
-6. ตั้งค่า Environment Variables ในหน้า Dashboard ของ Cloud Run ให้ครบถ้วน
-7. *Tip:* เราตั้งค่า `ProxyHeadersMiddleware` ไว้แล้ว พร้อมรองรับ IP จาก Load Balancer ของ Google แน่นอน!
+```bash
+cd backend
+gcloud run deploy mangalabth-backend --source . --region asia-southeast1 --allow-unauthenticated
+```
+
+หรือใช้ CI/CD ผ่าน Cloud Build (`cloudbuild.yaml`) → Build Docker → Push to Artifact Registry → Deploy to Cloud Run
+
+> **สำคัญ:** ต้อง run `alembic upgrade head` ก่อน deploy ครั้งแรก เพื่อสร้าง DB tables
 
 ### Frontend → Vercel
-Vercel เกิดมาเพื่อ Next.js งานนี้ง่ายเหมือนปอกกล้วย:
 
-1. เชื่อมต่อ GitHub Repository นี้เข้ากับ [Vercel](https://vercel.com/)
-2. ปรับ **Root Directory** เป็นโฟลเดอร์ `frontend`
-3. ตั้งค่า Variables รหัสลับต่างๆ รวมถึง `NEXT_PUBLIC_API_URL` ที่ชี้ไปยัง Cloud Run
-4. กด  `Deploy` แล้วรอชื่นชมผลงานได้เลย!
+1. เชื่อมต่อ GitHub Repository เข้ากับ [Vercel](https://vercel.com/)
+2. ตั้ง **Root Directory** เป็น `frontend`
+3. ตั้งค่า Environment Variables (`NEXT_PUBLIC_API_URL`, Clerk keys, etc.)
+4. Deploy!
 
----
+### Production Deployment Checklist
 
-## 🛡️ มาตรการรักษาความปลอดภัย (Security First)
-
-เราให้ความสำคัญกับข้อมูลและเงินของลูกค้าเป็นอันดับ 1:
-
-- **การยืนยันตัวตนระดับโลก**: ใช้ Clerk จัดการ JWT ทันสมัยพร้อมระบบดึงคีย์อัตโนมัติ (JWKS rotation)
-- **ปกป้องกระเป๋าเงิน (Double-Spend Protection)**: วางฐานข้อมูลเหนียวแน่นด้วยระบบ Unique Index สำหรับธุรกรรม และระบบล็อกเพื่อควบคุมการเติมเหรียญ
-- **ความปลอดภัยในการอัปโหลดไฟล์**: เช็คยันอณูไฟล์ (Magic byte validation) ป้องกันช่องโหว่ Path traversal และจำกัดเฉพาะไฟล์รูปจริงเท่านั้น
-- **จัดการกับปัญหาตีบตัน (Rate Limiting & Backoff)**: มีเกราะป้องกันสแปมที่หน้าล็อกอินและชำระเงิน พร้อมระบบลองเชื่อมต่อใหม่ (Retry mechanism) เมื่ออินเทอร์เน็ตมีปัญหา
+- [ ] `alembic upgrade head` — สร้าง/อัปเดต DB tables
+- [ ] ตั้ง `APP_ENV=production` — ปิด docs, restrict CORS
+- [ ] ตั้ง `CORS_ORIGINS` — เฉพาะ domain จริง
+- [ ] ตั้ง `REVALIDATION_SECRET` — ค่าเดียวกันทั้ง frontend + backend
+- [ ] ตั้ง `SITE_URL` — สำหรับ Google Indexing API
+- [ ] ตรวจ `R2_PUBLIC_URL` — must start with `https://`
+- [ ] Run `python scripts/seed_coin_packages.py` — ถ้าใช้ production DB ใหม่
 
 ---
 
 ## 🔍 กลยุทธ์เจาะตลาดด้วย SEO ขั้นสุด
 
-เราไม่ได้ทำแค่เว็บให้ใช้งานได้ แต่ทำเว็บให้คน **ค้นหาเจอ**:
+| เครื่องมือ SEO | รายละเอียด |
+|---------------|-----------|
+| **Google Indexing API** | แจ้ง Google ทันทีที่มีตอนใหม่ (Background task, ไม่ block response) |
+| **Dynamic Sitemap** | ISR 60s, Paginated fetch, Batch chapter URLs, Graceful fallback |
+| **robots.txt** | Disallow `/admin/`, `/api/`, `/account/`, `/sign-in/`, `/sign-up/` |
+| **JSON-LD** | ComicSeries, BreadcrumbList, WebPage structured data |
+| **OG/Twitter Cards** | Dynamic per-page metadata with cover images |
+| **Thai-friendly Slugs** | Unicode support (`\u0E00-\u0E7F`), Google displays Thai in SERPs |
+| **Canonical URLs** | Prevent duplicate content across pages |
+| **Search Page Robots** | `noindex` when query parameter present (thin content prevention) |
 
-| เครื่องมือ SEO ของเรา | มันคืออะไรและช่วยอะไรได้บ้าง? |
-|--------------------|----------------------------|
-| **Auto Google Ping API** | ไม่ง้อการอัปเดตแบบรอวันรอคืน! ทันทีที่มีตอนใหม่ ระบบหลังบ้านจะกระซิบผ่าน Indexing API ให้บอท Google วิ่งมาเก็บข้อมูลตรงๆ |
-| **Sitemap แสนรู้** | แผนที่เว็บแบบ Dynamic ที่ดึงข้อมูลทุกซอกทุกซอย รวมถึง "ตอนย่อยทุกตอน" (Parallel batch logic) ออกมาให้กูเกิลเห็นแบบเต็มขบวน |
-| **Rich Snippets อลังการ** | การใส่ JSON-LD โครงสร้างข้อมูล (เช่น ComicSeries พร้อมเรทติ้งและ Genre) เพื่อให้ผลค้นหาดูน่าดึงดูดเตะตาผู้อ่านมากกว่าเว็บคู่แข่ง |
-| **แชร์สนุกผ่าน Social (OG Cards)** | จะแชร์เรื่องไหน หรือแง้มตอนใด ภาพหน้าปกสุดสวยพร้อมแคปชั่นจะถูกหยิบไปโชว์ให้เพื่อนๆ เห็นบน Facebook/Twitter อัตโนมัติ |
-| **Friendly URL & Canonical** | ระบบจัดแจงลิงก์ภาษาไทยให้สวยงาม และกันปัญหาเนื้อหาซ้ำซ้อนอย่างหมดจด |
+---
 
-*(อ่านแผนผัง Endpoint API จำนวน 30+ รายการแบบละเอียด รบกวนตรวจสอบในโค้ดฝั่ง Backend)*
+## 📜 Utility Scripts
+
+```bash
+# Google Indexing — ส่ง sitemap URLs ทั้งหมดไปยัง Google
+cd backend && python scripts/run_google_index.py
+
+# Seed coin packages — สร้างแพ็กเกจเหรียญเริ่มต้น
+cd backend && python scripts/seed_coin_packages.py
+
+# Migrate slugs — แปลง slug เก่าให้รองรับภาษาไทย
+cd backend && python scripts/migrate_slugs.py
+
+# Reset economy — รีเซ็ตยอดเหรียญ (⚠️ dev only)
+cd backend && python scripts/reset_economy.py
+```
 
 ---
 

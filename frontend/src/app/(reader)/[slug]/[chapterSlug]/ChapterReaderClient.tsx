@@ -44,6 +44,7 @@ export default function ChapterReaderClient({
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [currentBalance, setCurrentBalance] = useState<number | undefined>(coinBalance);
   const lastScrollY = useRef(0);
+  const lastSaveTime = useRef(0);
 
   const pages = [...chapter.pages].sort((a, b) => a.number - b.number);
 
@@ -58,7 +59,10 @@ export default function ChapterReaderClient({
     setShowScrollTop(y > 600);
     lastScrollY.current = y;
 
-    // Save to localStorage
+    // Save to localStorage (throttled to every 2s)
+    const now = Date.now();
+    if (now - lastSaveTime.current < 2000) return;
+    lastSaveTime.current = now;
     try {
       localStorage.setItem(
         `mangalabth:lastRead:${manga.id}`,

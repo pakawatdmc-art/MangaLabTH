@@ -56,5 +56,5 @@ async def record_manga_view_task(manga_id: str, ip_address: Optional[str] = None
 
             await session.commit()
         except Exception as e:
-            logger.error(f"Failed to record view for manga_id={manga_id}: {e}")
+            logger.error("Failed to record view for manga_id=%s: %s", manga_id, e)
             await session.rollback()

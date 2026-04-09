@@ -68,11 +68,14 @@ export default function MangaCard({ manga }: Props) {
               {STATUS_LABELS[manga.status] || manga.status}
             </span>
           </div>
-          {getFormattedDate() && (
-            <span className="text-[10px] sm:text-[11px] text-gray-500 line-clamp-1">
-              {getFormattedDate()}
-            </span>
-          )}
+          {(() => {
+            const dateStr = getFormattedDate();
+            return dateStr ? (
+              <span className="text-[10px] sm:text-[11px] text-gray-500 line-clamp-1">
+                {dateStr}
+              </span>
+            ) : null;
+          })()}
         </div>
       </div>
     </Link>

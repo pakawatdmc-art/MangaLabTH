@@ -157,3 +157,7 @@ class Page(SQLModel, table=True):
 
     # ── Relationships ────────────────────────────
     chapter: Optional[Chapter] = Relationship(back_populates="pages")
+
+    __table_args__ = (
+        UniqueConstraint("chapter_id", "number", name="uq_page_chapter_number"),
+    )

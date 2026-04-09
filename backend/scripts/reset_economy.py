@@ -1,7 +1,24 @@
-"""Script to reset the economy (clear transactions and zero out balances)."""
+"""Script to reset the economy (clear transactions and zero out balances).
+
+USAGE:
+    cd backend
+    python scripts/reset_economy.py
+
+⚠️  WARNING: This is a DESTRUCTIVE operation. It will:
+    - Delete ALL transactions
+    - Set ALL user coin balances to 0
+"""
 
 import asyncio
 import logging
+import os
+import sys
+
+# Ensure `app.*` imports work when running from `backend/`
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from dotenv import load_dotenv
+load_dotenv()
 
 from sqlmodel import delete, update
 
@@ -47,4 +64,10 @@ async def reset_economy():
             raise
 
 if __name__ == "__main__":
+    print("\n⚠️  WARNING: This will DELETE all transactions and RESET all coin balances to 0.")
+    print("   This action is IRREVERSIBLE.\n")
+    confirm = input("Type 'RESET' to confirm: ").strip()
+    if confirm != "RESET":
+        print("❌ Aborted.")
+        sys.exit(1)
     asyncio.run(reset_economy())

@@ -1,14 +1,35 @@
+"""Manually submit all sitemap URLs to Google Indexing API.
+
+Usage:
+    cd backend
+    python scripts/run_google_index.py
+
+Optionally set GOOGLE_INDEXING_CREDENTIALS_FILE env var to override
+the default credentials path.
+"""
+
+import os
 import sys
-import json
 import xml.etree.ElementTree as ET
 import urllib.request
+import asyncio
+
+# Ensure `app.*` imports work when running from `backend/`
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from dotenv import load_dotenv
+load_dotenv()
+
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request as GoogleAuthRequest
 import httpx
-import asyncio
 
-CREDENTIALS_PATH = "/Users/naidoi/Desktop/MangaLabTH/credentials-indexing.json"
-SITEMAP_URL = "https://www.mangalab-th.com/sitemap.xml"
+# Credentials: env var → fallback to project root file
+CREDENTIALS_PATH = os.environ.get(
+    "GOOGLE_INDEXING_CREDENTIALS_FILE",
+    os.path.join(os.path.dirname(__file__), '..', '..', 'credentials-indexing.json')
+)
+SITEMAP_URL = os.environ.get("SITE_URL", "https://www.mangalab-th.com") + "/sitemap.xml"
 INDEXING_API_URL = "https://indexing.googleapis.com/v3/urlNotifications:publish"
 SCOPES = ["https://www.googleapis.com/auth/indexing"]
 
@@ -54,6 +75,13 @@ async def publish_url(client, creds, url):
         return False
 
 async def main():
+    # Validate credentials file exists
+    resolved_path = os.path.abspath(CREDENTIALS_PATH)
+    if not os.path.exists(resolved_path):
+        print(f"❌ Credentials file not found: {resolved_path}")
+        print("   Set GOOGLE_INDEXING_CREDENTIALS_FILE env var or place credentials-indexing.json in project root.")
+        return
+
     urls = fetch_sitemap_urls()
     if not urls:
         print("No URLs found in sitemap.")
@@ -63,7 +91,7 @@ async def main():
     
     try:
         creds = service_account.Credentials.from_service_account_file(
-            CREDENTIALS_PATH, scopes=SCOPES
+            resolved_path, scopes=SCOPES
         )
         creds.refresh(GoogleAuthRequest())
         print("✅ Google Credentials loaded and refreshed successfully.")

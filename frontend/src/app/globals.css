@@ -134,7 +134,6 @@ body:not(.theme-default) .hero-glow {
 }
 
 /* Make opaque sections transparent to reveal the theme background */
-/* Make opaque sections transparent to reveal the theme background */
 body:not(.theme-default) .bg-surface-300,
 body:not(.theme-default) .bg-surface-200,
 body:not(.theme-default) .bg-surface-100,

@@ -1,7 +1,8 @@
 """Manga CRUD endpoints."""
 
+import logging
 import re
-from datetime import date, timedelta, datetime, timezone
+from datetime import timedelta, datetime, timezone
 from math import ceil
 from typing import Any, Optional, List
 from cachetools import TTLCache  # type: ignore
@@ -27,6 +28,7 @@ from app.schemas.manga import (
 )
 
 router = APIRouter(prefix="/manga", tags=["Manga"])
+logger = logging.getLogger(__name__)
 
 # Global cache for rankings (1 hour TTL)
 _ranking_cache = TTLCache(maxsize=10, ttl=300)  # 5 minutes
@@ -142,11 +144,12 @@ async def get_manga_ranking(
             _ranking_cache[cache_key] = data
         return data
 
-    today = date.today()
+    # Use Thai time (UTC+7) to match DailyMangaView recording timezone
+    thai_today = (datetime.now(timezone.utc) + timedelta(hours=7)).date()
     if period == "weekly":
-        start_date = today - timedelta(days=7)
+        start_date = thai_today - timedelta(days=7)
     else:  # monthly
-        start_date = today - timedelta(days=30)
+        start_date = thai_today - timedelta(days=30)
 
     # 1. Sum up view_count from DailyMangaView
     stmt: Any = (
@@ -307,7 +310,7 @@ async def update_manga(
             try:
                 delete_object(old_key)
             except Exception as e:
-                print(f"Failed to delete old cover {old_key} from R2: {e}")
+                logger.warning("Failed to delete old cover %s from R2: %s", old_key, e)
 
     for key, value in update_data.items():
         setattr(manga, key, value)

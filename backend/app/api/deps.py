@@ -2,7 +2,7 @@
 
 from typing import Annotated, Optional
 
-import httpx
+from cachetools import TTLCache  # type: ignore
 import jwt
 from fastapi import Depends, HTTPException, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -88,7 +88,6 @@ def _is_primary_admin_email(email: str) -> bool:
 
 
 # ── Clerk profile cache ──────────────────────────
-from cachetools import TTLCache  # type: ignore
 _clerk_profile_cache: TTLCache = TTLCache(maxsize=500, ttl=60)
 
 

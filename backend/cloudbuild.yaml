@@ -22,9 +22,16 @@ steps:
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
+      - '--quiet'
 
 images:
   - '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:${COMMIT_SHA}'
+
+substitutions:
+  _AR_HOSTNAME: asia-southeast1-docker.pkg.dev
+  _AR_REPOSITORY: mangalabth
+  _SERVICE_NAME: mangalabth-backend
+  _DEPLOY_REGION: asia-southeast1
 
 options:
   logging: CLOUD_LOGGING_ONLY

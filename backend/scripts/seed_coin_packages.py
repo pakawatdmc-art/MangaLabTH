@@ -1,7 +1,17 @@
+"""Seed or update coin packages in the database.
+
+Usage:
+    cd backend
+    python scripts/seed_coin_packages.py
+"""
+
 import asyncio
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+# Ensure `app.*` imports work when running from `backend/`
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -9,7 +19,7 @@ from sqlmodel import select  # noqa: E402
 from app.database import async_session_factory  # noqa: E402
 from app.models.transaction import CoinPackage  # noqa: E402
 
-# 1. ข้อมูลแพ็กเกจเหรียญสำหรับ FeelFreePay
+# ข้อมูลแพ็กเกจเหรียญสำหรับ FeelFreePay
 packages_data = [
     {
         "name": "แพ็กเกจ 49 เหรียญ",
@@ -51,25 +61,44 @@ packages_data = [
 
 async def seed():
     async with async_session_factory() as session:
-        # Clear existing
+        # Fetch existing packages
         result = await session.execute(select(CoinPackage))
-        existing = result.scalars().all()
-        for p in existing:
-            await session.delete(p)
-        await session.commit()
-        
-        # Insert new
+        existing = {p.name: p for p in result.scalars().all()}
+
+        created = 0
+        updated = 0
+
         for pd in packages_data:
-            pkg = CoinPackage(
-                name=pd["name"],
-                coins=pd["coins"],
-                price_thb=pd["price_thb"], # save satang
-                sort_order=pd["sort_order"],
-                is_active=True
-            )
-            session.add(pkg)
+            if pd["name"] in existing:
+                # Update existing package (preserves ID → no FK issues)
+                pkg = existing[pd["name"]]
+                pkg.coins = pd["coins"]
+                pkg.price_thb = pd["price_thb"]
+                pkg.sort_order = pd["sort_order"]
+                pkg.is_active = True
+                session.add(pkg)
+                updated += 1
+            else:
+                # Create new package
+                pkg = CoinPackage(
+                    name=pd["name"],
+                    coins=pd["coins"],
+                    price_thb=pd["price_thb"],
+                    sort_order=pd["sort_order"],
+                    is_active=True
+                )
+                session.add(pkg)
+                created += 1
+
+        # Deactivate packages not in the seed data (instead of deleting)
+        seed_names = {pd["name"] for pd in packages_data}
+        for name, pkg in existing.items():
+            if name not in seed_names:
+                pkg.is_active = False
+                session.add(pkg)
+
         await session.commit()
-        print("Seeded coin packages successfully")
+        print(f"✅ Seed complete: {created} created, {updated} updated")
 
 if __name__ == "__main__":
     asyncio.run(seed())

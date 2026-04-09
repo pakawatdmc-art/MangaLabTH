@@ -15,8 +15,6 @@ class TransactionRead(BaseModel):
     amount: int
     balance_after: int
     chapter_id: Optional[str]
-    ffp_reference_no: Optional[str] = None
-    ffp_txn_id: Optional[str] = None
     note: str
     created_at: datetime
 
@@ -57,4 +55,4 @@ class CustomCheckoutRequest(BaseModel):
 class AdminGrantRequest(BaseModel):
     user_id: str
     amount: int = Field(gt=0)
-    note: str = ""
+    note: str = Field("", max_length=512)

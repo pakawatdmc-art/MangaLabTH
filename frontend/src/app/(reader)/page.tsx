@@ -175,7 +175,7 @@ export default async function HomePage({ searchParams }: Props) {
                     <Link
                       key={p}
                       href={`/?page=${p}${params.category ? `&category=${params.category}` : ""
-                        }${params.q ? `&q=${params.q}` : ""}`}
+                        }${params.q ? `&q=${params.q}` : ""}${params.sort ? `&sort=${params.sort}` : ""}`}
                       className={`flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold transition-all ${p === page
                         ? "bg-gold text-black shadow-lg shadow-gold/20"
                         : "bg-surface-100/50 text-gray-400 hover:bg-surface-100 hover:text-white ring-1 ring-white/5"

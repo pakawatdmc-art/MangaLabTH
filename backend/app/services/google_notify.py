@@ -49,7 +49,7 @@ def _get_google_credentials():
             logger.info("✅ Loaded Google credentials from GOOGLE_INDEXING_CREDENTIALS")
             return creds
         except Exception as e:
-            logger.error(f"❌ Failed to parse GOOGLE_INDEXING_CREDENTIALS: {e}")
+            logger.error("❌ Failed to parse GOOGLE_INDEXING_CREDENTIALS: %s", e)
             return None
 
     # --- Priority 2: Application Default Credentials (Cloud Run) ---
@@ -75,7 +75,7 @@ async def _publish_url(url: str, action: str = "URL_UPDATED") -> bool:
     try:
         creds.refresh(GoogleAuthRequest())
     except Exception as e:
-        logger.error(f"❌ Failed to refresh Google token: {e}")
+        logger.error("❌ Failed to refresh Google token: %s", e)
         return False
 
     headers = {
@@ -90,15 +90,15 @@ async def _publish_url(url: str, action: str = "URL_UPDATED") -> bool:
                 INDEXING_API_URL, headers=headers, json=payload
             )
             if resp.status_code == 200:
-                logger.info(f"⚡ Indexing API success: {url}")
+                logger.info("⚡ Indexing API success: %s", url)
                 return True
             else:
                 logger.warning(
-                    f"⚠️ Indexing API {resp.status_code}: {resp.text[:300]}"
+                    "⚠️ Indexing API %s: %s", resp.status_code, resp.text[:300]
                 )
                 return False
         except Exception as e:
-            logger.error(f"❌ Indexing API request error: {e}")
+            logger.error("❌ Indexing API request error: %s", e)
             return False
 
 
@@ -119,5 +119,5 @@ async def notify_google_updated(updated_paths: list[str]) -> None:
 
     for path in updated_paths:
         full_url = f"{site_url.rstrip('/')}{path}"
-        logger.info(f"📢 Content updated: {full_url}")
+        logger.info("📢 Content updated: %s", full_url)
         await _publish_url(full_url, "URL_UPDATED")

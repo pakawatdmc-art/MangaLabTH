@@ -55,6 +55,8 @@ temp/
 # ── Credentials (keep out of repo) ────────────────────────────────
 *.pem
 credentials*.json
+*-indexing*.json
+service-account*.json
 !package.json
 !package-lock.json
 !tsconfig.json
