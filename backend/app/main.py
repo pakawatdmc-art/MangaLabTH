@@ -44,7 +44,14 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore
 
 # ── Proxy Headers (for Cloud Run rate limiting) ────
-app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])  # type: ignore
+# Production: trust only Google Cloud Run's load balancer ranges
+# Dev: trust all (for localhost testing)
+_trusted_hosts = ["*"] if not settings.is_production else [
+    "35.191.0.0/16",    # Google Cloud health checks & LB
+    "130.211.0.0/22",   # Google Cloud Load Balancer
+    "169.254.1.1",      # Cloud Run internal proxy
+]
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=_trusted_hosts)  # type: ignore
 
 # ── CORS (V8: restricted methods/headers) ────────
 app.add_middleware(

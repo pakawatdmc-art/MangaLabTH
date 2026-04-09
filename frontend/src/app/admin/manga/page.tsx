@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { cn, slugify } from "@/lib/utils";
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@clerk/nextjs";
 import Image from "next/image";
@@ -86,12 +86,7 @@ export default function AdminMangaPage() {
       }
 
       const title = (form.get("title") as string).trim();
-      const slug = title
-        .toLowerCase()
-        .replace(/[^a-z0-9\u0E00-\u0E7F\s-]/g, "")
-        .replace(/\s+/g, "-")
-        .replace(/-+/g, "-")
-        .replace(/^-|-$/g, "");
+      const slug = slugify(title);
 
       const data: Partial<Manga> = {
         title,

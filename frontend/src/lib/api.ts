@@ -108,8 +108,11 @@ export async function getMangaBySlug(slug: string, token?: string) {
 
 // ── Chapters ────────────────────────────────────
 
-export async function getChapters(mangaId: string) {
-  return fetcher<Chapter[]>(`/chapters/manga/${mangaId}`);
+export async function getChapters(mangaId: string, token?: string) {
+  return fetcher<Chapter[]>(
+    `/chapters/manga/${mangaId}`,
+    token ? { token } : undefined
+  );
 }
 
 export async function getChapter(chapterId: string, token?: string) {
@@ -253,6 +256,16 @@ export async function getMarketingAnalytics(token: string, days = 30) {
       total_users: number;
       coins_earned_30d: number;
       coins_spent_30d: number;
+    };
+    previous_summary: {
+      total_views: number;
+      total_users: number;
+      coins_earned_30d: number;
+      coins_spent_30d: number;
+    };
+    user_segments: {
+      paid_users: number;
+      free_users: number;
     };
     chart_data: { date: string; views: number; coins_purchased: number; coins_spent: number }[];
     top_grossing_mangas: { id: string; title: string; slug: string; cover_image: string; coins_earned: number }[];

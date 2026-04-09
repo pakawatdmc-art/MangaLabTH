@@ -29,7 +29,7 @@ from app.schemas.manga import (
 router = APIRouter(prefix="/manga", tags=["Manga"])
 
 # Global cache for rankings (1 hour TTL)
-_ranking_cache = TTLCache(maxsize=10, ttl=3600)
+_ranking_cache = TTLCache(maxsize=10, ttl=300)  # 5 minutes
 
 
 def _escape_like(value: str) -> str:
@@ -353,6 +353,17 @@ async def delete_manga(
     views_result = await session.execute(views_stmt)
     for view in views_result.scalars().all():
         await session.delete(view)
+
+    # Nullify chapter_id on transactions to prevent FK violation
+    # (preserves the transaction ledger for accounting purposes)
+    chapter_ids = [ch.id for ch in (manga.chapters or [])]
+    if chapter_ids:
+        from app.models.transaction import Transaction
+        tx_stmt = select(Transaction).where(col(Transaction.chapter_id).in_(chapter_ids))
+        tx_results = (await session.execute(tx_stmt)).scalars().all()
+        for tx in tx_results:
+            tx.chapter_id = None
+            session.add(tx)
 
     await session.delete(manga)
     await session.commit()

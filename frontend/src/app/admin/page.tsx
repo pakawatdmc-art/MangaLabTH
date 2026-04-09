@@ -70,7 +70,7 @@ export default function AdminDashboard() {
       glow: "group-hover:shadow-purple-500/20",
     },
     {
-      label: "เหรียญหมุนเวียน",
+      label: "เหรียญคงเหลือในระบบ",
       value: stats ? formatNumber(stats.total_coins_in_circulation) : "—",
       icon: Coins,
       color: "text-gold",

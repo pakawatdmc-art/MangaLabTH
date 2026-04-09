@@ -51,8 +51,13 @@ def r2_url_to_key(url: str) -> Optional[str]:
     Example:
         "https://pub-xxx.r2.dev/covers/abc.webp" → "covers/abc.webp"
 
-    Returns None if the URL does not contain the expected ".r2.dev/" marker.
+    Supports both .r2.dev default URLs and custom domains via R2_PUBLIC_URL.
     """
+    # Try using the configured R2_PUBLIC_URL first (supports custom domains)
+    public_base = settings.R2_PUBLIC_URL.rstrip("/") + "/"
+    if url.startswith(public_base):
+        return url[len(public_base):]
+    # Fallback to .r2.dev marker for legacy URLs
     parts = url.split(".r2.dev/", 1)
     return parts[1] if len(parts) == 2 else None
 

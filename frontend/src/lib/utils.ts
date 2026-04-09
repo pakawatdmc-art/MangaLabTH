@@ -58,11 +58,28 @@ export function thaiDatetimeToUTC(localStr: string): string {
   return new Date(thaiIso).toISOString();
 }
 
+/**
+ * สร้าง URL slug ที่เหมาะสำหรับ SEO — รองรับภาษาไทย + อังกฤษ
+ *
+ * Google รองรับ Thai characters ใน URL ได้เต็มรูปแบบ
+ * และแสดงผลใน SERPs เป็นภาษาไทยอ่านง่าย (ไม่ encode เป็น %xx)
+ *
+ * ตัวอย่าง:
+ *   "Solo Leveling ตอนที่ 1"  → "solo-leveling-ตอนที่-1"
+ *   "วัน พีซ — ภาค Wano!!"  → "วัน-พีซ-ภาค-wano"
+ *   "  ดาบ  พิฆาต อสูร  "   → "ดาบ-พิฆาต-อสูร"
+ */
 export function slugify(text: string): string {
   return text
     .toLowerCase()
-    .replace(/[^\w\s-]/g, "")
+    .trim()
+    // อนุญาตเฉพาะ: a-z, 0-9, อักขระไทย (U+0E00–U+0E7F), ช่องว่าง, ขีด
+    .replace(/[^a-z0-9\u0E00-\u0E7F\s-]/g, "")
+    // แปลงช่องว่าง/underscore เป็น hyphen
     .replace(/[\s_]+/g, "-")
+    // รวม hyphen ซ้อนให้เหลือตัวเดียว
+    .replace(/-{2,}/g, "-")
+    // ตัด hyphen หัว-ท้าย
     .replace(/^-+|-+$/g, "");
 }
 

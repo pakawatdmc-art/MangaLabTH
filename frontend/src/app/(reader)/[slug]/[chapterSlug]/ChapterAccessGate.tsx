@@ -64,7 +64,7 @@ export default function ChapterAccessGate({
       intv = setInterval(updateCountdown, 1000);
       return () => clearInterval(intv);
     }
-  }, [unlocksAt]);
+  }, [unlocksAt, router]);
 
   useEffect(() => {
     (async () => {

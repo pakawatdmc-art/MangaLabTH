@@ -16,7 +16,17 @@
 
 ---
 
-## 🏗️ สถาปัตยกรรมระบบ (Tech Stack & Architecture)
+## 🛠️ การยกระดับระบบเชิงลึก (Technical Audit & Hardening)
+
+โปรเจกต์นี้ได้รับการทำ **Technical Audit** และปรับปรุงสถาปัตยกรรมระดับลึก เพื่อให้มั่นใจในความเสถียรและความปลอดภัยสูงสุด (Production-Ready) ซึ่งครอบคลุมประเด็นระดับ Professional ดังนี้:
+
+- 🔒 **Webhook Security & Anti-Spoofing**: ป้องกันการยิง Webhook ปลอมจากผู้ไม่หวังดี (Spoofing) โดยการเข้ารหัสลับและยืนยัน Secret Key ระหว่าง Payment Gateway อย่าง FeelFreePay กับระบบ Backend มั่นใจได้ว่าทุกยอดเงินที่เข้าเป็นของจริงร้อยเปอร์เซ็นต์
+- 🌍 **Advanced SEO & Unicode Slugs**: ขีดสุดของการทำ SEO ในภาษาไทย! สร้างระบบ URL Slug ที่รองรับอักขระ Unicode แบบลึกซึ้ง (Thai Characters + Regex \p{L}\p{N}) ช่วยให้ Google อ่าน URL ภาษาไทยได้สวยงามและจัดทำดัชนี (Index) ได้มีประสิทธิภาพกว่าเดิม
+- 🚦 **Rate Limiter & Proxy Bypass Prevention**: อุดช่องโหว่การโจมตี DDoS/Spam โดยการเซ็ต `trusted_hosts` จับ IP ที่แท้จริงผ่าน Google Cloud Load Balancer (X-Forwarded-For) ป้องกันแฮกเกอร์ใช้ Proxy ปลอมเพื่อหลบหลีกระบบ Rate Limiter
+- 💾 **Data Integrity & Orphan Prevention**: ปกป้องโครงสร้าง Database ขั้นสุด! เมื่อมีการลบมังงะ ระบบจะใช้อัลกอริทึมเคลียร์ Orphan Transactions (ตั้งค่า Chapter ให้เป็น NULL) ควบคู่ไปกับการใช้ `SELECT FOR UPDATE` เพื่อไม่ให้เกิด Foreign Key Constraint Violations หรือข้อมูลขยะตกค้าง
+- ⚡ **API QoS & Query Limits**: ปกป้อง Backend จากอาการ Timeout หรือ Memory Overflow (DoS Prevention) โดยเพิ่ม Validation ให้ Query Date Range อัตโนมัติ (เช่น ขอดูสถิติย้อนหลังได้สูงสุด 365 วันเท่านั้น) ลดภาระ Database ได้อย่างมหาศาล
+
+---
 
 เราเลือกใช้เครื่องมือที่ดีที่สุดในแต่ละด้าน เพื่อสร้างสถาปัตยกรรมที่แข็งแกร่งและดูแลรักษาง่าย:
 

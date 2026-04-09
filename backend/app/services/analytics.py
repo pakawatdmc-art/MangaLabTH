@@ -1,6 +1,6 @@
 """Analytics service for recording views safely."""
 
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 import logging
 from typing import Optional
 from cachetools import TTLCache  # type: ignore
@@ -29,7 +29,9 @@ async def record_manga_view_task(manga_id: str, ip_address: Optional[str] = None
             return
         _view_cache[cache_key] = True
 
-    today = date.today()
+    # ใช้วันที่ไทย (UTC+7) เสมอ ไม่ว่า server จะอยู่ timezone ไหน
+    thai_now = datetime.now(timezone.utc) + timedelta(hours=7)
+    today = thai_now.date()
 
     async with async_session_factory() as session:
         try:

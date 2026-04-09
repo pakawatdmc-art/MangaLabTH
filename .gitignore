@@ -59,12 +59,20 @@ credentials*.json
 !package-lock.json
 !tsconfig.json
 
-# ── Env files (NEVER commit secrets) ──────────────
+# ── Env files (NEVER commit secrets) ──────────
 backend/.env
+backend/.env.production
+backend/.env.*
+!backend/.env.example
 frontend/.env.local
+frontend/.env.*.local
 
-# ── Project Specific ──────────────────────────────
+# ── Project Specific ──────────────────────────
 stripe
 backend/users_log.txt
 stripe.log
 backend/backend.log
+
+# ── Test / Debug scripts ──────────────────────
+test_*.py
+backend/test_*.py

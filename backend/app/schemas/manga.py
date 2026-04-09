@@ -160,7 +160,7 @@ class MangaUpdate(BaseModel):
 
 
 class PaginatedResponse(BaseModel):
-    items: List
+    items: List[Any]
     total: int
     page: int
     per_page: int

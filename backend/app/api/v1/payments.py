@@ -155,6 +155,9 @@ async def create_checkout(
     if "localhost" in api_base_url or "127.0.0.1" in api_base_url:
         api_base_url = api_base_url.replace("localhost", "lvh.me").replace("127.0.0.1", "lvh.me")
         
+    # Webhook secret: first 16 chars of FFP_SECRET_KEY, appended to backgroundUrl
+    webhook_secret = settings.FFP_SECRET_KEY[:16] if settings.FFP_SECRET_KEY else ""
+    
     frontend_base_safe = frontend_base
     if "localhost" in frontend_base_safe or "127.0.0.1" in frontend_base_safe:
         frontend_base_safe = frontend_base_safe.replace("localhost", "lvh.me").replace("127.0.0.1", "lvh.me")
@@ -164,7 +167,7 @@ async def create_checkout(
             result = await create_qr_payment(
                 amount=float(package.price_thb),
                 reference_no=reference_no,
-                background_url=f"{api_base_url}/api/v1/payments/webhook",
+                background_url=f"{api_base_url}/api/v1/payments/webhook?secret={webhook_secret}",
                 user_id=user.id,
                 package_id=str(package.id),
             )
@@ -178,7 +181,7 @@ async def create_checkout(
                 amount=float(package.price_thb),
                 reference_no=reference_no,
                 response_url=f"{frontend_base_safe}/coins?status=processing&reference_no={reference_no}",
-                background_url=f"{api_base_url}/api/v1/payments/webhook",
+                background_url=f"{api_base_url}/api/v1/payments/webhook?secret={webhook_secret}",
                 user_id=user.id,
                 package_id=str(package.id),
             )
@@ -214,8 +217,18 @@ async def create_checkout(
 async def feelfreepay_webhook(request: Request, session: DBSession):
     """Handle FeelFreePay webhooks to fulfill orders.
     
+    Security: Verifies webhook origin via a shared secret query parameter.
+    The backgroundUrl sent to FFP should include ?secret=<WEBHOOK_SECRET>.
     Note: FeelFreePay TrueWallet posts JSON, QR may or may not use same structure.
     """
+    # ── Origin Verification ──────────────────────
+    webhook_secret = request.query_params.get("secret", "")
+    expected_secret = settings.FFP_SECRET_KEY[:16] if settings.FFP_SECRET_KEY else ""
+    if not expected_secret or webhook_secret != expected_secret:
+        logger.warning("Webhook rejected: invalid or missing secret from %s", 
+                       request.headers.get("x-forwarded-for", request.client.host if request.client else "unknown"))
+        raise HTTPException(status_code=403, detail="Forbidden")
+
     try:
         payload = await request.json()
     except Exception:
