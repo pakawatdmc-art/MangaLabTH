@@ -181,6 +181,7 @@ export function ChapterImageManager({
     const { getToken } = useAuth();
     const [files, setFiles] = useState<FileItem[]>([]);
     const filesRef = useRef<FileItem[]>([]);
+    const hadExistingPages = useRef(false);
     const [isDragging, setIsDragging] = useState(false);
     const [loadingInitial, setLoadingInitial] = useState(false);
     
@@ -214,7 +215,7 @@ export function ChapterImageManager({
     const [error, setError] = useState("");
     const [successMsg, setSuccessMsg] = useState("");
 
-    const canUpload = files.length > 0 && !uploading;
+    const canUpload = !uploading && (files.length > 0 || hadExistingPages.current);
 
     useEffect(() => {
         filesRef.current = files;
@@ -246,6 +247,7 @@ export function ChapterImageManager({
             return getChapter(chapter.id, currentToken)
                 .then((detail) => {
                     if (detail.pages && detail.pages.length > 0) {
+                        hadExistingPages.current = true;
                         const loadedFiles: FileItem[] = detail.pages.map((p) => ({
                             id: p.id || String(p.number),
                             preview: p.image_url,
@@ -336,8 +338,9 @@ export function ChapterImageManager({
     const handleUploadAndSave = async () => {
         if (!chapter) return;
         if (files.length === 0) {
-            setError("กรุณาเลือกไฟล์อย่างน้อย 1 ภาพก่อนบันทึก");
-            return;
+            if (!confirm("คุณต้องการลบภาพทั้งหมดของตอนนี้ออกจากระบบหรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้")) {
+                return;
+            }
         }
         
         // Prevent double click race conditions
