@@ -51,11 +51,16 @@ export default async function HomePage({ searchParams }: Props) {
         <div className="absolute left-1/2 top-0 -ml-[50%] h-[500px] w-full max-w-[1000px] bg-[radial-gradient(ellipse_at_top,rgba(212,175,55,0.08),transparent_50%)]" />
 
         <div className="relative z-50 mx-auto max-w-4xl px-4 text-center sm:px-6">
-          <h1 className="mb-5 text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl drop-shadow-sm">
-            MangaLab<span className="text-gold">TH</span>
-          </h1>
+          <div className="flex flex-col items-center justify-center">
+            <h1 className="mb-2 text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl drop-shadow-sm">
+              MangaLab<span className="text-gold">TH</span>
+            </h1>
+            <span className="mb-5 block text-sm sm:text-base font-medium text-gold/80 tracking-wide">
+              เว็บอ่านมังงะ มังงะแปลไทย มังงะเกาหลี อันดับ 1
+            </span>
+          </div>
           <p className="mx-auto mb-10 max-w-xl text-lg text-gray-400">
-            อ่านมังงะออนไลน์คุณภาพสูง อัปเดตทุกวัน พร้อมระบบเหรียญปลดล็อคตอนพิเศษ
+            แพลตฟอร์มอ่านการ์ตูนออนไลน์คุณภาพสูง อัปเดตตอนใหม่ทุกวัน พร้อมระบบเหรียญปลดล็อคสุดคุ้ม
           </p>
 
           {/* Search bar - more premium */}
@@ -63,9 +68,11 @@ export default async function HomePage({ searchParams }: Props) {
 
           {/* SEO Text Component - Elegant and subtle */}
           <div className="mx-auto mt-6 max-w-3xl">
+            <h2 className="sr-only">อ่านมังงะ มังงะแปลไทย มังงะเกาหลี อ่านการ์ตูนฟรี - MangaLabTH</h2>
             <p className="text-[11px] leading-relaxed text-gray-500/50 balance-text font-medium">
-              &quot;mangalab-th เว็บมังงะระบบทันสมัยปี 2026 อ่านฟรี ที่ คัดสรรเฉพาะเรื่องฮิตและมาแรงที่สุดเท่านั้น! เราไม่เน้นลงเยอะแต่เน้นคุณภาพ เพื่อให้คุณได้อ่านมังงะตัวท็อปจาก Webtoon, Kakao, Comico และมังงะจีน เกาหลี ญี่ปุ่น แบบไม่ตกเทรนด์
-              มั่นใจได้กับงานแปลที่ Admin แปลเอง ทุกเรื่อง อัปเดตตอนใหม่ล่าสุดก่อนใครเพื่อน ในราคาที่คุ้มค่า เหรียญไม่เกิน 3 เหรียญแน่นอน และเพราะเรา เน้นเอาใจผู้บริโภคเป็นหลัก หากมีเรื่องดังเรื่องไหนที่คุณอยากอ่าน ทักบอกแอดมินผ่าน แฟนเพจ FB : Mangalab-th  ได้เลย เรื่องไหนคนขอมาเยอะ เราจัดให้ที่ mangalab-th&quot;
+              &quot;MangaLabTH แพลตฟอร์มระบบทันสมัยปี 2026 ตอบโจทย์คนชอบ <strong>อ่านมังงะ</strong> ที่คัดสรรเฉพาะ <strong>มังงะเกาหลี</strong> และเรื่องฮิตมาแรงที่สุด! เราเน้นคุณภาพเน้นๆ เพื่อให้คุณได้ <strong>อ่านการ์ตูน</strong> ตัวท็อปจาก Webtoon, Kakao, Comico 
+              สนุกจัดเต็มทั้ง <strong>มังงะแปลไทย</strong> จีน ญี่ปุ่น แบบไม่ตกเทรนด์ มั่นใจได้กับงานแปลที่ Admin แปลเองทุกเรื่อง อัปเดตตอนใหม่ล่าสุดก่อนใคร แถมราคาสุดคุ้มเหรียญไม่แพงแน่นอน 
+              หากมีมังงะดังเรื่องไหนที่คุณอยากอ่าน ทักบอกแอดมินผ่าน แฟนเพจ FB: Mangalab-th ได้เลย เรื่องไหนคนขอมาเยอะ เราพร้อมจัดให้ที่ MangaLabTH&quot;
             </p>
           </div>
         </div>
