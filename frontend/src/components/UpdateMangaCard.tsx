@@ -40,7 +40,6 @@ export default function UpdateMangaCard({ manga, priority = false }: Props) {
                     className="object-cover transition-transform duration-500 group-hover:scale-105 text-transparent"
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
                     priority={priority}
-                    loading={priority ? "eager" : "lazy"}
                 />
 
                 {/* Category Badge */}

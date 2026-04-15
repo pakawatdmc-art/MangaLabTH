@@ -3,7 +3,7 @@ import { getMangaList } from "@/lib/api";
 import { MangaCategory, MangaStatus, CATEGORY_LABELS, Manga } from "@/lib/types";
 import MangaCard from "@/components/MangaCard";
 import UpdateMangaCard from "@/components/UpdateMangaCard";
-import TopMangaRankingLazy from "@/components/TopMangaRankingLazy";
+import TopMangaRanking from "@/components/TopMangaRanking";
 
 // Removed force-dynamic to allow ISR and page caching
 interface Props {
@@ -194,7 +194,7 @@ export default async function HomePage({ searchParams }: Props) {
         {!params.q && (
           <div className="w-full shrink-0 lg:w-[320px] xl:w-[350px]">
             <div className="sticky top-24">
-              <TopMangaRankingLazy />
+              <TopMangaRanking />
             </div>
           </div>
         )}

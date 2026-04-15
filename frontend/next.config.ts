@@ -21,30 +21,6 @@ const nextConfig: NextConfig = {
     // V13: Bypass Vercel Image Optimization to leverage zero egress from R2
     unoptimized: true,
   },
-
-  // Performance: aggressive caching for static assets
-  async headers() {
-    return [
-      {
-        source: "/_next/static/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
-      },
-      {
-        source: "/fonts/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
-      },
-    ];
-  },
 };
 
 export default nextConfig;

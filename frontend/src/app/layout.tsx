@@ -122,17 +122,6 @@ export default function RootLayout({
       }}
     >
       <html lang="th">
-        <head>
-          {/* Preconnect to critical origins for faster LCP */}
-          {process.env.NEXT_PUBLIC_R2_PUBLIC_URL && (
-            <link
-              rel="preconnect"
-              href={process.env.NEXT_PUBLIC_R2_PUBLIC_URL}
-              crossOrigin="anonymous"
-            />
-          )}
-          <link rel="dns-prefetch" href="https://img.clerk.com" />
-        </head>
 
         <body
           className={`${inter.variable} ${notoThai.variable} font-sans antialiased`}
