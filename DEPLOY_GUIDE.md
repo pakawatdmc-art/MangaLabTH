@@ -54,6 +54,7 @@ Google Cloud Run จะนำ `Dockerfile` ไปสร้าง Image และ
 | `REVALIDATION_SECRET` | `super-secret-xxx` | รหัสลับสำหรับสั่งเคลียร์ Cache |
 | `SITE_URL` | `https://mangalab-th.com` | ใช้สำหรับ Auto Google Ping (**ต้องตั้ง**) |
 | `GOOGLE_INDEXING_CREDENTIALS` | `<JSON string or Base64>` | Service Account JSON สำหรับ Google Indexing API |
+| `PRIMARY_ADMIN_EMAIL` | `email@example.com` | Email ของ Primary Admin (auto-assign role admin ตอน login ครั้งแรก) |
 
 ### ตรวจสอบ Health Check
 
@@ -86,7 +87,7 @@ GET https://<cloud-run-url>/health
 | `NEXT_PUBLIC_CLERK_SIGN_IN_URL` | `/sign-in` | Path หน้า Login |
 | `NEXT_PUBLIC_CLERK_SIGN_UP_URL` | `/sign-up` | Path หน้าสมัคร |
 | `NEXT_PUBLIC_API_URL` | `https://<cloud-run-url>/api/v1` | URL ของ Backend (**ต้องลงท้ายด้วย `/api/v1`**) |
-| `NEXT_PUBLIC_R2_PUBLIC_URL` | `https://pub-xxxxx.r2.dev` | ค่าเดียวกับ Backend |
+| `NEXT_PUBLIC_R2_PUBLIC_URL` | `https://pub-xxxxx.r2.dev` | ค่าเดียวกับ Backend (ใช้ใน `next.config.ts` สำหรับ next/image hostname) |
 | `NEXT_PUBLIC_SITE_URL` | `https://mangalab-th.com` | Base URL (สำหรับ SEO / robots.ts) |
 | `REVALIDATION_SECRET` | `super-secret-xxx` | ค่าเดียวกับ Backend (สำหรับรับ Webhook เคลียร์ Cache) |
 
@@ -130,7 +131,7 @@ alembic upgrade head
 
 ### Seed Coin Packages
 ```bash
-python seed_coin_packages.py
+python scripts/seed_coin_packages.py
 ```
 
 ---

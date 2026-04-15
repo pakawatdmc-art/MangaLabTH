@@ -95,6 +95,7 @@ def generate_presigned_upload_url(
             "Bucket": settings.R2_BUCKET_NAME,
             "Key": key,
             "ContentType": content_type,
+            "CacheControl": "public, max-age=31536000, immutable",
         },
         ExpiresIn=expires_in,
     )
@@ -114,6 +115,7 @@ def upload_file_to_r2(key: str, file_bytes: bytes, content_type: str = "image/we
         Key=key,
         Body=file_bytes,
         ContentType=content_type,
+        CacheControl="public, max-age=31536000, immutable",
     )
     return f"{settings.R2_PUBLIC_URL}/{key}"
 

@@ -3,7 +3,7 @@ import { getMangaList } from "@/lib/api";
 import { MangaCategory, MangaStatus, CATEGORY_LABELS, Manga } from "@/lib/types";
 import MangaCard from "@/components/MangaCard";
 import UpdateMangaCard from "@/components/UpdateMangaCard";
-import TopMangaRanking from "@/components/TopMangaRanking";
+import TopMangaRankingLazy from "@/components/TopMangaRankingLazy";
 
 // Removed force-dynamic to allow ISR and page caching
 interface Props {
@@ -96,8 +96,8 @@ export default async function HomePage({ searchParams }: Props) {
             {/* Panel Body */}
             <div className="p-4 sm:p-6">
               <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-                {updatedManga.items.map((m: Manga) => (
-                  <UpdateMangaCard key={m.id} manga={m} />
+                {updatedManga.items.map((m: Manga, idx: number) => (
+                  <UpdateMangaCard key={m.id} manga={m} priority={idx < 2} />
                 ))}
               </div>
             </div>
@@ -194,7 +194,7 @@ export default async function HomePage({ searchParams }: Props) {
         {!params.q && (
           <div className="w-full shrink-0 lg:w-[320px] xl:w-[350px]">
             <div className="sticky top-24">
-              <TopMangaRanking />
+              <TopMangaRankingLazy />
             </div>
           </div>
         )}

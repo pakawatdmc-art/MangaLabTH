@@ -99,6 +99,8 @@ export default function TopMangaRanking() {
                                                 src={manga.cover_url}
                                                 alt={manga.title}
                                                 fill
+                                                sizes="(max-width: 640px) 64px, 112px"
+                                                loading="lazy"
                                                 className={`object-cover transition-transform duration-300 group-hover:scale-110 ${idx === 0 ? "ring-2 ring-gold" : idx === 1 ? "ring-2 ring-slate-300" : "ring-2 ring-amber-700"
                                                     }`}
                                             />
@@ -140,6 +142,8 @@ export default function TopMangaRanking() {
                                                     src={manga.cover_url}
                                                     alt={manga.title}
                                                     fill
+                                                    sizes="40px"
+                                                    loading="lazy"
                                                     className="object-cover"
                                                 />
                                             ) : (

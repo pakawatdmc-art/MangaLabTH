@@ -5,9 +5,10 @@ import { parseUTCDate, formatChapterNumber } from "@/lib/utils";
 
 interface Props {
     manga: Manga;
+    priority?: boolean;
 }
 
-export default function UpdateMangaCard({ manga }: Props) {
+export default function UpdateMangaCard({ manga, priority = false }: Props) {
     // eslint-disable-next-line react-hooks/purity
     const now = Date.now();
     const isNew = manga.last_chapter_updated_at
@@ -38,6 +39,8 @@ export default function UpdateMangaCard({ manga }: Props) {
                     fill
                     className="object-cover transition-transform duration-500 group-hover:scale-105 text-transparent"
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
+                    priority={priority}
+                    loading={priority ? "eager" : "lazy"}
                 />
 
                 {/* Category Badge */}

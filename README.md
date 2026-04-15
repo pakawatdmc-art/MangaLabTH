@@ -73,10 +73,10 @@ MangaLabTH/
 | **Rate Limiting** | SlowAPI 120/min default, 10/min checkout, 5/min confirm |
 | **CORS** | Restricted origins in production (`cors_origin_list`) |
 | **Webhook Security** | Secret-based verification + double-check via Status API |
-| **File Upload** | Magic byte validation, 10MB limit, path traversal prevention |
+| **File Upload** | Magic byte validation, 10MB cover / 15MB chapter page, path traversal prevention |
 | **Docs Disabled** | `/docs` and `/redoc` hidden in production |
 
-### ⚡ Performance
+### ⚡ Performance (Lighthouse: Mobile 90+ / Desktop 100)
 | การปรับปรุง | รายละเอียด |
 |------------|-----------|
 | **ISR Caching** | `revalidate: 60` on manga lists, Backend → Frontend revalidation webhook |
@@ -86,6 +86,12 @@ MangaLabTH/
 | **Clerk Profile Cache** | TTLCache 500 entries, 60s TTL |
 | **View Dedup** | IP-based TTLCache (20k entries, 1hr) → prevent duplicate view counting |
 | **localStorage Throttle** | ChapterReader writes position every 2s (not every scroll) |
+| **Preconnect R2** | `<link rel="preconnect">` ไปยัง R2 CDN → ลด LCP ~200-400ms |
+| **LCP Image Priority** | UpdateMangaCard 2 ตัวแรก `priority + eager loading` → browser fetch ทันที |
+| **R2 Cache-Control** | `public, max-age=31536000, immutable` ทุก upload → browser cache 1 ปี |
+| **Static Asset Caching** | `_next/static/*` + fonts: immutable cache 1 ปี ผ่าน `next.config.ts` |
+| **Dynamic Import** | `TopMangaRanking` lazy-loaded ผ่าน client wrapper → ลด initial JS bundle |
+| **Lazy Loading** | Below-fold images (`MangaCard`, `TopMangaRanking`) ใช้ `loading="lazy"` + `sizes` |
 
 ### 📊 Observability
 | การปรับปรุง | รายละเอียด |
@@ -142,7 +148,7 @@ npm run dev        # เริ่มรัน Next.js server (http://localhost:3
 | `CORS_ORIGINS` | ❌ | Comma-separated origins |
 | `FRONTEND_URL` | ❌ | For ISR revalidation webhook |
 | `REVALIDATION_SECRET` | ❌ | Shared secret for revalidation |
-| `PRIMARY_ADMIN_EMAIL` | ❌ | Auto-assign admin role on first login |
+| `PRIMARY_ADMIN_EMAIL` | ❌ | Auto-assign admin role on first login (email of primary admin) |
 | `SITE_URL` | ❌ | For Google Indexing API notifications |
 | `GOOGLE_INDEXING_CREDENTIALS` | ❌ | Base64-encoded Service Account JSON |
 | `FFP_CUSTOMER_KEY` | ❌ | FeelFreePay customer key |
@@ -156,6 +162,7 @@ npm run dev        # เริ่มรัน Next.js server (http://localhost:3
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | ✅ | Clerk publishable key |
 | `CLERK_SECRET_KEY` | ✅ | Clerk secret (for server-side) |
 | `NEXT_PUBLIC_SITE_URL` | ❌ | Canonical site URL for SEO |
+| `NEXT_PUBLIC_R2_PUBLIC_URL` | ✅ | R2 public URL (ใช้ใน `next.config.ts` สำหรับ Image hostname) |
 | `REVALIDATION_SECRET` | ❌ | Must match backend's secret |
 
 ---
