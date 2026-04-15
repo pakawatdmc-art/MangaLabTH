@@ -23,6 +23,7 @@ import {
 } from "@/lib/api";
 import { formatDate, formatNumber } from "@/lib/utils";
 import type { Transaction, User, CoinPackage } from "@/lib/types";
+import { trackViewCoinPackages, trackSelectPackage, trackPurchase } from "@/lib/analytics";
 
 const TX_LABEL: Record<string, string> = {
   coin_purchase: "ซื้อเหรียญ",
@@ -84,6 +85,7 @@ function CoinsPageInner() {
 
   useEffect(() => {
     if (!isLoaded) return;
+    trackViewCoinPackages();
     fetchUserData()
       .then((me) => {
         // Capture the pre-payment balance so the poller knows when it truly changes
@@ -113,7 +115,10 @@ function CoinsPageInner() {
         prevBalanceRef.current !== null &&
         me.coin_balance !== prevBalanceRef.current;
 
-      if (confirmStatus === "success") return true;
+      if (confirmStatus === "success") {
+        trackPurchase(refNo, 0, confirm.coins || 0); // Price omitted if not returned
+        return true;
+      }
       if (confirmStatus === "ignored" && typeof confirmNewBalance === "number") return true;
       if (balanceChanged) return true;
 
@@ -197,6 +202,7 @@ function CoinsPageInner() {
       if (!token) return;
 
       const res = await createCheckoutSession(selectedPackage.id, paymentMethod, token);
+      trackSelectPackage(selectedPackage.id, selectedPackage.price_thb, selectedPackage.coins);
 
       if (res.type === "qr" && res.qr_data) {
         // QR Code: Server returns base64 PNG image inline

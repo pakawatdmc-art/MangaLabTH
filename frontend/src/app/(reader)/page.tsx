@@ -4,6 +4,7 @@ import { MangaCategory, MangaStatus, CATEGORY_LABELS, Manga } from "@/lib/types"
 import MangaCard from "@/components/MangaCard";
 import UpdateMangaCard from "@/components/UpdateMangaCard";
 import TopMangaRanking from "@/components/TopMangaRanking";
+import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 
 // Removed force-dynamic to allow ISR and page caching
 interface Props {
@@ -110,6 +111,7 @@ export default async function HomePage({ searchParams }: Props) {
 
         {/* Main Left Column (All Manga) */}
         <div className="flex w-full min-w-0 flex-1 flex-col">
+          {params.q && <AnalyticsTracker event="search_manga" data={{ query: params.q }} />}
           <section className="overflow-hidden rounded-[2rem] bg-surface-200/40 shadow-2xl ring-1 ring-white/5 backdrop-blur-md">
             {/* Panel Header */}
             <div className="flex items-center justify-between border-b border-white/5 bg-transparent px-6 py-5">

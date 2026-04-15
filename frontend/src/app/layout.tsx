@@ -5,6 +5,7 @@ import { dark } from "@clerk/themes";
 import { thTH } from "@clerk/localizations";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { DeviceDetector } from "@/components/DeviceDetector";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -142,6 +143,7 @@ export default function RootLayout({
           <ThemeProvider>
             {children}
           </ThemeProvider>
+          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID as string} />
         </body>
       </html>
     </ClerkProvider>

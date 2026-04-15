@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { formatChapterNumber, formatNumber } from "@/lib/utils";
 import type { ChapterDetail } from "@/lib/types";
+import { trackReadChapterStart, trackReadChapterComplete } from "@/lib/analytics";
 
 interface Props {
   chapter: ChapterDetail;
@@ -45,6 +46,11 @@ export default function ChapterReaderClient({
   const [currentBalance, setCurrentBalance] = useState<number | undefined>(coinBalance);
   const lastScrollY = useRef(0);
   const lastSaveTime = useRef(0);
+  const trackedComplete = useRef(false);
+
+  useEffect(() => {
+    trackReadChapterStart(manga.slug, chapter.id, chapter.number, chapter.coin_price === 0);
+  }, [manga.slug, chapter.id, chapter.number, chapter.coin_price]);
 
   const pages = [...chapter.pages].sort((a, b) => a.number - b.number);
 
@@ -58,6 +64,11 @@ export default function ChapterReaderClient({
     setShowTopBar(y < 100 || y < lastScrollY.current);
     setShowScrollTop(y > 600);
     lastScrollY.current = y;
+
+    if (pct >= 98 && !trackedComplete.current) {
+      trackedComplete.current = true;
+      trackReadChapterComplete(manga.slug, chapter.id);
+    }
 
     // Save to localStorage (throttled to every 2s)
     const now = Date.now();

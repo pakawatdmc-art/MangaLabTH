@@ -13,6 +13,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { ChapterListClient } from "@/components/ChapterListClient";
+import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -107,6 +108,10 @@ export default async function MangaDetailPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-background text-white">
+      <AnalyticsTracker 
+        event="view_item" 
+        data={{ slug: manga.slug, title: manga.title, category: manga.category }} 
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

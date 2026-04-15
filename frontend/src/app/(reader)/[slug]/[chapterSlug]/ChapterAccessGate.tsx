@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { ArrowLeft, Clock, Coins, Loader2, Lock, LogIn, Sparkles } from "lucide-react";
 import { getMe, unlockChapter } from "@/lib/api";
+import { trackUnlockChapter, trackInsufficientCoins } from "@/lib/analytics";
 import { formatChapterNumber, parseUTCDate } from "@/lib/utils";
 
 interface Props {
@@ -93,6 +94,7 @@ export default function ChapterAccessGate({
         return;
       }
       await unlockChapter(chapterId, token);
+      trackUnlockChapter(manga.slug, chapterId, coinPrice);
 
       // Update local balance
       setBalance(prev => prev !== null ? prev - coinPrice : null);
@@ -104,6 +106,7 @@ export default function ChapterAccessGate({
     } catch (err) {
       const msg = err instanceof Error ? err.message : "ไม่สามารถปลดล็อกตอนได้";
       if (msg.includes("402") || msg.toLowerCase().includes("insufficient")) {
+        trackInsufficientCoins(manga.slug, chapterId, coinPrice);
         setError("ยอดเหรียญของคุณไม่พอสำหรับปลดล็อกตอนนี้ครับ");
       } else if (msg.includes("401") || msg.toLowerCase().includes("login")) {
         setError("กรุณาเข้าสู่ระบบใหม่อีกครั้งครับ");
