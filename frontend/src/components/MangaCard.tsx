@@ -24,7 +24,7 @@ export default function MangaCard({ manga }: Props) {
   // eslint-disable-next-line react-hooks/purity
   const now = Date.now();
   const isNew = manga.last_chapter_updated_at
-    ? parseUTCDate(manga.last_chapter_updated_at).getTime() > now - 7 * 24 * 60 * 60 * 1000
+    ? parseUTCDate(manga.last_chapter_updated_at).getTime() > now - 3 * 24 * 60 * 60 * 1000
     : false;
 
   return (
