@@ -69,6 +69,9 @@ export default function UpdateMangaCard({ manga, priority = false }: Props) {
                         <span className="font-semibold text-xs text-white">
                             ตอนที่ {manga.latest_chapter_number != null ? formatChapterNumber(manga.latest_chapter_number) : (manga.chapter_count ?? 0)}
                         </span>
+                        {isNew && (
+                            <span className="ml-1.5 rounded bg-red-600 px-1 py-[1px] text-[9px] font-extrabold text-white leading-none">NEW</span>
+                        )}
                     </div>
                     {getFormattedDate() && (
                         <span className="text-[10px] sm:text-[11px] text-gray-500 line-clamp-1">

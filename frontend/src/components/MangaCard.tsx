@@ -65,6 +65,9 @@ export default function MangaCard({ manga }: Props) {
             <span className="font-semibold text-xs text-emerald-400">
               ตอนที่ {manga.latest_chapter_number != null ? formatChapterNumber(manga.latest_chapter_number) : (manga.chapter_count ?? 0)}
             </span>
+            {isNew && (
+              <span className="ml-1.5 rounded bg-red-600 px-1 py-[1px] text-[9px] font-extrabold text-white leading-none">NEW</span>
+            )}
             <span className="text-[10px] font-bold text-gold shrink-0">
               {STATUS_LABELS[manga.status] || manga.status}
             </span>
