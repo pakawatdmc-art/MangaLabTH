@@ -46,11 +46,11 @@ export default async function HomePage({ searchParams }: Props) {
   return (
     <div className="min-h-screen bg-surface-300">
       {/* Hero */}
-      <section className="relative overflow-hidden py-8 sm:py-12">
+      <section className="relative z-50 py-8 sm:py-12">
         {/* Subtle glow instead of heavy radial gradient */}
         <div className="absolute left-1/2 top-0 -ml-[50%] h-[500px] w-full max-w-[1000px] bg-[radial-gradient(ellipse_at_top,rgba(212,175,55,0.08),transparent_50%)]" />
 
-        <div className="relative mx-auto max-w-4xl px-4 text-center sm:px-6">
+        <div className="relative z-50 mx-auto max-w-4xl px-4 text-center sm:px-6">
           <h1 className="mb-5 text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl drop-shadow-sm">
             MangaLab<span className="text-gold">TH</span>
           </h1>
