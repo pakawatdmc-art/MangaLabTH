@@ -5,6 +5,7 @@ import MangaCard from "@/components/MangaCard";
 import UpdateMangaCard from "@/components/UpdateMangaCard";
 import TopMangaRanking from "@/components/TopMangaRanking";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
+import { SearchAutocomplete } from "@/components/SearchAutocomplete";
 
 // Removed force-dynamic to allow ISR and page caching
 interface Props {
@@ -58,21 +59,7 @@ export default async function HomePage({ searchParams }: Props) {
           </p>
 
           {/* Search bar - more premium */}
-          <form action="/search" method="GET" className="mx-auto flex max-w-xl items-center gap-2 rounded-3xl bg-surface-100/40 p-2 shadow-2xl ring-1 ring-white/10 backdrop-blur-xl transition focus-within:ring-white/20">
-            <input
-              type="text"
-              name="q"
-              placeholder="ค้นหามังงะที่อยากอ่าน..."
-              defaultValue={params.q}
-              className="flex-1 bg-transparent px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none"
-            />
-            <button
-              type="submit"
-              className="rounded-2xl bg-gold px-8 py-3 text-sm font-bold text-black shadow-lg shadow-gold/20 transition hover:bg-gold-light hover:shadow-gold/40"
-            >
-              ค้นหา
-            </button>
-          </form>
+          <SearchAutocomplete defaultValue={params.q || ""} />
 
           {/* SEO Text Component - Elegant and subtle */}
           <div className="mx-auto mt-6 max-w-3xl">
