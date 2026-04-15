@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { ArrowDownCircle, ArrowUpCircle, Coins, History, Loader2, Search, Sparkles } from "lucide-react";
-import type { Transaction } from "@/lib/types";
+import type { Transaction, User } from "@/lib/types";
 import { formatDateTime } from "@/lib/utils";
-import { listAllTransactions } from "@/lib/api";
+import { listAllTransactions, listUsers } from "@/lib/api";
 
 const TX_TYPE_LABELS: Record<string, { label: string; color: string }> = {
   coin_purchase: { label: "เติมเหรียญ", color: "text-emerald-400" },
@@ -17,6 +17,7 @@ const TX_TYPE_LABELS: Record<string, { label: string; color: string }> = {
 export default function AdminTransactionsPage() {
   const { getToken } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [userMap, setUserMap] = useState<Map<string, User>>(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
@@ -33,6 +34,17 @@ export default function AdminTransactionsPage() {
             (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
           )
         );
+
+        // Fetch users for username lookup
+        try {
+          const users = await listUsers(token);
+          const map = new Map<string, User>();
+          users.forEach((u) => map.set(u.id, u));
+          setUserMap(map);
+        } catch {
+          // Non-critical: fallback to showing user_id
+        }
+
         setError("");
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "โหลดรายการเหรียญล้มเหลว");
@@ -57,6 +69,8 @@ export default function AdminTransactionsPage() {
     const searchable = [
       tx.type,
       tx.user_id,
+      userMap.get(tx.user_id)?.username || "",
+      userMap.get(tx.user_id)?.email || "",
       tx.note || "",
       String(tx.amount),
       String(tx.balance_after),
@@ -186,7 +200,18 @@ export default function AdminTransactionsPage() {
                         {typeInfo.label}
                       </span>
                     </td>
-                    <td className="px-4 py-2.5 text-gray-400">{tx.user_id}</td>
+                    <td className="px-4 py-2.5">
+                      <div className="flex flex-col">
+                        <span className="text-white text-xs font-medium">
+                          @{userMap.get(tx.user_id)?.username || tx.user_id.slice(0, 12) + "…"}
+                        </span>
+                        {userMap.get(tx.user_id)?.email && (
+                          <span className="text-[10px] text-gray-500 truncate max-w-[180px]">
+                            {userMap.get(tx.user_id)!.email}
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-4 py-2.5">
                       <span className={tx.amount >= 0 ? "text-emerald-400" : "text-orange-400"}>
                         {tx.amount >= 0 ? "+" : ""}
