@@ -167,7 +167,7 @@ export default function AdminTransactionsPage() {
       </section>
 
       <div className="overflow-x-auto rounded-2xl border border-white/10 bg-surface-100/80 ring-1 ring-white/5">
-        <table className="w-full min-w-[680px] text-sm">
+        <table className="w-full min-w-[860px] text-sm">
           <thead>
             <tr className="border-b border-white/5 text-left text-xs text-gray-500">
               <th className="px-4 py-3">ประเภท</th>
@@ -201,28 +201,28 @@ export default function AdminTransactionsPage() {
                       </span>
                     </td>
                     <td className="px-4 py-2.5">
-                      <div className="flex flex-col">
+                      <div className="flex flex-col" title={`User ID: ${tx.user_id}`}>
                         <span className="text-white text-xs font-medium">
                           @{userMap.get(tx.user_id)?.username || tx.user_id.slice(0, 12) + "…"}
                         </span>
                         {userMap.get(tx.user_id)?.email && (
-                          <span className="text-[10px] text-gray-500 truncate max-w-[180px]">
+                          <span className="text-[10px] text-gray-500 truncate max-w-[180px]" title={userMap.get(tx.user_id)!.email}>
                             {userMap.get(tx.user_id)!.email}
                           </span>
                         )}
                       </div>
                     </td>
                     <td className="px-4 py-2.5">
-                      <span className={tx.amount >= 0 ? "text-emerald-400" : "text-orange-400"}>
+                      <span className={tx.amount >= 0 ? "text-emerald-400 font-medium" : "text-orange-400 font-medium"}>
                         {tx.amount >= 0 ? "+" : ""}
                         {tx.amount.toLocaleString()}
                       </span>
                     </td>
-                    <td className="px-4 py-2.5 text-gray-400">{tx.balance_after.toLocaleString()}</td>
-                    <td className="max-w-[220px] truncate px-4 py-2.5 text-xs text-gray-500">
+                    <td className="px-4 py-2.5 text-gray-400 font-medium">{tx.balance_after.toLocaleString()}</td>
+                    <td className="max-w-[320px] px-4 py-2.5 text-xs text-gray-300 leading-relaxed break-words" title={tx.note}>
                       {tx.note || "—"}
                     </td>
-                    <td className="px-4 py-2.5 text-xs text-gray-500">{formatDateTime(tx.created_at)}</td>
+                    <td className="px-4 py-2.5 text-xs text-gray-500 whitespace-nowrap">{formatDateTime(tx.created_at)}</td>
                   </tr>
                 );
               })

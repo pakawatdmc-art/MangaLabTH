@@ -11,7 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import select, col
 
 from app.api.deps import AdminUser, CurrentUser, DBSession
-from app.models.manga import Chapter
+from app.models.manga import Chapter, Manga
 from app.models.transaction import Transaction, TransactionType
 from app.models.user import User
 from app.schemas.transaction import (
@@ -79,6 +79,9 @@ async def unlock_chapter(
     chapter = await session.get(Chapter, body.chapter_id)
     if not chapter:
         raise HTTPException(status_code=404, detail="Chapter not found")
+        
+    manga = await session.get(Manga, chapter.manga_id)
+    manga_title = manga.title if manga else "Unknown"
 
     if chapter.is_free or chapter.coin_price == 0:
         raise HTTPException(
@@ -130,7 +133,7 @@ async def unlock_chapter(
         amount=-chapter.coin_price,
         balance_after=new_balance,
         chapter_id=chapter.id,
-        note=f"Unlocked chapter {chapter.number}",
+        note=f"Unlocked {manga_title} chapter {chapter.number}",
     )
     session.add(tx)
     session.add(locked_user)
