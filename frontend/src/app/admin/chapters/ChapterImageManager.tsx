@@ -356,8 +356,9 @@ export function ChapterImageManager({
             const pendingUploads = files.filter(f => f.status === "pending" || f.status === "error");
             setUploadProgress({ done: 0, total: pendingUploads.length });
 
-            const currentToken = await getToken();
-            if (!currentToken) {
+            // Pre-validate token before starting
+            const initialToken = await getToken();
+            if (!initialToken) {
                 throw new Error("เซสชันหมดอายุ กรุณาโหลดหน้าเว็บเพื่อเข้าสู่ระบบใหม่");
             }
 
@@ -366,6 +367,12 @@ export function ChapterImageManager({
             if (pendingUploads.length > 0) {
                 const CONCURRENCY_LIMIT = 5;
                 for (let i = 0; i < pendingUploads.length; i += CONCURRENCY_LIMIT) {
+                    // Refresh token for every batch to prevent JWT expiry during long uploads
+                    const batchToken = await getToken();
+                    if (!batchToken) {
+                        throw new Error("เซสชันหมดอายุระหว่างอัปโหลด กรุณาโหลดหน้าเว็บใหม่");
+                    }
+
                     const batch = pendingUploads.slice(i, i + CONCURRENCY_LIMIT);
 
                     // Mark as uploading
@@ -385,7 +392,7 @@ export function ChapterImageManager({
                         const key = `manga/${manga.slug}/chapters/${chNum}/page-${String(pageNumber).padStart(3, "0")}.${ext}`;
 
                         try {
-                            const res = await uploadChapterPage(pendingItem.file!, key, currentToken);
+                            const res = await uploadChapterPage(pendingItem.file!, key, batchToken);
 
                             updatedFiles[globalIdx] = {
                                 ...updatedFiles[globalIdx],
@@ -426,8 +433,12 @@ export function ChapterImageManager({
                 })
             );
 
-            // 3. Call replacePages API
-            await replacePages(chapter.id, finalPagesData, currentToken);
+            // 3. Call replacePages API (refresh token in case uploads took a long time)
+            const finalToken = await getToken();
+            if (!finalToken) {
+                throw new Error("เซสชันหมดอายุ กรุณาโหลดหน้าเว็บใหม่");
+            }
+            await replacePages(chapter.id, finalPagesData, finalToken);
 
             setSuccessMsg(`บันทึกทั้ง ${finalPagesData.length} หน้าสำเร็จ!`);
             setTimeout(() => {

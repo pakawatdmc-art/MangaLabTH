@@ -8,7 +8,7 @@
 
 ## ⚡ จุดเด่นที่ทำให้เราแตกต่าง (Engineering Highlights)
 
-- ⚡ **เร็วทะลุจอ (Real-time & Lightning Fast)**: ขับเคลื่อนด้วย Next.js 16 (App Router) และเทคนิคอัปเดตข้อมูลแบบ ISR ทำให้โหลดหน้าเว็บได้ในพริบตา (LCP < 1 วินาที) มอบประสบการณ์ที่ลื่นไหลขั้นสุด
+- ⚡ **เร็วทะลุจอ (Real-time & Lightning Fast)**: ขับเคลื่อนด้วย Next.js 16.2.4 (App Router + Turbopack) และเทคนิคอัปเดตข้อมูลแบบ ISR ทำให้โหลดหน้าเว็บได้ในพริบตา (LCP < 1 วินาที) มอบประสบการณ์ที่ลื่นไหลขั้นสุด
 - 🛡️ **ระบบเหรียญที่เชื่อถือได้ 100% (Atomic Transactions)**: ลาก่อนปัญหาหักเหรียญซ้ำซ้อน! เราใช้ระบบล็อกข้อมูลระดับ Database (`SELECT FOR UPDATE`) จัดการทุกธุรกรรมทางการเงินอย่างเฉียบขาด ปลอดภัยแม้มีคนกดซื้อตอนมังงะพร้อมกันเป็นหมื่นคน
 - ☁️ **Cloud Pipeline อัจฉริยะ**: อัปโหลดปุ๊บ แปลงเป็น WebP ปั๊บ! จัดการไฟล์ภาพทั้งหมดผ่านสถาปัตยกรรม S3-compatible (Cloudflare R2) ที่โหลดรูปได้เร็วปรี๊ด ประหยัดแบนด์วิดท์ และรองรับการขยายตัวระดับโลก
 - ⏰ **ระบบปลดเวลาอ่านฟรีอัจฉริยะ (Automated Timed Unlocks)**: มิติใหม่ของการจัดการเนื้อหา! รองรับระบบ Timezone แบบเป๊ะปัง ไม่มีคลาดเคลื่อน ระบบหน้าบ้านและหลังบ้านซิงค์กันแบบ Real-time ปลดล็อกตอนให้อ่านฟรีทันทีเมื่อตัวนับถอยหลังสิ้นสุด
@@ -20,7 +20,7 @@
 
 ```
 MangaLabTH/
-├── frontend/     # Next.js 16 (App Router) → Vercel
+├── frontend/     # Next.js 16.2.4 (App Router + Turbopack) → Vercel
 ├── backend/      # FastAPI (Python) → Google Cloud Run
 ├── .gitignore
 └── README.md
@@ -28,7 +28,7 @@ MangaLabTH/
 
 | ส่วนของระบบ | เทคโนโลยีที่ใช้ | ผู้ให้บริการ Hosting |
 |-----------|----------------|----------------------|
-| **Frontend** | Next.js 16 (App Router), Tailwind CSS v4, Clerk | **Vercel** |
+| **Frontend** | Next.js 16.2.4 (App Router + Turbopack), Tailwind CSS v4, Clerk | **Vercel** |
 | **Backend** | FastAPI, SQLModel, Pydantic v2, Alembic | **Google Cloud Run (Docker)** |
 | **Database** | PostgreSQL (IPv4 Session Pooler) | **Supabase** |
 | **Storage** | Cloudflare R2 (S3-compatible, boto3) | **Cloudflare R2** |
@@ -52,7 +52,7 @@ MangaLabTH/
 
 ### ⚙️ ฝั่งผู้ดูแลระบบ (Admin Superpowers)
 - **Marketing Analytics Dashboard** — 3 chart types (Area, Donut, Dual Area), Growth comparison, Time range selector (7/30/90 วัน)
-- **Master Upload Pipeline** — Drag-drop reordering (dnd-kit), Concurrent upload (5 at a time), Auto WebP conversion, R2 orphan cleanup
+- **Master Upload Pipeline** — Drag-drop reordering (dnd-kit), Concurrent upload (5 at a time), Auto WebP conversion, R2 orphan cleanup, Auto-retry (3 attempts + exponential backoff), Per-batch token refresh, 60s upload timeout
 - **Manga CRUD** — สร้าง/แก้ไข/ลบ มังงะ, Auto-slug generation (Thai + English), Cover upload with magic byte validation
 - **Chapter Management** — ตั้งราคาเหรียญ, กำหนดเวลาปลดล็อกฟรี (Timed Unlock), Auto-sync is_free ↔ coin_price
 - **User Management** — Admin/Reader roles, Grant coins (Primary Admin only), Role toggle with safety guards

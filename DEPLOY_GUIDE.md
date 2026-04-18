@@ -3,7 +3,7 @@
 ## สถาปัตยกรรม
 
 ```
-[Next.js 16 / Vercel] ⇆ [FastAPI / Google Cloud Run] ⇆ [PostgreSQL (Supabase)]
+[Next.js 16.2.4 / Vercel] ⇆ [FastAPI / Google Cloud Run] ⇆ [PostgreSQL (Supabase)]
                              ↑↓
                       [Cloudflare R2]     ← Storage
                       [FeelFreePay]       ← Payments (PromptPay QR / TrueWallet)

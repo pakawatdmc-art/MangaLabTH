@@ -57,7 +57,7 @@ app/
 │       └── settings.py  # Global theme
 └── services/
     ├── storage.py       # R2 operations + shared utilities
-    ├── image.py         # WebP conversion
+    ├── image.py         # WebP conversion (method=4 balanced speed/compression)
     ├── revalidate.py    # Frontend ISR cache purge
     ├── feelfreepay_service.py # FeelFreePay API wrapper
     └── analytics.py     # Background view recording

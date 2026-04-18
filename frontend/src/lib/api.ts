@@ -313,46 +313,110 @@ export async function confirmCheckoutPayment(referenceNo: string, token: string)
 // ── Upload (R2 via Backend Proxy) ────────────────
 
 export async function uploadCoverImage(file: File, token: string): Promise<string> {
-  const formData = new FormData();
-  formData.append("file", file);
+  const MAX_RETRIES = 3;
+  const TIMEOUT_MS = 60000;
+  let lastError: unknown;
 
-  const res = await fetch(`${API}/upload/cover`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      // Do NOT set Content-Type — browser sets it automatically with boundary
-    },
-    body: formData,
-  });
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.detail || "อัปโหลดรูปภาพล้มเหลว");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch(`${API}/upload/cover`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          // Do NOT set Content-Type — browser sets it automatically with boundary
+        },
+        body: formData,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const data = await res.json();
+        return data.public_url;
+      }
+
+      // Client errors (4xx) should not be retried
+      if (res.status >= 400 && res.status < 500) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.detail || "อัปโหลดรูปภาพล้มเหลว");
+      }
+
+      lastError = new Error(`Server error ${res.status}`);
+    } catch (err) {
+      clearTimeout(timeoutId);
+      // Don't retry client errors or intentional aborts that we re-threw
+      if (err instanceof Error && !err.message.startsWith("Server error") && err.name !== "AbortError") {
+        throw err;
+      }
+      lastError = err;
+    }
+
+    if (attempt < MAX_RETRIES - 1) {
+      await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+    }
   }
 
-  const data = await res.json();
-  return data.public_url;
+  throw lastError || new Error("อัปโหลดรูปภาพล้มเหลว หลังจากลองหลายครั้ง");
 }
 
 export async function uploadChapterPage(file: File, key: string, token: string): Promise<{ public_url: string; key: string }> {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("key", key);
+  const MAX_RETRIES = 3;
+  const TIMEOUT_MS = 60000;
+  let lastError: unknown;
 
-  const res = await fetch(`${API}/upload/chapter_page`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: formData,
-  });
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.detail || "อัปโหลดภาพตอนล้มเหลว");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("key", key);
+
+      const res = await fetch(`${API}/upload/chapter_page`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        return res.json();
+      }
+
+      // Client errors (4xx) should not be retried
+      if (res.status >= 400 && res.status < 500) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.detail || "อัปโหลดภาพตอนล้มเหลว");
+      }
+
+      lastError = new Error(`Server error ${res.status}`);
+    } catch (err) {
+      clearTimeout(timeoutId);
+      // Don't retry client errors that we re-threw
+      if (err instanceof Error && !err.message.startsWith("Server error") && err.name !== "AbortError") {
+        throw err;
+      }
+      lastError = err;
+    }
+
+    if (attempt < MAX_RETRIES - 1) {
+      await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+    }
   }
 
-  return res.json();
+  throw lastError || new Error("อัปโหลดภาพตอนล้มเหลว หลังจากลองหลายครั้ง");
 }
 
 export async function getPresignedUploadUrls(
