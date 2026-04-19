@@ -355,6 +355,7 @@ export default function AdminMangaPage() {
         <table className="w-full min-w-[600px] text-sm">
           <thead>
             <tr className="border-b border-white/5 text-left text-xs text-gray-500">
+              <th className="w-16 px-4 py-3 text-center whitespace-nowrap">ลำดับที่</th>
               <th className="px-4 py-3">ปก</th>
               <th className="px-4 py-3">ชื่อเรื่อง</th>
               <th className="px-4 py-3">หมวดหมู่</th>
@@ -366,13 +367,14 @@ export default function AdminMangaPage() {
           <tbody>
             {mangas.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-gray-600">
+                <td colSpan={7} className="px-4 py-12 text-center text-gray-600">
                   ยังไม่มีมังงะ — กดปุ่ม &quot;เพิ่มมังงะ&quot; เพื่อเริ่มต้น
                 </td>
               </tr>
             ) : (
-              mangas.map((m) => (
+              [...mangas].reverse().map((m, index) => (
                 <tr key={m.id} className="border-b border-white/5 hover:bg-white/[0.02]">
+                  <td className="px-4 py-2 text-center font-medium text-gray-500">{index + 1}</td>
                   <td className="px-4 py-2">
                     <div className="h-12 w-8 overflow-hidden rounded bg-surface-200">
                       {m.cover_url && (

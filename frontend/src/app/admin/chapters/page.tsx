@@ -207,9 +207,9 @@ export default function AdminChaptersPage() {
               className="h-11 w-full rounded-lg border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:ring-1 focus:ring-gold/60 focus:outline-none transition"
             >
               <option value="">-- กรุณาเลือกมังงะ --</option>
-              {mangas.map((m) => (
+              {[...mangas].reverse().map((m, index) => (
                 <option key={m.id} value={m.id}>
-                  {m.title}
+                  {index + 1}. {m.title}
                 </option>
               ))}
             </select>
