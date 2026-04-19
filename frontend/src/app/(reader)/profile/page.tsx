@@ -16,6 +16,7 @@ import {
     ShieldCheck,
     UserCircle,
 } from "lucide-react";
+import { FadeUp, StaggerContainer, StaggerItem } from "@/components/MotionWrappers";
 
 export default function ProfilePage() {
     const { getToken, isLoaded } = useAuth();
@@ -67,47 +68,49 @@ export default function ProfilePage() {
     return (
         <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
             {/* Profile card */}
-            <section className="mb-8 rounded-2xl bg-surface-100/70 p-6 ring-1 ring-white/10">
-                <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-                    {user.avatar_url ? (
-                        <Image
-                            src={user.avatar_url}
-                            alt={user.display_name || "user avatar"}
-                            width={80}
-                            height={80}
-                            unoptimized
-                            className="h-20 w-20 rounded-full ring-2 ring-gold/30"
-                        />
-                    ) : (
-                        <UserCircle className="h-20 w-20 text-gray-600" />
-                    )}
-                    <div className="flex-1 text-center sm:text-left">
-                        <h1 className="text-2xl font-bold text-white">
-                            {user.display_name || "ผู้ใช้งาน"}
-                        </h1>
-                        <div className="mt-1 flex flex-wrap items-center justify-center gap-3 text-sm text-gray-400 sm:justify-start">
-                            <span className="flex items-center gap-1">
-                                <Mail className="h-3.5 w-3.5" />
-                                {user.email}
-                            </span>
-                            <span className="flex items-center gap-1">
-                                <ShieldCheck className="h-3.5 w-3.5" />
-                                {user.role === "admin" ? "แอดมิน" : "ผู้อ่าน"}
-                            </span>
+            <FadeUp delay={0.1}>
+                <section className="mb-8 rounded-2xl bg-surface-100/70 p-6 ring-1 ring-white/10">
+                    <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
+                        {user.avatar_url ? (
+                            <Image
+                                src={user.avatar_url}
+                                alt={user.display_name || "user avatar"}
+                                width={80}
+                                height={80}
+                                unoptimized
+                                className="h-20 w-20 rounded-full ring-2 ring-gold/30"
+                            />
+                        ) : (
+                            <UserCircle className="h-20 w-20 text-gray-600" />
+                        )}
+                        <div className="flex-1 text-center sm:text-left">
+                            <h1 className="text-2xl font-bold text-white">
+                                {user.display_name || "ผู้ใช้งาน"}
+                            </h1>
+                            <div className="mt-1 flex flex-wrap items-center justify-center gap-3 text-sm text-gray-400 sm:justify-start">
+                                <span className="flex items-center gap-1">
+                                    <Mail className="h-3.5 w-3.5" />
+                                    {user.email}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                    <ShieldCheck className="h-3.5 w-3.5" />
+                                    {user.role === "admin" ? "แอดมิน" : "ผู้อ่าน"}
+                                </span>
+                            </div>
+                            <p className="mt-1 text-xs text-gray-500">
+                                สมัครเมื่อ {formatDate(user.created_at)}
+                            </p>
                         </div>
-                        <p className="mt-1 text-xs text-gray-500">
-                            สมัครเมื่อ {formatDate(user.created_at)}
-                        </p>
+                        <div className="rounded-xl bg-gold/10 px-5 py-3 text-center ring-1 ring-gold/20">
+                            <Coins className="mx-auto mb-1 h-5 w-5 text-gold" />
+                            <p className="text-2xl font-bold text-gold">
+                                {formatNumber(user.coin_balance)}
+                            </p>
+                            <p className="text-[10px] text-gold/70">เหรียญ</p>
+                        </div>
                     </div>
-                    <div className="rounded-xl bg-gold/10 px-5 py-3 text-center ring-1 ring-gold/20">
-                        <Coins className="mx-auto mb-1 h-5 w-5 text-gold" />
-                        <p className="text-2xl font-bold text-gold">
-                            {formatNumber(user.coin_balance)}
-                        </p>
-                        <p className="text-[10px] text-gold/70">เหรียญ</p>
-                    </div>
-                </div>
-            </section>
+                </section>
+            </FadeUp>
 
             {/* Transaction history */}
             <section>
@@ -117,9 +120,9 @@ export default function ProfilePage() {
                 </h2>
 
                 {transactions.length > 0 ? (
-                    <div className="space-y-2">
+                    <StaggerContainer className="space-y-2">
                         {transactions.map((tx) => (
-                            <div
+                            <StaggerItem
                                 key={tx.id}
                                 className="flex items-center justify-between rounded-xl bg-surface-100/60 px-4 py-3 ring-1 ring-white/5"
                             >
@@ -150,9 +153,9 @@ export default function ProfilePage() {
                                         {formatDate(tx.created_at)}
                                     </p>
                                 </div>
-                            </div>
+                            </StaggerItem>
                         ))}
-                    </div>
+                    </StaggerContainer>
                 ) : (
                     <div className="rounded-xl bg-surface-100/60 py-12 text-center ring-1 ring-white/5">
                         <History className="mx-auto mb-2 h-6 w-6 text-gray-600" />

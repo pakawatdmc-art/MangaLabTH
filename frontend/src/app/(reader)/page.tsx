@@ -6,6 +6,7 @@ import UpdateMangaCard from "@/components/UpdateMangaCard";
 import TopMangaRanking from "@/components/TopMangaRanking";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { SearchAutocomplete } from "@/components/SearchAutocomplete";
+import { FadeUp, StaggerContainer, StaggerItem, ScaleUp } from "@/components/MotionWrappers";
 
 // Removed force-dynamic to allow ISR and page caching
 interface Props {
@@ -51,20 +52,24 @@ export default async function HomePage({ searchParams }: Props) {
         <div className="absolute left-1/2 top-0 -ml-[50%] h-[500px] w-full max-w-[1000px] bg-[radial-gradient(ellipse_at_top,rgba(212,175,55,0.08),transparent_50%)]" />
 
         <div className="relative z-10 mx-auto max-w-4xl px-4 text-center sm:px-6">
-          <div className="flex flex-col items-center justify-center">
+          <FadeUp delay={0.1} className="flex flex-col items-center justify-center">
             <h1 className="mb-2 text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl drop-shadow-sm">
               MangaLab<span className="text-gold">TH</span>
             </h1>
             <span className="mb-5 block text-sm sm:text-base font-medium text-gold/80 tracking-wide">
               เว็บอ่านมังงะ มังงะแปลไทย มังงะเกาหลี อันดับ 1
             </span>
-          </div>
-          <p className="mx-auto mb-10 max-w-xl text-lg text-gray-400">
-            แพลตฟอร์มอ่านการ์ตูนออนไลน์คุณภาพสูง อัปเดตตอนใหม่ทุกวัน พร้อมระบบเหรียญปลดล็อคสุดคุ้ม
-          </p>
+          </FadeUp>
+          <FadeUp delay={0.2}>
+            <p className="mx-auto mb-10 max-w-xl text-lg text-gray-400">
+              แพลตฟอร์มอ่านการ์ตูนออนไลน์คุณภาพสูง อัปเดตตอนใหม่ทุกวัน พร้อมระบบเหรียญปลดล็อคสุดคุ้ม
+            </p>
+          </FadeUp>
 
           {/* Search bar - more premium */}
-          <SearchAutocomplete defaultValue={params.q || ""} />
+          <FadeUp delay={0.3}>
+            <SearchAutocomplete defaultValue={params.q || ""} />
+          </FadeUp>
 
           {/* SEO Text Component - Elegant and subtle */}
           <div className="mx-auto mt-6 max-w-3xl">
@@ -81,7 +86,7 @@ export default async function HomePage({ searchParams }: Props) {
       {/* Latest Updates Section */}
       {!params.q && page === 1 && updatedManga.items.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 pt-4 sm:pt-6 sm:px-6">
-          <div className="overflow-hidden rounded-[2rem] bg-surface-200/40 shadow-2xl ring-1 ring-white/5 backdrop-blur-md">
+          <ScaleUp delay={0.4} className="overflow-hidden rounded-[2rem] bg-surface-200/40 shadow-2xl ring-1 ring-white/5 backdrop-blur-md">
             {/* Panel Header */}
             <div className="flex items-center justify-between border-b border-white/5 bg-transparent px-6 py-5">
               <h2 className="flex items-center gap-3 text-lg font-bold tracking-tight text-white/90">
@@ -90,13 +95,15 @@ export default async function HomePage({ searchParams }: Props) {
             </div>
             {/* Panel Body */}
             <div className="p-4 sm:p-6">
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+              <StaggerContainer className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
                 {updatedManga.items.map((m: Manga, idx: number) => (
-                  <UpdateMangaCard key={m.id} manga={m} priority={idx < 2} />
+                  <StaggerItem key={m.id}>
+                    <UpdateMangaCard manga={m} priority={idx < 2} />
+                  </StaggerItem>
                 ))}
-              </div>
+              </StaggerContainer>
             </div>
-          </div>
+          </ScaleUp>
         </section>
       )}
 
@@ -106,7 +113,7 @@ export default async function HomePage({ searchParams }: Props) {
         {/* Main Left Column (All Manga) */}
         <div className="flex w-full min-w-0 flex-1 flex-col">
           {params.q && <AnalyticsTracker event="search_manga" data={{ query: params.q }} />}
-          <section className="overflow-hidden rounded-[2rem] bg-surface-200/40 shadow-2xl ring-1 ring-white/5 backdrop-blur-md">
+          <ScaleUp delay={0.2} className="overflow-hidden rounded-[2rem] bg-surface-200/40 shadow-2xl ring-1 ring-white/5 backdrop-blur-md">
             {/* Panel Header */}
             <div className="flex items-center justify-between border-b border-white/5 bg-transparent px-6 py-5">
               <h2 className="flex items-center gap-3 text-lg font-bold tracking-tight text-white/90">
@@ -150,11 +157,13 @@ export default async function HomePage({ searchParams }: Props) {
               </div>
 
               {manga.items.length > 0 ? (
-                <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                <StaggerContainer className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                   {manga.items.map((m: Manga) => (
-                    <MangaCard key={m.id} manga={m} />
+                    <StaggerItem key={m.id}>
+                      <MangaCard manga={m} />
+                    </StaggerItem>
                   ))}
-                </div>
+                </StaggerContainer>
               ) : (
                 <div className="py-24 text-center">
                   <p className="text-lg text-gray-500 font-medium">ไม่มีมังงะในหมวดหมู่นี้</p>
@@ -183,7 +192,7 @@ export default async function HomePage({ searchParams }: Props) {
                 </div>
               )}
             </div>
-          </section>
+          </ScaleUp>
         </div>
 
         {/* Right Sidebar Column (Top 10) */}

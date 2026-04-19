@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { ChapterListClient } from "@/components/ChapterListClient";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
+import { FadeUp } from "@/components/MotionWrappers";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -134,7 +135,7 @@ export default async function MangaDetailPage({ params }: Props) {
       </div>
 
       <div className="mx-auto -mt-32 max-w-5xl px-4 sm:px-6 sm:-mt-40">
-        <div className="flex flex-col gap-6 rounded-2xl border border-white/10 bg-surface-200/85 p-4 shadow-2xl shadow-black/40 backdrop-blur-md sm:flex-row sm:gap-8 sm:p-6">
+        <FadeUp delay={0.2} className="flex flex-col gap-6 rounded-2xl border border-white/10 bg-surface-200/85 p-4 shadow-2xl shadow-black/40 backdrop-blur-md sm:flex-row sm:gap-8 sm:p-6">
           {/* Cover */}
           <div className="relative mx-auto aspect-[2/3] w-44 flex-shrink-0 overflow-hidden rounded-xl ring-2 ring-gold/30 sm:mx-0 sm:w-52">
             <Image
@@ -232,9 +233,11 @@ export default async function MangaDetailPage({ params }: Props) {
               )}
             </div>
           </div>
-        </div>
+        </FadeUp>
 
-        <ChapterListClient chapters={sortedChapters} freeChapterCount={freeChapterCount} mangaSlug={manga.slug} />
+        <FadeUp delay={0.3}>
+          <ChapterListClient chapters={sortedChapters} freeChapterCount={freeChapterCount} mangaSlug={manga.slug} />
+        </FadeUp>
       </div>
     </div>
   );

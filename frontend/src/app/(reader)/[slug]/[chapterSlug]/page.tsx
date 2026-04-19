@@ -3,6 +3,7 @@ import { getChapter, getMangaBySlug, getMe } from "@/lib/api";
 import { notFound } from "next/navigation";
 import ChapterReaderClient from "./ChapterReaderClient";
 import ChapterAccessGate from "./ChapterAccessGate";
+import { SoftFade } from "@/components/MotionWrappers";
 
 interface Props {
   params: Promise<{ slug: string; chapterSlug: string }>;
@@ -121,15 +122,17 @@ export default async function ChapterReadPage({ params }: Props) {
 
   if (chapter.can_read === false) {
     return (
-      <ChapterAccessGate
-        chapterId={chapter.id}
-        chapterNumber={chapter.number}
-        chapterTitle={chapter.title}
-        coinPrice={chapter.coin_price}
-        requiresLogin={Boolean(chapter.requires_login)}
-        manga={{ title: manga.title, slug: manga.slug }}
-        unlocksAt={chapter.unlocks_at}
-      />
+      <SoftFade>
+        <ChapterAccessGate
+          chapterId={chapter.id}
+          chapterNumber={chapter.number}
+          chapterTitle={chapter.title}
+          coinPrice={chapter.coin_price}
+          requiresLogin={Boolean(chapter.requires_login)}
+          manga={{ title: manga.title, slug: manga.slug }}
+          unlocksAt={chapter.unlocks_at}
+        />
+      </SoftFade>
     );
   }
 
@@ -139,14 +142,16 @@ export default async function ChapterReadPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}
       />
-      <ChapterReaderClient
-        chapter={chapter}
-        manga={{ id: manga.id, title: manga.title, slug: manga.slug }}
-        allChapters={allChapters}
-        prevChapterId={prevChapter?.id || null}
-        nextChapterId={nextChapter?.id || null}
-        coinBalance={coinBalance}
-      />
+      <SoftFade>
+        <ChapterReaderClient
+          chapter={chapter}
+          manga={{ id: manga.id, title: manga.title, slug: manga.slug }}
+          allChapters={allChapters}
+          prevChapterId={prevChapter?.id || null}
+          nextChapterId={nextChapter?.id || null}
+          coinBalance={coinBalance}
+        />
+      </SoftFade>
     </>
   );
 }
