@@ -6,7 +6,6 @@ import { thTH } from "@clerk/localizations";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { DeviceDetector } from "@/components/DeviceDetector";
 import { GoogleAnalytics } from "@next/third-parties/google";
-import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
 
 const inter = Inter({
@@ -141,7 +140,6 @@ export default function RootLayout({
             }}
           />
           <DeviceDetector />
-          <NextTopLoader color="#d4a843" height={2} showSpinner={false} />
           <ThemeProvider>
             {children}
           </ThemeProvider>
