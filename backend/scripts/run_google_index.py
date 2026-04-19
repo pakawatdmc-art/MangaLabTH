@@ -29,7 +29,7 @@ CREDENTIALS_PATH = os.environ.get(
     "GOOGLE_INDEXING_CREDENTIALS_FILE",
     os.path.join(os.path.dirname(__file__), '..', '..', 'credentials-indexing.json')
 )
-SITEMAP_URL = os.environ.get("SITE_URL", "https://www.mangalab-th.com") + "/sitemap.xml"
+SITEMAP_URL = os.environ.get("SITE_URL", "https://mangalab-th.com") + "/sitemap.xml"
 INDEXING_API_URL = "https://indexing.googleapis.com/v3/urlNotifications:publish"
 SCOPES = ["https://www.googleapis.com/auth/indexing"]
 

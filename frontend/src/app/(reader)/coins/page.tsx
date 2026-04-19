@@ -23,14 +23,10 @@ import {
 } from "@/lib/api";
 import { formatDate, formatNumber } from "@/lib/utils";
 import type { Transaction, User, CoinPackage } from "@/lib/types";
+import { TX_LABELS } from "@/lib/types";
 import { trackViewCoinPackages, trackSelectPackage, trackPurchase } from "@/lib/analytics";
 
-const TX_LABEL: Record<string, string> = {
-  coin_purchase: "ซื้อเหรียญ",
-  chapter_unlock: "ปลดล็อกตอน",
-  admin_grant: "Admin เติม",
-  refund: "คืนเงิน",
-};
+
 
 function CoinsPageInner() {
   const searchParams = useSearchParams();
@@ -116,7 +112,9 @@ function CoinsPageInner() {
         me.coin_balance !== prevBalanceRef.current;
 
       if (confirmStatus === "success") {
-        trackPurchase(refNo, 0, confirm.coins || 0); // Price omitted if not returned
+        const purchaseValue = selectedPackage?.price_thb || 0;
+        const purchaseCoins = confirm.coins || selectedPackage?.coins || 0;
+        trackPurchase(refNo, purchaseValue, purchaseCoins);
         return true;
       }
       if (confirmStatus === "ignored" && typeof confirmNewBalance === "number") return true;
@@ -551,7 +549,7 @@ function CoinsPageInner() {
                     </div>
                     <div className="min-w-0">
                       <p className="truncate text-sm text-white">
-                        {TX_LABEL[tx.type] || tx.type}
+                        {TX_LABELS[tx.type] || tx.type}
                       </p>
                       {tx.note && (
                         <p className="truncate text-xs text-gray-500">{tx.note}</p>

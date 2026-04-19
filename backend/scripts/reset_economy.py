@@ -64,6 +64,12 @@ async def reset_economy():
             raise
 
 if __name__ == "__main__":
+    env = os.getenv("APP_ENV", "development")
+    if env == "production":
+        print("❌ BLOCKED: Cannot run reset_economy on production environment!")
+        print("   APP_ENV is set to 'production'. This script is for dev/staging only.")
+        sys.exit(1)
+
     print("\n⚠️  WARNING: This will DELETE all transactions and RESET all coin balances to 0.")
     print("   This action is IRREVERSIBLE.\n")
     confirm = input("Type 'RESET' to confirm: ").strip()

@@ -110,6 +110,8 @@ async def notify_google_updated(updated_paths: list[str]) -> None:
     Args:
         updated_paths: e.g. ["/manga/solo-leveling", "/"]
     """
+    from urllib.parse import quote
+
     settings = get_settings()
     site_url = settings.SITE_URL
 
@@ -118,6 +120,9 @@ async def notify_google_updated(updated_paths: list[str]) -> None:
         return
 
     for path in updated_paths:
-        full_url = f"{site_url.rstrip('/')}{path}"
+        # Encode path segments to match sitemap URL format
+        # (Thai characters like ตอนที่ must be percent-encoded)
+        encoded_path = quote(path, safe="/:-_~")
+        full_url = f"{site_url.rstrip('/')}{encoded_path}"
         logger.info("📢 Content updated: %s", full_url)
         await _publish_url(full_url, "URL_UPDATED")

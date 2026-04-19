@@ -5,6 +5,7 @@ import { useAuth } from "@clerk/nextjs";
 import Image from "next/image";
 import { getMe, getMyTransactions } from "@/lib/api";
 import type { User, Transaction } from "@/lib/types";
+import { TX_LABELS } from "@/lib/types";
 import { formatNumber, formatDate } from "@/lib/utils";
 import {
     Coins,
@@ -61,12 +62,7 @@ export default function ProfilePage() {
         );
     }
 
-    const txTypeLabel: Record<string, string> = {
-        coin_purchase: "ซื้อเหรียญ",
-        chapter_unlock: "ปลดล็อกตอน",
-        admin_grant: "Admin เติม",
-        refund: "คืนเงิน",
-    };
+
 
     return (
         <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
@@ -135,7 +131,7 @@ export default function ProfilePage() {
                                     )}
                                     <div>
                                         <p className="text-sm text-white">
-                                            {txTypeLabel[tx.type] || tx.type}
+                                            {TX_LABELS[tx.type] || tx.type}
                                         </p>
                                         {tx.note && (
                                             <p className="text-xs text-gray-500">{tx.note}</p>

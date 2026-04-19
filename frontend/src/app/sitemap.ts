@@ -79,7 +79,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                     const manga = result.value;
                     for (const ch of manga.chapters || []) {
                         chapterPages.push({
-                            url: `${baseUrl}/${encodeURIComponent(manga.slug)}/ตอนที่-${ch.number}`,
+                            url: `${baseUrl}/${encodeURIComponent(manga.slug)}/${encodeURIComponent(`ตอนที่-${ch.number}`)}`,
                             lastModified: parseUTCDate(ch.published_at),
                             changeFrequency: "monthly" as const,
                             priority: 0.6,

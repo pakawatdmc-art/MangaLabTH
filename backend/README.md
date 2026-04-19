@@ -11,6 +11,7 @@ FastAPI backend สำหรับ MangaLabTH — แพลตฟอร์มอ
 - **Auth:** Clerk JWT (RS256 + JWKS)
 - **Payments:** FeelFreePay (PromptPay QR / TrueWallet)
 - **Image Processing:** Pillow (WebP auto-conversion)
+- **SEO:** Google Indexing API (auto-notify on content changes)
 - **Deployment:** Google Cloud Run (Docker)
 
 ## Quick Start
@@ -31,37 +32,55 @@ uvicorn app.main:app --reload --port 8000
 
 ```
 app/
-├── main.py              # FastAPI app, CORS, middleware
-├── config.py            # Settings (Pydantic v2)
-├── database.py          # Async SQLModel engine + session
+├── main.py              # FastAPI app, CORS, rate limiter, middleware
+├── config.py            # Settings (Pydantic v2, env validation)
+├── database.py          # Async SQLModel engine + session + seed data
 ├── models/              # SQLModel table definitions
 │   ├── manga.py         # Manga, Chapter, Page
-│   ├── user.py          # User (Clerk-linked, RBAC)
+│   ├── user.py          # User (Clerk-linked, RBAC, coin_balance)
 │   ├── transaction.py   # Transaction, CoinPackage
 │   ├── analytics.py     # DailyMangaView
-│   └── settings.py      # SystemSettings
+│   └── setting.py       # SystemSetting (key-value)
 ├── schemas/             # Pydantic request/response schemas
 │   ├── manga.py
 │   ├── user.py
 │   └── transaction.py
 ├── api/
-│   ├── deps.py          # Auth dependencies, RBAC, user provisioning
+│   ├── deps.py          # Auth: JWT decode, RBAC, Clerk profile cache
 │   └── v1/              # Route modules
-│       ├── manga.py     # Manga CRUD + ranking
-│       ├── chapters.py  # Chapter/Page CRUD + coin gating
-│       ├── upload.py    # R2 upload (presigned + proxy)
-│       ├── users.py     # User management
-│       ├── transactions.py  # Coin economy (atomic)
-│       ├── payments.py  # FeelFreePay integration
-│       ├── analytics.py # View tracking dashboard
-│       └── settings.py  # Global theme
+│       ├── manga.py     # Manga CRUD + ranking + view recording
+│       ├── chapters.py  # Chapter/Page CRUD + coin gating + auto-unlock
+│       ├── upload.py    # R2 upload (cover + chapter page, WebP conversion)
+│       ├── users.py     # User CRUD + admin stats
+│       ├── transactions.py  # Coin economy (atomic SELECT FOR UPDATE)
+│       ├── payments.py  # FeelFreePay (checkout + webhook + confirm)
+│       ├── analytics.py # Marketing dashboard (charts, top mangas)
+│       └── settings.py  # Global theme (festival themes)
 └── services/
-    ├── storage.py       # R2 operations + shared utilities
-    ├── image.py         # WebP conversion (method=4 balanced speed/compression)
-    ├── revalidate.py    # Frontend ISR cache purge
-    ├── feelfreepay_service.py # FeelFreePay API wrapper
-    └── analytics.py     # Background view recording
+    ├── storage.py           # R2 upload/delete/presigned + IP helper
+    ├── image.py             # WebP conversion (Pillow, method=4)
+    ├── http_client.py       # Shared httpx.AsyncClient singleton
+    ├── google_notify.py     # Google Indexing API (auto-notify)
+    ├── revalidate.py        # Frontend ISR cache purge
+    ├── feelfreepay_service.py  # FeelFreePay API (QR, TrueWallet, status)
+    └── analytics.py         # Background view recording (IP dedup)
 ```
+
+## Utility Scripts
+
+```bash
+# Seed coin packages
+python scripts/seed_coin_packages.py
+
+# Google Indexing — submit all sitemap URLs
+python scripts/run_google_index.py
+
+# Reset economy — reset all coin balances (⚠️ dev only, blocked on production)
+python scripts/reset_economy.py
+```
+
+> **Archived** (one-time migrations, in `scripts/archive/`):
+> `migrate_slugs.py`, `update_transaction_notes.py`
 
 ## Deployment (Cloud Run)
 

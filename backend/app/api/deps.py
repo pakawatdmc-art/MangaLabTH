@@ -57,6 +57,7 @@ def _decode_clerk_token(token: str) -> dict:
             algorithms=["RS256"],
             issuer=_get_clerk_issuer(),
             options={"verify_aud": False},
+            leeway=10,  # Allow 10s clock skew between local and Clerk server
         )
         return payload
     except jwt.ExpiredSignatureError:
@@ -179,6 +180,12 @@ async def get_current_user(
         payload.get("email_address"),
         payload.get("primary_email_address"),
     )
+
+    # Clerk JWT often doesn't include email — fallback to Backend API
+    if not email:
+        profile = await get_clerk_profile(clerk_id)
+        email = profile.get("email", "")
+
     username = _first_non_empty(
         payload.get("username"),
         payload.get("preferred_username"),

@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: Props): Promise<import("next"
       description: `อ่าน ${manga.title} ${chTitle} แปลไทย ออนไลน์ฟรี ภาพคมชัด — MangaLabTH`,
       robots: { index: true, follow: true },
       alternates: {
-        canonical: `${siteUrl}/${decodedSlug}/ตอนที่-${matchedChapter.number}`,
+        canonical: `${siteUrl}/${encodeURIComponent(decodedSlug)}/${encodeURIComponent(`ตอนที่-${matchedChapter.number}`)}`,
       },
       openGraph: {
         title: `${manga.title} ${chTitle} — MangaLabTH`,

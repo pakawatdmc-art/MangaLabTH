@@ -31,6 +31,13 @@ export const STATUS_LABELS: Record<MangaStatus, string> = {
   dropped: "หยุดอัปเดต",
 };
 
+export const TX_LABELS: Record<string, string> = {
+  coin_purchase: "ซื้อเหรียญ",
+  chapter_unlock: "ปลดล็อกตอน",
+  admin_grant: "Admin เติม",
+  refund: "คืนเงิน",
+};
+
 // Models
 export interface User {
   id: string;

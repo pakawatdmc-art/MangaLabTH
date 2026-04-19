@@ -34,6 +34,7 @@ export const trackReadChapterComplete = (mangaSlug: string, chapterId: string) =
   });
 };
 
+// TODO: Connect to bookmark/favorite UI when feature is implemented
 export const trackAddBookmark = (mangaSlug: string, title?: string) => {
   sendGAEvent("event", "add_bookmark", {
     manga_slug: mangaSlug,

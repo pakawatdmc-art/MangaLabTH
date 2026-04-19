@@ -12,7 +12,8 @@
 - 🛡️ **ระบบเหรียญที่เชื่อถือได้ 100% (Atomic Transactions)**: ลาก่อนปัญหาหักเหรียญซ้ำซ้อน! เราใช้ระบบล็อกข้อมูลระดับ Database (`SELECT FOR UPDATE`) จัดการทุกธุรกรรมทางการเงินอย่างเฉียบขาด ปลอดภัยแม้มีคนกดซื้อตอนมังงะพร้อมกันเป็นหมื่นคน
 - ☁️ **Cloud Pipeline อัจฉริยะ**: อัปโหลดปุ๊บ แปลงเป็น WebP ปั๊บ! จัดการไฟล์ภาพทั้งหมดผ่านสถาปัตยกรรม S3-compatible (Cloudflare R2) ที่โหลดรูปได้เร็วปรี๊ด ประหยัดแบนด์วิดท์ และรองรับการขยายตัวระดับโลก
 - ⏰ **ระบบปลดเวลาอ่านฟรีอัจฉริยะ (Automated Timed Unlocks)**: มิติใหม่ของการจัดการเนื้อหา! รองรับระบบ Timezone แบบเป๊ะปัง ไม่มีคลาดเคลื่อน ระบบหน้าบ้านและหลังบ้านซิงค์กันแบบ Real-time ปลดล็อกตอนให้อ่านฟรีทันทีเมื่อตัวนับถอยหลังสิ้นสุด
-- 🔍 **สุดยอดปรมาจารย์ด้าน SEO**: ผสานพลังเข้ากับ Google Indexing API แจ้งเตือนบอทของ Google ให้มาเก็บข้อมูลทันทีที่มีการอัปเดตตอนใหม่ แถมจัดเต็มด้วย JSON-LD Structured Data และ Dynamic Sitemap ที่ครอบคลุมเนื้อหาทุกหน้าอย่างสมบูรณ์แบบ
+- 🔍 **สุดยอดปรมาจารย์ด้าน SEO**: ผสานพลังเข้ากับ Google Indexing API แจ้งเตือนบอทของ Google ให้มาเก็บข้อมูลทันทีที่มีการอัปเดตตอนใหม่ แถมจัดเต็มด้วย JSON-LD Structured Data และ Dynamic Sitemap ที่ครอบคลุมเนื้อหาทุกหน้าอย่างสมบูรณ์แบบ พร้อม URL Encoding ที่สอดคล้องกันทั้ง Sitemap, Canonical และ Indexing API
+- 📊 **Google Analytics 4 ครบวงจร**: ติดตาม User Journey ตั้งแต่ค้นหา → อ่าน → ซื้อเหรียญ → ปลดล็อก พร้อม Key Events สำหรับวัด Conversion ได้ทันที
 
 ---
 
@@ -39,7 +40,7 @@ MangaLabTH/
 
 ---
 
-## 🎯 ฟีเจอร์ชูโรง (39 Features — Production-Audited ✅)
+## 🎯 ฟีเจอร์ชูโรง (41 Features — Production-Audited ✅)
 
 ### 📖 ฝั่งผู้อ่าน (Reader Experience)
 - **UI/UX ดีไซน์พรีเมียม** — Dark Mode, Glassmorphism, Gold accents, Responsive
@@ -49,6 +50,8 @@ MangaLabTH/
 - **Coin Economy** — เติมเหรียญผ่าน PromptPay QR / TrueWallet, ปลดล็อกตอน, ดูประวัติธุรกรรม
 - **Top Manga Rankings** — รายสัปดาห์/รายเดือน/ตลอดกาล (DailyMangaView aggregation)
 - **Theme System** — Server-synced global themes (ธีมเทศกาล เช่น สงกรานต์, คริสต์มาส)
+- **GA4 Analytics** — Custom events: `view_manga_detail`, `read_chapter_start/complete`, `unlock_chapter`, `purchase` พร้อม Key Events + Conversion tracking
+- **Clerk Proxy** — Route protection ผ่าน `proxy.ts` (protect `/admin`, `/coins`, `/profile`)
 
 ### ⚙️ ฝั่งผู้ดูแลระบบ (Admin Superpowers)
 - **Marketing Analytics Dashboard** — 3 chart types (Area, Donut, Dual Area), Growth comparison, Time range selector (7/30/90 วัน)
@@ -62,7 +65,7 @@ MangaLabTH/
 
 ## 🛠️ Production Hardening (Technical Audit — April 2026)
 
-โปรเจกต์ผ่านการทำ **Full Code Audit 39 ฟีเจอร์** + **Integration Audit 28 API Endpoints** + **Bug Review 14 Areas** พร้อม Production:
+โปรเจกต์ผ่านการทำ **Full Code Audit 41 ฟีเจอร์** + **Integration Audit 28 API Endpoints** + **Bug Review 14 Areas** + **SEO/Analytics Deep Review** พร้อม Production:
 
 ### 🔒 Security
 | มาตรการ | รายละเอียด |
@@ -154,6 +157,7 @@ npm run dev        # เริ่มรัน Next.js server (http://localhost:3
 | `FFP_CUSTOMER_KEY` | ❌ | FeelFreePay customer key |
 | `FFP_PUBLIC_KEY` | ❌ | FeelFreePay public key |
 | `FFP_SECRET_KEY` | ❌ | FeelFreePay secret key |
+| `FFP_BASE_URL` | ❌ | FeelFreePay API URL (`https://api-test.feelfreepay.com` สำหรับ testing, `https://api.feelfreepay.com` สำหรับ production) |
 
 #### Frontend (`.env.local`)
 | Variable | Required | Description |
@@ -164,6 +168,7 @@ npm run dev        # เริ่มรัน Next.js server (http://localhost:3
 | `NEXT_PUBLIC_SITE_URL` | ❌ | Canonical site URL for SEO |
 | `NEXT_PUBLIC_R2_PUBLIC_URL` | ✅ | R2 public URL (ใช้ใน `next.config.ts` สำหรับ Image hostname) |
 | `REVALIDATION_SECRET` | ❌ | Must match backend's secret |
+| `NEXT_PUBLIC_GA_MEASUREMENT_ID` | ❌ | Google Analytics 4 Measurement ID (e.g. `G-XXXXXXXXXX`) |
 
 ---
 
@@ -203,14 +208,16 @@ gcloud run deploy mangalabth-backend --source . --region asia-southeast1 --allow
 
 | เครื่องมือ SEO | รายละเอียด |
 |---------------|-----------|
-| **Google Indexing API** | แจ้ง Google ทันทีที่มีตอนใหม่ (Background task, ไม่ block response) |
-| **Dynamic Sitemap** | ISR 60s, Paginated fetch, Batch chapter URLs, Graceful fallback |
+| **Google Indexing API** | แจ้ง Google ทันทีที่มีตอนใหม่ (Background task, ไม่ block response, URL encoded) |
+| **Dynamic Sitemap** | ISR 60s, Paginated fetch, Batch chapter URLs, Full URL encoding, Graceful fallback |
 | **robots.txt** | Disallow `/admin/`, `/api/`, `/account/`, `/sign-in/`, `/sign-up/` |
 | **JSON-LD** | ComicSeries, BreadcrumbList, WebPage structured data |
 | **OG/Twitter Cards** | Dynamic per-page metadata with cover images |
 | **Thai-friendly Slugs** | Unicode support (`\u0E00-\u0E7F`), Google displays Thai in SERPs |
-| **Canonical URLs** | Prevent duplicate content across pages |
+| **Canonical URLs** | Fully encoded, synced with Sitemap + Indexing API (prevent duplicate content) |
 | **Search Page Robots** | `noindex` when query parameter present (thin content prevention) |
+| **GA4 Key Events** | `unlock_chapter` + `view_coin_packages` marked as conversions |
+| **URL Consistency** | Sitemap ↔ Canonical ↔ Google Indexing API ใช้ encoded URL format เดียวกัน |
 
 ---
 
@@ -223,12 +230,12 @@ cd backend && python scripts/run_google_index.py
 # Seed coin packages — สร้างแพ็กเกจเหรียญเริ่มต้น
 cd backend && python scripts/seed_coin_packages.py
 
-# Migrate slugs — แปลง slug เก่าให้รองรับภาษาไทย
-cd backend && python scripts/migrate_slugs.py
-
-# Reset economy — รีเซ็ตยอดเหรียญ (⚠️ dev only)
+# Reset economy — รีเซ็ตยอดเหรียญ (⚠️ dev only, blocked on production)
 cd backend && python scripts/reset_economy.py
 ```
+
+> **Archived scripts** (one-time migrations, อยู่ใน `scripts/archive/`):
+> `migrate_slugs.py`, `update_transaction_notes.py`
 
 ---
 

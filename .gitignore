@@ -1,5 +1,5 @@
 # ══════════════════════════════════════════════════════════════════
-# mangaFactory — Next.js (frontend) + FastAPI (backend)
+# MangaLabTH — Next.js (frontend) + FastAPI (backend)
 # ══════════════════════════════════════════════════════════════════
 
 # ── Python / FastAPI ──────────────────────────────────────────────
@@ -70,9 +70,6 @@ frontend/.env.local
 frontend/.env.*.local
 
 # ── Project Specific ──────────────────────────
-stripe
-backend/users_log.txt
-stripe.log
 backend/backend.log
 
 # ── Test / Debug scripts ──────────────────────

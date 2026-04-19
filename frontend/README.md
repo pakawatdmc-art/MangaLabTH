@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MangaLabTH Frontend
 
-## Getting Started
+Next.js 16.2.4 (App Router + Turbopack) frontend สำหรับ MangaLabTH — แพลตฟอร์มอ่านมังงะออนไลน์
 
-First, run the development server:
+## Tech Stack
+
+- **Framework:** Next.js 16.2.4 (App Router + Turbopack)
+- **Language:** TypeScript 5
+- **Styling:** Tailwind CSS v4 + LightningCSS
+- **Auth:** Clerk (`@clerk/nextjs` + Thai localization)
+- **Charts:** ApexCharts (react-apexcharts)
+- **Drag & Drop:** dnd-kit (sortable)
+- **Icons:** Lucide React
+- **Fonts:** Inter + Noto Sans Thai (Google Fonts via `next/font`)
+- **Analytics:** Google Analytics 4 (`@next/third-parties`)
+- **Deployment:** Vercel
+
+## Quick Start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local
+# Fill in all variables (see root README for details)
+npm run dev       # → http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Project Structure
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+src/
+├── proxy.ts                # Clerk auth proxy (protects /admin, /coins, /profile)
+├── app/
+│   ├── layout.tsx           # Root: ClerkProvider, fonts, JSON-LD, ThemeProvider
+│   ├── globals.css          # Design system (Tailwind v4)
+│   ├── robots.ts            # SEO robots.txt
+│   ├── sitemap.ts           # Dynamic ISR sitemap
+│   ├── (reader)/            # Public reader layout group
+│   │   ├── page.tsx         # Homepage
+│   │   ├── [slug]/[chapterSlug]/  # Chapter reader
+│   │   ├── manga/[slug]/   # Manga detail
+│   │   ├── coins/           # Coin purchase (QR / TrueWallet)
+│   │   ├── search/          # Search with filters
+│   │   ├── category/[slug]/ # Category filter
+│   │   └── profile/         # User profile
+│   ├── admin/               # Admin dashboard
+│   │   ├── page.tsx         # Stats dashboard
+│   │   ├── manga/           # Manga CRUD
+│   │   ├── chapters/        # Chapter management + image upload
+│   │   ├── users/           # User management
+│   │   ├── transactions/    # Transaction ledger
+│   │   └── analytics/       # Marketing analytics charts
+│   └── api/revalidate/      # ISR revalidation webhook
+├── components/              # Shared UI components
+│   ├── Navbar.tsx
+│   ├── Footer.tsx
+│   ├── MangaCard.tsx
+│   ├── TopMangaRanking.tsx
+│   ├── ChapterListClient.tsx
+│   ├── SearchAutocomplete.tsx
+│   ├── ThemeProvider.tsx + ThemeSwitcher.tsx
+│   └── ...
+└── lib/
+    ├── api.ts               # API client with retry logic
+    ├── types.ts             # TypeScript interfaces + shared constants (TX_LABELS)
+    ├── utils.ts             # Utility functions
+    ├── analytics.ts         # GA4 event tracking (13 events, Key Events configured)
+    ├── clerk.ts             # Clerk key detection helper
+    └── clerkAppearance.ts   # Clerk theme customization
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deployment (Vercel)
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Import repository → set **Root Directory** to `frontend`
+2. Set environment variables (see root `README.md`)
+3. Deploy!
