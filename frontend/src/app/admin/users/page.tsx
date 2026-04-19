@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { Coins, Loader2, Search, Shield, Sparkles, Users } from "lucide-react";
+import { ChevronDown, ChevronUp, Coins, Loader2, Search, Shield, Sparkles, Users } from "lucide-react";
 import type { User } from "@/lib/types";
 import { listUsers, adminGrantCoins, updateUser } from "@/lib/api";
+import { formatDateTime } from "@/lib/utils";
 
 function getUsername(u: User): string {
   if (u.username?.trim()) return u.username.trim();
@@ -19,6 +20,7 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
+  const [isAdminTableOpen, setIsAdminTableOpen] = useState(false);
 
   // Grant coins modal
   const [grantTarget, setGrantTarget] = useState<User | null>(null);
@@ -139,8 +141,8 @@ export default function AdminUsersPage() {
             {u.coin_balance}
           </span>
         </td>
-        <td className="px-4 py-2 text-xs text-gray-500">
-          {new Date(u.created_at).toLocaleDateString("th-TH")}
+        <td className="px-4 py-2 text-xs text-gray-500 whitespace-nowrap">
+          {formatDateTime(u.created_at)}
         </td>
         <td className="px-4 py-2 text-right">
           {isPrimaryAdmin && (
@@ -324,16 +326,26 @@ export default function AdminUsersPage() {
       )}
 
       <section className="space-y-3">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="flex items-center gap-2 text-base font-semibold text-white">
+        <button 
+          onClick={() => setIsAdminTableOpen(!isAdminTableOpen)}
+          className="flex w-full items-center justify-between gap-3 rounded-xl p-2 transition hover:bg-white/5"
+        >
+          <div className="flex items-center gap-2 text-base font-semibold text-white">
             <Shield className="h-4 w-4 text-gold" />
             ตารางทีมแอดมิน
-          </h2>
-          <span className="rounded-full border border-gold/25 bg-gold/10 px-2.5 py-1 text-xs font-medium text-gold">
-            {filteredAdmins.length} คน
-          </span>
-        </div>
-        {renderUserTable(
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="rounded-full border border-gold/25 bg-gold/10 px-2.5 py-1 text-xs font-medium text-gold">
+              {filteredAdmins.length} คน
+            </span>
+            {isAdminTableOpen ? (
+              <ChevronUp className="h-5 w-5 text-gray-400" />
+            ) : (
+              <ChevronDown className="h-5 w-5 text-gray-400" />
+            )}
+          </div>
+        </button>
+        {isAdminTableOpen && renderUserTable(
           filteredAdmins,
           query ? "ไม่พบแอดมินที่ตรงกับคำค้นหา" : "ยังไม่มีบัญชีแอดมิน"
         )}

@@ -14,6 +14,20 @@ const TX_TYPE_LABELS: Record<string, { label: string; color: string }> = {
   refund: { label: "คืนเหรียญ", color: "text-purple-400" },
 };
 
+function translateNote(note: string | null | undefined): string {
+  if (!note) return "—";
+  let translated = note;
+  if (translated.startsWith("Unlocked ")) {
+    translated = translated.replace("Unlocked ", "ปลดล็อกเรื่อง ");
+    translated = translated.replace(" chapter ", " ตอนที่ ");
+  } else if (translated.startsWith("Purchased ")) {
+    translated = translated.replace("Purchased ", "เติมเงิน ");
+  } else if (translated === "Admin grant") {
+    translated = "แอดมินเติมเงินให้";
+  }
+  return translated;
+}
+
 export default function AdminTransactionsPage() {
   const { getToken } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -72,6 +86,7 @@ export default function AdminTransactionsPage() {
       userMap.get(tx.user_id)?.username || "",
       userMap.get(tx.user_id)?.email || "",
       tx.note || "",
+      translateNote(tx.note),
       String(tx.amount),
       String(tx.balance_after),
       formatDateTime(tx.created_at),
@@ -219,8 +234,8 @@ export default function AdminTransactionsPage() {
                       </span>
                     </td>
                     <td className="px-4 py-2.5 text-gray-400 font-medium">{tx.balance_after.toLocaleString()}</td>
-                    <td className="max-w-[320px] px-4 py-2.5 text-xs text-gray-300 leading-relaxed break-words" title={tx.note}>
-                      {tx.note || "—"}
+                    <td className="max-w-[320px] px-4 py-2.5 text-xs text-gray-300 leading-relaxed break-words" title={translateNote(tx.note)}>
+                      {translateNote(tx.note)}
                     </td>
                     <td className="px-4 py-2.5 text-xs text-gray-500 whitespace-nowrap">{formatDateTime(tx.created_at)}</td>
                   </tr>
