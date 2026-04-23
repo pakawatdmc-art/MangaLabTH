@@ -6,9 +6,10 @@ import { parseUTCDate, formatChapterNumber } from "@/lib/utils";
 
 interface Props {
   manga: Manga;
+  priority?: boolean;
 }
 
-export default function MangaCard({ manga }: Props) {
+export default function MangaCard({ manga, priority = false }: Props) {
   const getFormattedDate = () => {
     const dateStr = manga.last_chapter_updated_at || manga.created_at;
     if (!dateStr) return "";
@@ -38,7 +39,8 @@ export default function MangaCard({ manga }: Props) {
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-105 text-transparent"
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
-          loading="lazy"
+          priority={priority}
+          {...(!priority ? { loading: "lazy" } : {})}
         />
 
         <div className="absolute left-2 top-2 z-10 flex items-center">
