@@ -146,9 +146,9 @@ async def upload_cover(
         raise HTTPException(
             status_code=400, detail="ไฟล์ไม่ใช่รูปภาพที่ถูกต้อง")
 
-    # --- Optimization: Convert to WebP ---
+    # --- Optimization: Convert to WebP and Resize to 500px ---
     try:
-        contents, content_type = process_image_to_webp(contents)
+        contents, content_type = process_image_to_webp(contents, max_width=500)
     except Exception as e:
         logger.error("Cover image processing failed: %s", e)
         raise HTTPException(
