@@ -36,6 +36,8 @@ export default function AdminTransactionsPage() {
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -96,6 +98,18 @@ export default function AdminTransactionsPage() {
 
     return searchable.includes(normalizedQuery);
   });
+
+  // Pagination for transactions
+  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
+  const paginatedTransactions = filteredTransactions.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query, typeFilter]);
 
   if (loading) {
     return (
@@ -176,9 +190,6 @@ export default function AdminTransactionsPage() {
             ))}
           </select>
         </div>
-        <p className="mt-2 text-xs text-gray-500">
-          แสดง {filteredTransactions.length} จาก {transactions.length} รายการ
-        </p>
       </section>
 
       <div className="overflow-x-auto rounded-2xl border border-white/10 bg-surface-100/80 ring-1 ring-white/5">
@@ -203,7 +214,7 @@ export default function AdminTransactionsPage() {
                 </td>
               </tr>
             ) : (
-              filteredTransactions.map((tx) => {
+              paginatedTransactions.map((tx) => {
                 const typeInfo = TX_TYPE_LABELS[tx.type] || {
                   label: tx.type,
                   color: "text-gray-400",
@@ -244,6 +255,68 @@ export default function AdminTransactionsPage() {
             )}
           </tbody>
         </table>
+        
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between border-t border-white/5 px-4 py-3">
+            <p className="text-xs text-gray-500">
+              แสดง {(currentPage - 1) * itemsPerPage + 1} ถึง {Math.min(currentPage * itemsPerPage, filteredTransactions.length)} จากทั้งหมด {filteredTransactions.length} รายการ
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="rounded-lg border border-white/10 bg-surface-200 px-3 py-1.5 text-xs text-white transition hover:bg-surface-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                ก่อนหน้า
+              </button>
+              
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }).map((_, i) => {
+                  // Show max 5 page numbers
+                  if (
+                    totalPages <= 5 || 
+                    i === 0 || 
+                    i === totalPages - 1 || 
+                    Math.abs(currentPage - 1 - i) <= 1
+                  ) {
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => setCurrentPage(i + 1)}
+                        className={`flex h-8 w-8 items-center justify-center rounded-lg border text-xs transition ${
+                          currentPage === i + 1
+                            ? "border-emerald-500/50 bg-emerald-500/20 text-emerald-400 font-medium"
+                            : "border-white/10 bg-surface-200 text-gray-400 hover:bg-surface-100 hover:text-white"
+                        }`}
+                      >
+                        {i + 1}
+                      </button>
+                    );
+                  }
+                  
+                  // Add ellipsis
+                  if (
+                    (i === 1 && currentPage > 3) || 
+                    (i === totalPages - 2 && currentPage < totalPages - 2)
+                  ) {
+                    return <span key={i} className="px-1 text-gray-500">...</span>;
+                  }
+                  
+                  return null;
+                })}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="rounded-lg border border-white/10 bg-surface-200 px-3 py-1.5 text-xs text-white transition hover:bg-surface-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                ถัดไป
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
