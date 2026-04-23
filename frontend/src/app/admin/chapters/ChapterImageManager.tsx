@@ -358,6 +358,8 @@ export function ChapterImageManager({
         setError("");
         setSuccessMsg("");
 
+        let updatedFiles = [...files];
+
         try {
             // 1. Filter out only the "pending" files that needs upload
             const pendingUploads = files.filter(f => f.status === "pending" || f.status === "error");
@@ -368,8 +370,6 @@ export function ChapterImageManager({
             if (!initialToken) {
                 throw new Error("เซสชันหมดอายุ กรุณาโหลดหน้าเว็บเพื่อเข้าสู่ระบบใหม่");
             }
-
-            const updatedFiles = [...files];
 
             if (pendingUploads.length > 0) {
                 const CONCURRENCY_LIMIT = 5;
