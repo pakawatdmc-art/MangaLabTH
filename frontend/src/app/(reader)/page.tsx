@@ -98,7 +98,7 @@ export default async function HomePage({ searchParams }: Props) {
               <StaggerContainer className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
                 {updatedManga.items.map((m: Manga, idx: number) => (
                   <StaggerItem key={m.id}>
-                    <UpdateMangaCard manga={m} priority={idx < 4} />
+                    <UpdateMangaCard manga={m} priority={idx < 2} />
                   </StaggerItem>
                 ))}
               </StaggerContainer>
@@ -158,9 +158,9 @@ export default async function HomePage({ searchParams }: Props) {
 
               {manga.items.length > 0 ? (
                 <StaggerContainer className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-                  {manga.items.map((m: Manga, idx: number) => (
+                  {manga.items.map((m: Manga) => (
                     <StaggerItem key={m.id}>
-                      <MangaCard manga={m} priority={idx < 4} />
+                      <MangaCard manga={m} />
                     </StaggerItem>
                   ))}
                 </StaggerContainer>
