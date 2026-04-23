@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<import("next"
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   
   try {
-    const manga = await getMangaBySlug(decodedSlug);
+    const manga = await getMangaBySlug(decodedSlug, undefined, { noTrack: true });
     const chapterNumberMatch = decodedChapterSlug.match(/ตอนที่-([\d.]+)/);
     if (!chapterNumberMatch) return { title: `${manga.title} — MangaLabTH` };
     const chapterNumber = Number(chapterNumberMatch[1]);
@@ -61,7 +61,7 @@ export default async function ChapterReadPage({ params }: Props) {
 
   let manga;
   try {
-    manga = await getMangaBySlug(decodedSlug);
+    manga = await getMangaBySlug(decodedSlug, undefined, { noTrack: true });
   } catch {
     notFound();
   }

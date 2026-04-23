@@ -6,7 +6,7 @@ from typing import List, Optional
 from fastapi import APIRouter, BackgroundTasks, HTTPException, status, Request
 from sqlmodel import select, col
 
-from app.services.analytics import record_manga_view_task
+from app.services.analytics import record_manga_read_task, is_bot_request
 from app.services.google_notify import notify_google_updated
 
 from app.api.deps import AdminUser, DBSession, OptionalUser
@@ -173,8 +173,9 @@ async def get_chapter(
 
     detail.pages.sort(key=lambda p: p.number)
 
-    background_tasks.add_task(record_manga_view_task,
-                              chapter.manga_id, get_client_ip(request))
+    if not is_bot_request(request.headers.get("user-agent")):
+        background_tasks.add_task(record_manga_read_task,
+                                  chapter.manga_id, get_client_ip(request))
 
     return detail
 

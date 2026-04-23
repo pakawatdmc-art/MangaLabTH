@@ -223,15 +223,22 @@ export function ChapterImageManager({
 
     useEffect(() => {
         return () => {
+            // Revoke all blob URLs on unmount to prevent memory leaks
             filesRef.current.forEach((f) => {
-                if (f.file) URL.revokeObjectURL(f.preview);
+                if (f.file && f.preview.startsWith("blob:")) URL.revokeObjectURL(f.preview);
             });
         };
     }, []);
 
-    // Fetch existing pages when opened
+    // Fetch existing pages when opened; clean up blob URLs when closed
     useEffect(() => {
-        if (!isOpen || !chapter) return;
+        if (!isOpen || !chapter) {
+            // RISK #4 fix: Revoke blob URLs when modal closes
+            filesRef.current.forEach((f) => {
+                if (f.file && f.preview.startsWith("blob:")) URL.revokeObjectURL(f.preview);
+            });
+            return;
+        }
 
         setLoadingInitial(true);
         setFiles([]);
@@ -383,13 +390,14 @@ export function ChapterImageManager({
                     setFiles([...updatedFiles]);
 
                     // Upload in parallel via new backend proxy endpoint (auto-converts to WebP)
+                    // BUG #1 fix: Use UUID-based keys instead of index-based to prevent
+                    // collision when drag-reordering + retrying failed uploads
                     await Promise.all(batch.map(async (pendingItem) => {
                         const globalIdx = updatedFiles.findIndex(f => f.id === pendingItem.id);
-                        const pageNumber = globalIdx + 1;
 
-                        const ext = pendingItem.file!.name.split(".").pop() || "webp";
                         const chNum = Number.isInteger(chapter.number) ? String(chapter.number) : chapter.number.toFixed(1);
-                        const key = `manga/${manga.slug}/chapters/${chNum}/page-${String(pageNumber).padStart(3, "0")}.${ext}`;
+                        const uniqueId = crypto.randomUUID().slice(0, 8);
+                        const key = `manga/${manga.slug}/chapters/${chNum}/${uniqueId}.webp`;
 
                         try {
                             const res = await uploadChapterPage(pendingItem.file!, key, batchToken);
@@ -447,6 +455,14 @@ export function ChapterImageManager({
             }, 1500);
 
         } catch (err: unknown) {
+            // BUG #2: Log orphaned R2 files for manual cleanup if replacePages failed
+            const orphanedUrls = updatedFiles
+                .filter(f => f.status === "done" && f.publicUrl)
+                .map(f => f.publicUrl);
+            if (orphanedUrls.length > 0) {
+                console.warn("[ChapterImageManager] Possible orphaned R2 files:", orphanedUrls);
+            }
+
             setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการบันทึก");
         } finally {
             setUploading(false);

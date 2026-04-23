@@ -1,6 +1,10 @@
 import io
 from PIL import Image
 
+# Limit max decompressed image size to ~50 megapixels (≈7000×7000)
+# to prevent decompression bomb attacks that could OOM the server.
+Image.MAX_IMAGE_PIXELS = 50_000_000
+
 def process_image_to_webp(image_bytes: bytes, quality: int = 80) -> tuple[bytes, str]:
     """
     Process an image: convert to WebP and return bytes with its new content type.

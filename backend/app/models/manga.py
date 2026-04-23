@@ -61,6 +61,7 @@ class Manga(SQLModel, table=True):
     is_featured: bool = Field(default=False, index=True)
     is_visible: bool = Field(default=True, index=True)
     total_views: int = Field(default=0, ge=0)
+    total_reads: int = Field(default=0, ge=0, description="Actual chapter reads (more accurate than views)")
     last_chapter_updated_at: Optional[datetime] = Field(
         default=None,
         index=True,

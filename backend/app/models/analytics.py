@@ -35,3 +35,38 @@ class DailyMangaView(SQLModel, table=True):
         UniqueConstraint("manga_id", "view_date",
                          name="uq_daily_view_manga_date"),
     )
+
+
+class DailyMangaRead(SQLModel, table=True):
+    """Tracks actual chapter reads per manga per day.
+
+    Unlike DailyMangaView (which counts detail page visits),
+    this counts only when a user actually opens and reads a chapter.
+    Used for more accurate rankings.
+    """
+    __tablename__ = "daily_manga_reads"
+
+    id: str = Field(
+        default_factory=lambda: uuid4().hex,
+        primary_key=True,
+        max_length=64,
+    )
+    manga_id: str = Field(foreign_key="mangas.id", index=True, max_length=64)
+    read_date: date = Field(index=True)
+    read_count: int = Field(default=0, ge=0)
+
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(
+            timezone.utc).replace(tzinfo=None),
+    )
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(
+            timezone.utc).replace(tzinfo=None),
+        sa_column_kwargs={"onupdate": lambda: datetime.now(
+            timezone.utc).replace(tzinfo=None)},
+    )
+
+    __table_args__ = (
+        UniqueConstraint("manga_id", "read_date",
+                         name="uq_daily_read_manga_date"),
+    )

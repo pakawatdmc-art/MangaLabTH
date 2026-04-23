@@ -13,11 +13,11 @@ from sqlmodel import col, select
 
 from app.api.deps import AdminUser, DBSession, OptionalUser
 from app.models.manga import Manga, MangaCategory, MangaStatus
-from app.models.analytics import DailyMangaView
+from app.models.analytics import DailyMangaView, DailyMangaRead
 from app.models.transaction import Transaction, TransactionType
 from app.services.storage import delete_object, delete_objects, r2_url_to_key, get_client_ip
 from app.services.revalidate import revalidate_paths
-from app.services.analytics import record_manga_view_task
+from app.services.analytics import record_manga_view_task, is_bot_request
 from app.services.google_notify import notify_google_updated
 from app.schemas.manga import (
     MangaCreate,
@@ -133,7 +133,7 @@ async def get_manga_ranking(
         query = select(Manga)
         if not is_admin:
             query = query.where(Manga.is_visible.is_(True))
-        query = query.order_by(col(Manga.total_views).desc()).limit(limit)
+        query = query.order_by(col(Manga.total_reads).desc()).limit(limit)
         results = (await session.execute(query)).scalars().all()
         data = []
         for m in results:
@@ -153,15 +153,15 @@ async def get_manga_ranking(
     else:  # monthly
         start_date = thai_today - timedelta(days=30)
 
-    # 1. Sum up view_count from DailyMangaView
+    # 1. Sum up read_count from DailyMangaRead (actual chapter reads)
     stmt: Any = (
         select(
-            DailyMangaView.manga_id,
-            func.sum(DailyMangaView.view_count).label("period_views")
+            DailyMangaRead.manga_id,
+            func.sum(DailyMangaRead.read_count).label("period_reads")
         )
-        .where(DailyMangaView.view_date >= start_date)
-        .group_by(DailyMangaView.manga_id)
-        .order_by(func.sum(DailyMangaView.view_count).desc())
+        .where(DailyMangaRead.read_date >= start_date)
+        .group_by(DailyMangaRead.manga_id)
+        .order_by(func.sum(DailyMangaRead.read_count).desc())
         .limit(limit)
     )
     top_entries = (await session.execute(stmt)).all()
@@ -199,8 +199,10 @@ async def _build_manga_detail(
     request: Request,
     session: DBSession,
     background_tasks: BackgroundTasks,
+    *,
+    track: bool = True,
 ) -> MangaDetail:
-    """Shared helper: build MangaDetail with unlock status + record view."""
+    """Shared helper: build MangaDetail with unlock status + optionally record view."""
     # Visibility Check
     is_admin = user and user.role == "admin"
     if not manga.is_visible and not is_admin:
@@ -244,12 +246,20 @@ async def _build_manga_detail(
             if ch.id in unlocked_ids:
                 ch.is_unlocked = True
 
-    background_tasks.add_task(record_manga_view_task, manga.id, get_client_ip(request))
+    if track and not is_bot_request(request.headers.get("user-agent")):
+        background_tasks.add_task(record_manga_view_task, manga.id, get_client_ip(request))
     return detail
 
 
 @router.get("/slug/{slug}", response_model=MangaDetail)
-async def get_manga_by_slug(slug: str, request: Request, session: DBSession, user: OptionalUser, background_tasks: BackgroundTasks):
+async def get_manga_by_slug(
+    slug: str,
+    request: Request,
+    session: DBSession,
+    user: OptionalUser,
+    background_tasks: BackgroundTasks,
+    no_track: bool = Query(False, description="Skip view recording (used by chapter reader)"),
+):
     """Public manga detail by slug."""
     stmt = select(Manga).where(Manga.slug == slug)
     result = await session.execute(stmt)
@@ -257,17 +267,24 @@ async def get_manga_by_slug(slug: str, request: Request, session: DBSession, use
     if not manga:
         raise HTTPException(status_code=404, detail="Manga not found")
 
-    return await _build_manga_detail(manga, user, request, session, background_tasks)
+    return await _build_manga_detail(manga, user, request, session, background_tasks, track=not no_track)
 
 
 @router.get("/{manga_id}", response_model=MangaDetail)
-async def get_manga(manga_id: str, request: Request, session: DBSession, user: OptionalUser, background_tasks: BackgroundTasks):
+async def get_manga(
+    manga_id: str,
+    request: Request,
+    session: DBSession,
+    user: OptionalUser,
+    background_tasks: BackgroundTasks,
+    no_track: bool = Query(False, description="Skip view recording (used by chapter reader)"),
+):
     """Public manga detail with chapters list."""
     manga = await session.get(Manga, manga_id)
     if not manga:
         raise HTTPException(status_code=404, detail="Manga not found")
 
-    return await _build_manga_detail(manga, user, request, session, background_tasks)
+    return await _build_manga_detail(manga, user, request, session, background_tasks, track=not no_track)
 
 
 # ── Admin ────────────────────────────────────────
@@ -305,15 +322,11 @@ async def update_manga(
 
     update_data = body.model_dump(exclude_unset=True)
 
-    # Check if cover_url is being updated to a new URL
+    # Track old cover for R2 cleanup AFTER successful commit
+    old_cover_key = None
     if "cover_url" in update_data and update_data["cover_url"] != manga.cover_url:
         old_cover_url = manga.cover_url
-        old_key = r2_url_to_key(old_cover_url) if old_cover_url else None
-        if old_key:
-            try:
-                delete_object(old_key)
-            except Exception as e:
-                logger.warning("Failed to delete old cover %s from R2: %s", old_key, e)
+        old_cover_key = r2_url_to_key(old_cover_url) if old_cover_url else None
 
     for key, value in update_data.items():
         setattr(manga, key, value)
@@ -321,6 +334,14 @@ async def update_manga(
     session.add(manga)
     await session.commit()
     await session.refresh(manga)
+
+    # Best-effort R2 cleanup after successful commit
+    if old_cover_key:
+        try:
+            delete_object(old_cover_key)
+        except Exception as e:
+            logger.warning("Failed to delete old cover %s from R2: %s", old_cover_key, e)
+
     background_tasks.add_task(revalidate_paths, ["/"])
     background_tasks.add_task(
         notify_google_updated, [f"/manga/{manga.slug}"]

@@ -21,6 +21,8 @@ export default function AdminUsersPage() {
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
   const [isAdminTableOpen, setIsAdminTableOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Grant coins modal
   const [grantTarget, setGrantTarget] = useState<User | null>(null);
@@ -63,6 +65,18 @@ export default function AdminUsersPage() {
   const readerCount = users.length - adminCount;
   const filteredAdmins = filteredUsers.filter((u) => u.role === "admin");
   const filteredReaders = filteredUsers.filter((u) => u.role !== "admin");
+
+  // Pagination for readers
+  const totalPages = Math.ceil(filteredReaders.length / itemsPerPage);
+  const paginatedReaders = filteredReaders.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Reset page when search query changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query]);
 
   const currentUser = users.find((u) => u.clerk_id === userId);
   const isPrimaryAdmin = currentUser?.is_primary_admin || false;
@@ -362,8 +376,70 @@ export default function AdminUsersPage() {
           </span>
         </div>
         {renderUserTable(
-          filteredReaders,
+          paginatedReaders,
           query ? "ไม่พบผู้ใช้ทั่วไปที่ตรงกับคำค้นหา" : "ยังไม่มีบัญชีผู้ใช้ทั่วไป"
+        )}
+        
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-2 pt-2 pb-4">
+            <p className="text-xs text-gray-500">
+              แสดง {(currentPage - 1) * itemsPerPage + 1} ถึง {Math.min(currentPage * itemsPerPage, filteredReaders.length)} จากทั้งหมด {filteredReaders.length} รายการ
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="rounded-lg border border-white/10 bg-surface-200 px-3 py-1.5 text-xs text-white transition hover:bg-surface-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                ก่อนหน้า
+              </button>
+              
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }).map((_, i) => {
+                  // Show max 5 page numbers
+                  if (
+                    totalPages <= 5 || 
+                    i === 0 || 
+                    i === totalPages - 1 || 
+                    Math.abs(currentPage - 1 - i) <= 1
+                  ) {
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => setCurrentPage(i + 1)}
+                        className={`flex h-8 w-8 items-center justify-center rounded-lg border text-xs transition ${
+                          currentPage === i + 1
+                            ? "border-emerald-500/50 bg-emerald-500/20 text-emerald-400 font-medium"
+                            : "border-white/10 bg-surface-200 text-gray-400 hover:bg-surface-100 hover:text-white"
+                        }`}
+                      >
+                        {i + 1}
+                      </button>
+                    );
+                  }
+                  
+                  // Add ellipsis
+                  if (
+                    (i === 1 && currentPage > 3) || 
+                    (i === totalPages - 2 && currentPage < totalPages - 2)
+                  ) {
+                    return <span key={i} className="px-1 text-gray-500">...</span>;
+                  }
+                  
+                  return null;
+                })}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="rounded-lg border border-white/10 bg-surface-200 px-3 py-1.5 text-xs text-white transition hover:bg-surface-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                ถัดไป
+              </button>
+            </div>
+          </div>
         )}
       </section>
     </div>

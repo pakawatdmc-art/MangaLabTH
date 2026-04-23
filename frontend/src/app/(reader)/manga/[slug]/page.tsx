@@ -23,7 +23,7 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<import("next").Metadata> {
   const { slug } = await params;
   try {
-    const manga = await getMangaBySlug(slug);
+    const manga = await getMangaBySlug(slug, undefined, { noTrack: true });
     const desc = manga.description
       ? manga.description.slice(0, 160)
       : `อ่าน ${manga.title} มังงะแปลไทย ออนไลน์ฟรี ภาพคมชัด`;
@@ -174,7 +174,11 @@ export default async function MangaDetailPage({ params }: Props) {
               </span>
               <span className="inline-flex items-center gap-1 rounded-full bg-surface-100 px-2.5 py-1 text-gray-300 ring-1 ring-white/10">
                 <Eye className="h-3 w-3" />
-                {formatNumber(manga.total_views)}
+                {formatNumber(manga.total_views)} วิว
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-surface-100 px-2.5 py-1 text-gray-300 ring-1 ring-white/10">
+                <BookOpen className="h-3 w-3" />
+                {formatNumber(manga.total_reads)} อ่าน
               </span>
               <span className="inline-flex items-center gap-1 rounded-full bg-surface-100 px-2.5 py-1 text-gray-300 ring-1 ring-white/10">
                 <Calendar className="h-3 w-3" />

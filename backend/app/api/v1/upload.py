@@ -35,6 +35,10 @@ def _validate_image_bytes(data: bytes) -> bool:
     """V10: Check file magic bytes to verify it's actually an image."""
     for signature in _IMAGE_SIGNATURES:
         if data[:len(signature)] == signature:
+            # RIFF is a container format used by WebP, WAV, and AVI.
+            # Verify bytes 8-11 are "WEBP" to reject non-image RIFF files.
+            if signature == b"RIFF" and data[8:12] != b"WEBP":
+                return False
             return True
     return False
 

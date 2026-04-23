@@ -127,11 +127,17 @@ def delete_object(key: str) -> None:
 
 
 def delete_objects(keys: List[str]) -> None:
-    """Batch delete objects from R2."""
+    """Batch delete objects from R2.
+
+    S3/R2 DeleteObjects API supports max 1,000 keys per request,
+    so we chunk large deletions automatically.
+    """
     if not keys:
         return
     client = _get_r2_client()
-    client.delete_objects(
-        Bucket=settings.R2_BUCKET_NAME,
-        Delete={"Objects": [{"Key": k} for k in keys]},
-    )
+    for i in range(0, len(keys), 1000):
+        batch = keys[i:i + 1000]
+        client.delete_objects(
+            Bucket=settings.R2_BUCKET_NAME,
+            Delete={"Objects": [{"Key": k} for k in batch]},
+        )

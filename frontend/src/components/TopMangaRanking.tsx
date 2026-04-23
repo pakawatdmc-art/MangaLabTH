@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Eye, Loader2, Trophy } from "lucide-react";
+import { BookOpen, Loader2, Trophy } from "lucide-react";
 import { Manga } from "@/lib/types";
 import { getTopManga } from "@/lib/api";
 import { formatNumber } from "@/lib/utils";
@@ -116,8 +116,8 @@ export default function TopMangaRanking() {
                                             {manga.title}
                                         </h3>
                                         <div className="mt-2 flex items-center justify-start gap-1 text-xs text-gray-400 sm:justify-center lg:justify-start">
-                                            <Eye className="h-3.5 w-3.5" />
-                                            <span>{formatNumber(manga.total_views)} วิว</span>
+                                            <BookOpen className="h-3.5 w-3.5" />
+                                            <span>{formatNumber(manga.total_reads)} อ่าน</span>
                                         </div>
                                     </div>
                                 </Link>
@@ -156,8 +156,8 @@ export default function TopMangaRanking() {
                                             </h4>
                                         </div>
                                         <div className="flex shrink-0 items-center gap-1 text-xs text-gray-400">
-                                            <Eye className="h-3.5 w-3.5" />
-                                            {formatNumber(manga.total_views)}
+                                            <BookOpen className="h-3.5 w-3.5" />
+                                            {formatNumber(manga.total_reads)}
                                         </div>
                                     </Link>
                                 ))}

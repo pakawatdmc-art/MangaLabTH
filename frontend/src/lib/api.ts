@@ -99,9 +99,10 @@ export async function getManga(id: string, token?: string) {
   );
 }
 
-export async function getMangaBySlug(slug: string, token?: string) {
+export async function getMangaBySlug(slug: string, token?: string, opts?: { noTrack?: boolean }) {
+  const qs = opts?.noTrack ? "?no_track=true" : "";
   return fetcher<MangaDetail>(
-    `/manga/slug/${slug}`,
+    `/manga/slug/${slug}${qs}`,
     token
       ? { token, cache: "no-store", next: { revalidate: 0 } }
       : { next: { revalidate: 60 } }
