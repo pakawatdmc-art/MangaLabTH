@@ -251,11 +251,12 @@ async def feelfreepay_webhook(request: Request, session: DBSession):
         logger.error("Webhook verify failed for %s: %s", reference_no, e)
         raise HTTPException(status_code=400, detail="Status verification failed")
         
-    # Check Status API returns "00" for success and "S" for Settle
+    # Check Status API returns "00" for success, "S" for Settle, "G" for Granted (TrueWallet)
+    SETTLED_STATUSES = {"S", "G"}
     verify_result_code = status_data.get("resultCode")
     verify_status = status_data.get("txn.status") or status_data.get("status")
     
-    if verify_result_code != "00" or verify_status != "S":
+    if verify_result_code != "00" or verify_status not in SETTLED_STATUSES:
         logger.warning(
             "Spoofed or incomplete webhook detected for %s (result: %s, status: %s)", 
             reference_no, verify_result_code, verify_status
@@ -318,7 +319,8 @@ async def confirm_checkout_payment(
     verify_result_code = status_data.get("resultCode")
     verify_status = status_data.get("txn.status") or status_data.get("status")
 
-    if verify_result_code != "00" or verify_status != "S":
+    SETTLED_STATUSES = {"S", "G"}
+    if verify_result_code != "00" or verify_status not in SETTLED_STATUSES:
         return {"status": "pending", "reason": "payment_not_settled"}
         
     user_id = status_data.get("txn.merchantDefined1")
