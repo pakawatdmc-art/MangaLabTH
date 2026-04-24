@@ -105,32 +105,26 @@ function CoinsPageInner() {
       const confirmStatus = confirm.status;
       const confirmNewBalance = confirm.new_balance;
 
-      const me = await fetchUserData();
-      const balanceChanged =
-        me !== null &&
-        prevBalanceRef.current !== null &&
-        me.coin_balance !== prevBalanceRef.current;
-
+      // เรียก fetchUserData เฉพาะเมื่อ payment สำเร็จเท่านั้น (ลด API calls ระหว่าง polling)
       if (confirmStatus === "success") {
         const purchaseValue = selectedPackage?.price_thb || 0;
         const purchaseCoins = confirm.coins || selectedPackage?.coins || 0;
         trackPurchase(refNo, purchaseValue, purchaseCoins);
+        await fetchUserData();
         return true;
       }
-      if (confirmStatus === "ignored" && typeof confirmNewBalance === "number") return true;
-      if (balanceChanged) return true;
+      if (confirmStatus === "ignored" && typeof confirmNewBalance === "number") {
+        await fetchUserData();
+        return true;
+      }
 
+      // ยังไม่สำเร็จ — ไม่ต้องเรียก fetchUserData
       return false;
     } catch (err) {
       console.error("Failed to confirm checkout payment:", err);
-      const me = await fetchUserData();
-      return (
-        me !== null &&
-        prevBalanceRef.current !== null &&
-        me.coin_balance !== prevBalanceRef.current
-      );
+      return false;
     }
-  }, [fetchUserData, getToken]);
+  }, [fetchUserData, getToken, selectedPackage]);
 
   // Poll every 2 seconds if status is processing or QR is active until balance is updated.
   useEffect(() => {
@@ -142,7 +136,7 @@ function CoinsPageInner() {
     setIsRefreshing(true);
     let cancelled = false;
     let attempts = 0;
-    const MAX = 15; // up to 30 seconds
+    const MAX = 20; // up to 60 seconds
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
     const run = async () => {
@@ -161,7 +155,7 @@ function CoinsPageInner() {
         return;
       }
 
-      timeoutId = setTimeout(run, 2000);
+      timeoutId = setTimeout(run, 3000);
     };
 
     void run();

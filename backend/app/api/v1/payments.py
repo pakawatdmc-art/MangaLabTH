@@ -295,7 +295,7 @@ async def feelfreepay_webhook(request: Request, session: DBSession):
 
 
 @router.post("/confirm")
-@limiter.limit("5/minute")
+@limiter.limit("20/minute")
 async def confirm_checkout_payment(
     request: Request,
     reference_no: str,
