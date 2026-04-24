@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { ChevronDown, ChevronUp, Coins, Loader2, Search, Shield, Sparkles, Users } from "lucide-react";
+import { ChevronDown, ChevronUp, Coins, Loader2, Search, Shield, Sparkles, Trash2, Users } from "lucide-react";
 import type { User } from "@/lib/types";
-import { listUsers, adminGrantCoins, updateUser } from "@/lib/api";
+import { listUsers, adminGrantCoins, updateUser, deleteUser } from "@/lib/api";
 import { formatDateTime } from "@/lib/utils";
 
 function getUsername(u: User): string {
@@ -119,6 +119,20 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handleDeleteUser = async (user: User) => {
+    const displayName = user.email || getUsername(user);
+    if (!confirm(`⚠️ ยืนยันลบบัญชี "${displayName}" ?\n\nข้อมูลผู้ใช้และประวัติธุรกรรมทั้งหมดจะถูกลบออกจากทั้งระบบของเราและ Clerk อย่างถาวร`)) return;
+    try {
+      const token = await getToken();
+      if (!token) return;
+      await deleteUser(user.id, token);
+      setError("");
+      await fetchUsers();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "ลบผู้ใช้ล้มเหลว");
+    }
+  };
+
   const renderUserRows = (tableUsers: User[]) =>
     tableUsers.map((u) => (
       <tr key={u.id} className="border-b border-white/5 hover:bg-white/[0.03]">
@@ -159,26 +173,37 @@ export default function AdminUsersPage() {
           {formatDateTime(u.created_at)}
         </td>
         <td className="px-4 py-2 text-right">
-          {isPrimaryAdmin && (
+          <div className="flex items-center justify-end gap-1.5">
             <button
               onClick={() => setGrantTarget(u)}
-              className="mr-2 rounded-md border border-gold/20 bg-gold/10 px-2.5 py-1 text-xs text-gold transition hover:bg-gold/20"
+              className="rounded-md border border-gold/20 bg-gold/10 px-2.5 py-1 text-xs text-gold transition hover:bg-gold/20"
             >
               เติมเหรียญ
             </button>
-          )}
-          <button
-            onClick={() => handleToggleRole(u)}
-            disabled={u.is_primary_admin}
-            title={u.is_primary_admin ? "บัญชีหลักไม่สามารถลดสิทธิ์ได้" : undefined}
-            className="rounded-md border border-white/10 bg-surface-200 px-2.5 py-1 text-xs text-gray-300 transition hover:border-white/20 hover:text-white disabled:cursor-not-allowed disabled:border-emerald-500/35 disabled:bg-emerald-500/10 disabled:font-semibold disabled:text-emerald-300"
-          >
-            {u.is_primary_admin
-              ? "Admin Master"
-              : u.role === "admin"
-                ? "ลดสิทธิ์"
-                : "เลื่อนเป็น Admin"}
-          </button>
+            {isPrimaryAdmin && (
+              <button
+                onClick={() => handleToggleRole(u)}
+                disabled={u.is_primary_admin}
+                title={u.is_primary_admin ? "บัญชีหลักไม่สามารถลดสิทธิ์ได้" : undefined}
+                className="rounded-md border border-white/10 bg-surface-200 px-2.5 py-1 text-xs text-gray-300 transition hover:border-white/20 hover:text-white disabled:cursor-not-allowed disabled:border-emerald-500/35 disabled:bg-emerald-500/10 disabled:font-semibold disabled:text-emerald-300"
+              >
+                {u.is_primary_admin
+                  ? "Admin Master"
+                  : u.role === "admin"
+                    ? "ลดสิทธิ์"
+                    : "เลื่อนเป็น Admin"}
+              </button>
+            )}
+            {!u.is_primary_admin && u.id !== currentUser?.id && (
+              <button
+                onClick={() => handleDeleteUser(u)}
+                title="ลบบัญชีผู้ใช้"
+                className="rounded-md border border-red-500/20 bg-red-500/10 px-2 py-1 text-xs text-red-400 transition hover:bg-red-500/20 hover:text-red-300"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
         </td>
       </tr>
     ));

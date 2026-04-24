@@ -111,6 +111,76 @@ async def admin_update_user(
     return _to_user_read(user, profile)
 
 
+@router.delete("/{user_id}", status_code=204)
+async def admin_delete_user(
+    user_id: str,
+    session: DBSession,
+    admin: AdminUser,
+):
+    """Admin: delete a user from DB and Clerk.
+
+    - Any admin can delete users.
+    - Cannot delete yourself or other primary admins.
+    - Deletes related transactions first, then the user record.
+    - Also removes the user from Clerk via their API.
+    """
+
+    user = await session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="ไม่พบผู้ใช้")
+
+    if user.is_primary_admin:
+        raise HTTPException(
+            status_code=403,
+            detail="ไม่สามารถลบบัญชี Admin Master ได้",
+        )
+
+    if user.id == admin.id:
+        raise HTTPException(
+            status_code=403,
+            detail="ไม่สามารถลบบัญชีตัวเองได้",
+        )
+
+    clerk_id = user.clerk_id
+
+    # Delete related transactions first (FK constraint)
+    from sqlalchemy import delete as sa_delete
+    from app.models.transaction import Transaction
+    await session.execute(
+        sa_delete(Transaction).where(Transaction.user_id == user_id)
+    )
+
+    # Delete the user from DB
+    await session.delete(user)
+    await session.commit()
+
+    # Delete from Clerk (fire-and-forget, don't block if it fails)
+    try:
+        import httpx
+        async with httpx.AsyncClient() as client:
+            resp = await client.delete(
+                f"https://api.clerk.com/v1/users/{clerk_id}",
+                headers={
+                    "Authorization": f"Bearer {settings.CLERK_SECRET_KEY}",
+                    "Content-Type": "application/json",
+                },
+                timeout=10,
+            )
+            if resp.status_code not in (200, 204, 404):
+                import logging
+                logging.getLogger(__name__).warning(
+                    "Clerk delete failed for %s: %s %s",
+                    clerk_id, resp.status_code, resp.text,
+                )
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception(
+            "Failed to delete user %s from Clerk", clerk_id,
+        )
+
+    return None
+
+
 @router.get("/stats")
 async def admin_stats(
     session: DBSession,

@@ -10,6 +10,7 @@ FastAPI backend สำหรับ MangaLabTH — แพลตฟอร์มอ
 - **Storage:** Cloudflare R2 (S3-compatible via boto3)
 - **Auth:** Clerk JWT (RS256 + JWKS)
 - **Payments:** FeelFreePay (PromptPay QR / TrueWallet)
+- **Email:** Resend (Welcome + Payment Confirmation, fire-and-forget)
 - **Image Processing:** Pillow (WebP auto-conversion)
 - **SEO:** Google Indexing API (auto-notify on content changes)
 - **Deployment:** Google Cloud Run (Docker)
@@ -51,7 +52,7 @@ app/
 │       ├── manga.py     # Manga CRUD + ranking + view recording
 │       ├── chapters.py  # Chapter/Page CRUD + coin gating + auto-unlock
 │       ├── upload.py    # R2 upload (cover + chapter page, WebP conversion)
-│       ├── users.py     # User CRUD + admin stats
+│       ├── users.py     # User CRUD + admin stats + delete (DB + Clerk sync)
 │       ├── transactions.py  # Coin economy (atomic SELECT FOR UPDATE)
 │       ├── payments.py  # FeelFreePay (checkout + webhook + confirm)
 │       ├── analytics.py # Marketing dashboard (charts, top mangas)
@@ -63,7 +64,9 @@ app/
     ├── google_notify.py     # Google Indexing API (auto-notify)
     ├── revalidate.py        # Frontend ISR cache purge
     ├── feelfreepay_service.py  # FeelFreePay API (QR, TrueWallet, status)
-    └── analytics.py         # Background view recording (IP dedup)
+    ├── email_service.py         # Resend SDK wrapper (async, fire-and-forget)
+    ├── email_templates.py       # HTML email templates (Welcome, Payment)
+    └── analytics.py             # Background view recording (IP dedup)
 ```
 
 ## Utility Scripts

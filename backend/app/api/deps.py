@@ -213,7 +213,26 @@ async def get_current_user(
     )
 
     if user is None:
-        # Auto-provision on first login
+        # Check if a user with the same email already exists (re-registration with new Clerk account)
+        if email:
+            email_stmt = select(User).where(User.email == email)
+            email_result = await session.execute(email_stmt)
+            existing_user = email_result.scalar_one_or_none()
+            if existing_user:
+                # Re-link existing user to the new Clerk account
+                existing_user.clerk_id = clerk_id
+                if display_name:
+                    existing_user.display_name = display_name
+                if avatar_url:
+                    existing_user.avatar_url = avatar_url
+                if username:
+                    existing_user.username = username
+                session.add(existing_user)
+                await session.commit()
+                await session.refresh(existing_user)
+                return existing_user
+
+        # Truly new user — auto-provision
         user = User(
             clerk_id=clerk_id,
             email=email,
@@ -228,7 +247,7 @@ async def get_current_user(
         await session.commit()
         await session.refresh(user)
 
-        # Fire-and-forget: Send welcome email to new users
+        # Fire-and-forget: Send welcome email
         if email:
             import asyncio
             from app.services.email_service import send_welcome_email

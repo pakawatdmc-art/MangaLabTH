@@ -231,6 +231,10 @@ export async function updateUser(userId: string, data: { role?: string; coin_bal
   return fetcher<User>(`/users/${userId}`, { method: "PATCH", body: JSON.stringify(data), token });
 }
 
+export async function deleteUser(userId: string, token: string) {
+  return fetcher<void>(`/users/${userId}`, { method: "DELETE", token });
+}
+
 export async function listAllTransactions(token: string) {
   return fetcher<Transaction[]>("/transactions", { token });
 }
