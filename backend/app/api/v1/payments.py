@@ -15,13 +15,15 @@ import logging
 from typing import Any, List
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, Request, Form
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, Form
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select, col
 
 logger = logging.getLogger(__name__)
+
+from app.services import email as email_service
 
 
 router = APIRouter(prefix="/payments", tags=["Payments"])
@@ -32,6 +34,7 @@ limiter = Limiter(key_func=get_remote_address)
 async def _fulfill_payment(
     *,
     session: DBSession,
+    background_tasks: BackgroundTasks,
     reference_no: str,
     user_id: str,
     package_id: str,
@@ -111,6 +114,16 @@ async def _fulfill_payment(
             "reason": "already processed (concurrent)",
             "new_balance": existing_check.balance_after if existing_check else 0,
         }
+
+    # Send receipt email in background
+    if user.email:
+        background_tasks.add_task(
+            email_service.send_receipt_email,
+            user_email=user.email,
+            amount_thb=float(package.price_thb),
+            coins=coins,
+            reference_no=reference_no
+        )
 
     return {"status": "success", "new_balance": new_balance, "coins": coins}
 
@@ -214,7 +227,7 @@ async def create_checkout(
 
 @router.post("/webhook", include_in_schema=False)
 @limiter.limit("30/minute")
-async def feelfreepay_webhook(request: Request, session: DBSession):
+async def feelfreepay_webhook(request: Request, background_tasks: BackgroundTasks, session: DBSession):
     """Handle FeelFreePay webhooks to fulfill orders.
     
     Security: Verifies webhook origin via a shared secret query parameter.
@@ -288,6 +301,7 @@ async def feelfreepay_webhook(request: Request, session: DBSession):
     # Fulfill
     return await _fulfill_payment(
         session=session,
+        background_tasks=background_tasks,
         reference_no=reference_no,
         user_id=user_id,
         package_id=package_id,
@@ -301,6 +315,7 @@ async def confirm_checkout_payment(
     request: Request,
     reference_no: str,
     user: CurrentUser,
+    background_tasks: BackgroundTasks,
     session: DBSession,
 ):
     """Confirm checkout result from frontend polling.
@@ -319,8 +334,10 @@ async def confirm_checkout_payment(
     verify_result_code = status_data.get("resultCode")
     verify_status = status_data.get("txn.status") or status_data.get("status")
 
-    SETTLED_STATUSES = {"S", "G"}
-    if verify_result_code != "00" or verify_status not in SETTLED_STATUSES:
+    # IMPORTANT: Only accept "S" (Settled) here, NOT "G" (Generated).
+    # For QR: "G" means QR was generated but NOT yet paid — must wait for "S".
+    # For TrueWallet: "G" means Granted (paid), but TrueWallet is handled by webhook instead.
+    if verify_result_code != "00" or verify_status != "S":
         return {"status": "pending", "reason": "payment_not_settled"}
         
     user_id = status_data.get("txn.merchantDefined1")
@@ -347,6 +364,7 @@ async def confirm_checkout_payment(
 
     return await _fulfill_payment(
         session=session,
+        background_tasks=background_tasks,
         reference_no=reference_no,
         user_id=user.id,
         package_id=package_id,
