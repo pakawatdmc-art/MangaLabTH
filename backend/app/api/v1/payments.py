@@ -113,6 +113,22 @@ async def _fulfill_payment(
             "new_balance": existing_check.balance_after if existing_check else 0,
         }
 
+    # Fire-and-forget: Send payment confirmation email
+    if user.email:
+        import asyncio
+        from app.services.email_service import send_payment_confirmation_email
+        asyncio.create_task(
+            send_payment_confirmation_email(
+                to_email=user.email,
+                display_name=user.display_name or "สมาชิก",
+                package_name=package.name,
+                coins=coins,
+                price_thb=int(package.price_thb),
+                new_balance=new_balance,
+                reference_no=reference_no,
+            )
+        )
+
     return {"status": "success", "new_balance": new_balance, "coins": coins}
 
 

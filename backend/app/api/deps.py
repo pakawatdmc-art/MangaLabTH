@@ -227,6 +227,12 @@ async def get_current_user(
         session.add(user)
         await session.commit()
         await session.refresh(user)
+
+        # Fire-and-forget: Send welcome email to new users
+        if email:
+            import asyncio
+            from app.services.email_service import send_welcome_email
+            asyncio.create_task(send_welcome_email(email, display_name or "สมาชิก"))
     else:
         # Backfill/update profile fields when token has fresher claims
         changed = False
