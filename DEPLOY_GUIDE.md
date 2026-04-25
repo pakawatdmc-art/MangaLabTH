@@ -98,8 +98,8 @@ GET https://<cloud-run-url>/health
 ## 3. Cloudflare R2 — ตั้งค่า Bucket
 
 1. ไปที่ Cloudflare Dashboard → **R2 Object Storage**
-2. สร้าง Bucket ชื่อ `mangafactory`
-3. เปิด **Public Access** → จด URL เช่น `https://pub-xxxxx.r2.dev`
+2. สร้าง Bucket ชื่อ `factory-manga-storage`
+3. ตั้งค่า **Custom Domain** → ผูก Subdomain `cdn.mangalab-th.com` เข้ากับ Bucket (ผ่าน Cloudflare Proxy)
 4. สร้าง **R2 API Token** → จด Access Key ID + Secret Access Key
 5. จด **Account ID** จาก URL bar → สร้าง Endpoint URL: `https://<account_id>.r2.cloudflarestorage.com`
 
@@ -151,7 +151,7 @@ python scripts/seed_coin_packages.py
 1. สมัครบัญชีที่ [FeelFreePay](https://feelfreepay.com/)
 2. ไปที่ Profile → **Gen Token** → คัดลอก Customer Key
 3. จดค่า Public Key, Secret Key จาก Dashboard
-4. ตั้ง Webhook URL: `https://<cloud-run-url>/api/v1/payments/webhook`
+4. Webhook URL จะถูกสร้างแบบ Dynamic (ไม่ต้องตั้งค่าในหน้า FFP) — Backend สร้าง `backgroundUrl` อัตโนมัติจาก `request.base_url`
 5. สำหรับ Testing: ใช้ `FFP_BASE_URL=https://api-test.feelfreepay.com`
 6. สำหรับ Production: ใช้ `FFP_BASE_URL=https://api.feelfreepay.com`
 

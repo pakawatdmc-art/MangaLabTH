@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     R2_ENDPOINT_URL: str = ""
     R2_ACCESS_KEY_ID: str = ""
     R2_SECRET_ACCESS_KEY: str = ""
-    R2_BUCKET_NAME: str = "mangafactory"
+    R2_BUCKET_NAME: str = "factory-manga-storage"
     R2_PUBLIC_URL: str = ""
 
     # ── SEO / Google Notification ─────────────────
@@ -66,7 +66,7 @@ class Settings(BaseSettings):
         if not self.R2_PUBLIC_URL or not self.R2_PUBLIC_URL.startswith("https://"):
             raise RuntimeError(
                 "R2_PUBLIC_URL is missing or invalid — "
-                "must be a full URL like https://pub-xxx.r2.dev"
+                "must be a full URL like https://cdn.mangalab-th.com"
             )
         if not self.R2_ENDPOINT_URL:
             raise RuntimeError(

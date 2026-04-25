@@ -148,7 +148,7 @@ npm run dev        # เริ่มรัน Next.js server (http://localhost:3
 | `R2_ENDPOINT_URL` | ✅ | Cloudflare R2 S3-compatible endpoint |
 | `R2_ACCESS_KEY_ID` | ✅ | R2 access key |
 | `R2_SECRET_ACCESS_KEY` | ✅ | R2 secret key |
-| `R2_PUBLIC_URL` | ✅ | R2 public URL (e.g. `https://pub-xxx.r2.dev`) |
+| `R2_PUBLIC_URL` | ✅ | R2 Custom Domain (e.g. `https://cdn.mangalab-th.com`) |
 | `R2_BUCKET_NAME` | ✅ | R2 bucket name |
 | `APP_ENV` | ❌ | `development` (default) or `production` |
 | `CORS_ORIGINS` | ❌ | Comma-separated origins |

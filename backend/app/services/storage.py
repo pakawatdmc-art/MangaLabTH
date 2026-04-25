@@ -7,8 +7,8 @@ Environment variables required:
     R2_ENDPOINT_URL       — e.g. https://<account_id>.r2.cloudflarestorage.com
     R2_ACCESS_KEY_ID      — R2 API token Access Key ID
     R2_SECRET_ACCESS_KEY  — R2 API token Secret Access Key
-    R2_BUCKET_NAME        — Target bucket (default: mangafactory)
-    R2_PUBLIC_URL         — Public URL prefix, e.g. https://pub-xxx.r2.dev
+    R2_BUCKET_NAME        — Target bucket (default: factory-manga-storage)
+    R2_PUBLIC_URL         — Public URL prefix, e.g. https://cdn.mangalab-th.com
 """
 
 from typing import List, Optional
@@ -49,9 +49,9 @@ def r2_url_to_key(url: str) -> Optional[str]:
     """Extract the R2 object key from a public URL.
 
     Example:
-        "https://pub-xxx.r2.dev/covers/abc.webp" → "covers/abc.webp"
+        "https://cdn.mangalab-th.com/covers/abc.webp" → "covers/abc.webp"
 
-    Supports both .r2.dev default URLs and custom domains via R2_PUBLIC_URL.
+    Supports both custom domain URLs and legacy .r2.dev URLs via fallback.
     """
     # Try using the configured R2_PUBLIC_URL first (supports custom domains)
     public_base = settings.R2_PUBLIC_URL.rstrip("/") + "/"
