@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
+import ProtectedImage from "./ProtectedImage";
 import { getMe } from "@/lib/api";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
@@ -117,6 +117,24 @@ export default function ChapterReaderClient({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [prevChapterId, nextChapterId, router]);
+
+  // Anti-scraping keyboard shortcuts (Level 1)
+  useEffect(() => {
+    function preventShortcuts(e: KeyboardEvent) {
+      // F12
+      if (e.key === "F12") e.preventDefault();
+      // Ctrl+Shift+I, J, C
+      if (e.ctrlKey && e.shiftKey && ["I", "i", "J", "j", "C", "c"].includes(e.key)) e.preventDefault();
+      // Ctrl+U, Ctrl+S, Ctrl+P
+      if (e.ctrlKey && ["U", "u", "S", "s", "P", "p"].includes(e.key)) e.preventDefault();
+      // Mac Cmd+Opt+I, J, U
+      if (e.metaKey && e.altKey && ["I", "i", "J", "j", "U", "u"].includes(e.key)) e.preventDefault();
+      // Mac Cmd+S, P, U
+      if (e.metaKey && ["S", "s", "P", "p", "U", "u"].includes(e.key)) e.preventDefault();
+    }
+    window.addEventListener("keydown", preventShortcuts);
+    return () => window.removeEventListener("keydown", preventShortcuts);
+  }, []);
 
   // Balance update listener
   useEffect(() => {
@@ -296,18 +314,19 @@ export default function ChapterReaderClient({
       </header>
 
       {/* Pages */}
-      <main className="mx-auto max-w-3xl pt-14 pb-4 md:pb-0">
+      <main 
+        className="mx-auto max-w-3xl pt-14 pb-4 md:pb-0 select-none"
+        onContextMenu={(e) => e.preventDefault()}
+        onDragStart={(e) => e.preventDefault()}
+      >
         {pages.map((pg) => (
           <div key={pg.id} className="relative w-full">
-            <Image
+            <ProtectedImage
               src={pg.image_url}
-              alt={`หน้า ${pg.number}`}
+              alt="MangaLabTH"
               width={pg.width || 900}
               height={pg.height || 1350}
-              unoptimized
-              className="w-full"
-              loading={pg.number <= 3 ? "eager" : "lazy"}
-              quality={85}
+              eager={pg.number <= 3}
             />
           </div>
         ))}

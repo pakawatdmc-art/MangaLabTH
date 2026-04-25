@@ -27,7 +27,8 @@ export default function AdminChaptersPage() {
   const [editingChapter, setEditingChapter] = useState<Chapter | null>(null);
   const [updating, setUpdating] = useState(false);
   const [managingChapter, setManagingChapter] = useState<Chapter | null>(null);
-  const [createIsFree, setCreateIsFree] = useState(true);
+  const [createIsFree, setCreateIsFree] = useState(false);
+  const [createCoinPrice, setCreateCoinPrice] = useState(2);
   const [editIsFree, setEditIsFree] = useState(false);
   const [now, setNow] = useState(() => new Date());
 
@@ -39,6 +40,22 @@ export default function AdminChaptersPage() {
     : [];
   const freeCount = filteredChapters.filter((ch) => ch.is_free).length;
   const paidCount = Math.max(filteredChapters.length - freeCount, 0);
+
+  const nextChapterNumber = filteredChapters.length > 0
+    ? Math.max(...filteredChapters.map((ch) => ch.number)) + 1
+    : 1;
+
+  let defaultUnlocksAt = "";
+  const latestChapterWithUnlock = filteredChapters.find(ch => ch.unlocks_at);
+  if (latestChapterWithUnlock && latestChapterWithUnlock.unlocks_at) {
+      const d = parseUTCDate(latestChapterWithUnlock.unlocks_at);
+      // บวก 7 วัน
+      d.setDate(d.getDate() + 7);
+      // แปลงเป็นเวลาไทย (UTC+7) สำหรับ datetime-local input
+      const thaiDate = new Date(d.getTime() + 7 * 60 * 60 * 1000);
+      defaultUnlocksAt = thaiDate.toISOString().slice(0, 16);
+  }
+
 
   const fetchData = async () => {
     try {
@@ -413,10 +430,12 @@ export default function AdminChaptersPage() {
               <label className="mb-1 block text-xs text-gray-400">ตอนที่ *</label>
               <input
                 type="number"
+                key={`manga-${selectedMangaId}-next-${nextChapterNumber}`}
                 name="number"
                 step="0.5"
                 min="0"
                 required
+                defaultValue={nextChapterNumber}
                 className="h-10 w-full rounded-xl border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:outline-none"
                 placeholder="1"
               />
@@ -436,8 +455,10 @@ export default function AdminChaptersPage() {
                 type="number"
                 name="coin_price"
                 min="0"
-                defaultValue={0}
-                className="h-10 w-full rounded-xl border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:outline-none"
+                value={createIsFree ? 0 : createCoinPrice}
+                onChange={(e) => setCreateCoinPrice(Number(e.target.value))}
+                disabled={createIsFree}
+                className="h-10 w-full rounded-xl border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
             <div className="flex items-end">
@@ -458,7 +479,9 @@ export default function AdminChaptersPage() {
                  <label className="mb-2 block text-xs text-gray-400">ตั้งเวลาเปิดให้อ่านฟรีอัตโนมัติ (ไม่บังคับ)</label>
                  <input
                    type="datetime-local"
+                   key={`unlock-${selectedMangaId}-${defaultUnlocksAt}`}
                    name="unlocks_at"
+                   defaultValue={defaultUnlocksAt}
                    className="h-10 w-full sm:w-1/3 rounded-xl border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:outline-none [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:bg-gold [&::-webkit-calendar-picker-indicator]:p-1 [&::-webkit-calendar-picker-indicator]:rounded-md [&::-webkit-calendar-picker-indicator]:cursor-pointer hover:[&::-webkit-calendar-picker-indicator]:bg-gold-light"
                  />
               </div>
