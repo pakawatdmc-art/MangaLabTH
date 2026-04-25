@@ -43,7 +43,7 @@ Google Cloud Run จะนำ `Dockerfile` ไปสร้าง Image และ
 | `R2_ACCESS_KEY_ID` | `abcdef1234567890` | จาก R2 API Token |
 | `R2_SECRET_ACCESS_KEY` | `secret_key_here` | จาก R2 API Token |
 | `R2_BUCKET_NAME` | `mangafactory` | ชื่อ Bucket ที่สร้างใน R2 |
-| `R2_PUBLIC_URL` | `https://pub-xxxxx.r2.dev` | **ต้องมี `https://` นำหน้า, ห้ามมี `/` ต่อท้าย** |
+| `R2_PUBLIC_URL` | `https://cdn.mangalab-th.com` | **ต้องเป็น Custom Domain ที่ผูกกับ Cloudflare (ห้ามลงท้ายด้วย /)** |
 | `FFP_CUSTOMER_KEY` | `cust_xxxx` | จาก FeelFreePay Dashboard → Profile > Gen Token |
 | `FFP_PUBLIC_KEY` | `pub_xxxx` | จาก FeelFreePay Dashboard |
 | `FFP_SECRET_KEY` | `sec_xxxx` | จาก FeelFreePay Dashboard |
@@ -87,7 +87,7 @@ GET https://<cloud-run-url>/health
 | `NEXT_PUBLIC_CLERK_SIGN_IN_URL` | `/sign-in` | Path หน้า Login |
 | `NEXT_PUBLIC_CLERK_SIGN_UP_URL` | `/sign-up` | Path หน้าสมัคร |
 | `NEXT_PUBLIC_API_URL` | `https://<cloud-run-url>/api/v1` | URL ของ Backend (**ต้องลงท้ายด้วย `/api/v1`**) |
-| `NEXT_PUBLIC_R2_PUBLIC_URL` | `https://pub-xxxxx.r2.dev` | ค่าเดียวกับ Backend (ใช้ใน `next.config.ts` สำหรับ next/image hostname) |
+| `NEXT_PUBLIC_R2_PUBLIC_URL` | `https://cdn.mangalab-th.com` | Custom Domain ที่ผ่าน WAF (ใช้ใน `next.config.ts`) |
 | `NEXT_PUBLIC_SITE_URL` | `https://mangalab-th.com` | Base URL (สำหรับ SEO / robots.ts) |
 | `REVALIDATION_SECRET` | `super-secret-xxx` | ค่าเดียวกับ Backend (สำหรับรับ Webhook เคลียร์ Cache) |
 
@@ -105,12 +105,22 @@ GET https://<cloud-run-url>/health
 
 ### ข้อสำคัญเกี่ยวกับ R2_PUBLIC_URL
 
+- ระบบปัจจุบันใช้ **Custom Domain (cdn.mangalab-th.com)** เพื่อซ่อน URL จริงและป้องกันการโดนดูดรูป
 - **ต้องขึ้นต้นด้วย `https://`** เสมอ
 - **ห้ามมี `/` ต่อท้าย** (trailing slash)
-- ✅ ถูก: `https://pub-abc123.r2.dev`
-- ❌ ผิด: `pub-abc123.r2.dev` (ไม่มี scheme)
-- ❌ ผิด: `https://pub-abc123.r2.dev/` (มี trailing slash)
-- ถ้าค่าผิด Backend จะ **Raise Error ทันที** (fail-fast)
+- ✅ ถูก: `https://cdn.mangalab-th.com`
+- ❌ ผิด: `https://cdn.mangalab-th.com/` (มี trailing slash)
+- ❌ ผิด: `https://pub-xxxxx.r2.dev` (URL สำรอง จะทำให้ WAF ไม่ทำงาน)
+
+### Cloudflare WAF (Anti-Scraping Level 5)
+
+เพื่อป้องกันบอทและ Extension ดูดรูปภาพ ต้องตั้งค่า **WAF Custom Rule** ใน Cloudflare:
+- **Field:** `Hostname` equals `cdn.mangalab-th.com`
+- **AND:** `Referer` does not contain `mangalab-th.com`
+- **AND:** `Referer` does not contain `localhost`
+- **Action:** `Block`
+
+> **หมายเหตุ DNS:** ตรวจสอบให้แน่ใจว่า CNAME ของ Clerk (ระบบล็อกอิน) ได้ถูกเพิ่มเข้าไปในหน้า DNS ของ Cloudflare เรียบร้อยแล้ว (เปิดโหมด DNS-only สีเทา) มิฉะนั้นระบบสมาชิกจะพัง (`ERR_NAME_NOT_RESOLVED`)
 
 ---
 

@@ -58,6 +58,7 @@ MangaLabTH/
 - **Master Upload Pipeline** — Drag-drop reordering (dnd-kit), Concurrent upload (5 at a time), Auto WebP conversion, R2 orphan cleanup, Auto-retry (3 attempts + exponential backoff), Per-batch token refresh, 60s upload timeout
 - **Manga CRUD** — สร้าง/แก้ไข/ลบ มังงะ, Auto-slug generation (Thai + English), Cover upload with magic byte validation
 - **Chapter Management** — ตั้งราคาเหรียญ, กำหนดเวลาปลดล็อกฟรี (Timed Unlock), Auto-sync is_free ↔ coin_price
+- **Chapter Defaults Setting** — ตั้งค่ามาตรฐานสำหรับตอนถัดไป เช่น จำนวนวันที่จะปลดล็อกฟรี เพื่อลดข้อผิดพลาดในการลงเนื้อหา
 - **User Management** — Admin/Reader roles, Grant coins (Primary Admin only), Role toggle with safety guards
 - **Transaction Ledger** — Color-coded types, Dual filter (search + dropdown), Summary cards
 
@@ -70,6 +71,8 @@ MangaLabTH/
 ### 🔒 Security
 | มาตรการ | รายละเอียด |
 |---------|-----------|
+| **Anti-Scraping (Level 5)** | Cloudflare WAF ป้องกันการดูดรูปโดยตรง + R2 Custom Domain (`cdn.mangalab-th.com`) + Hotlink Protection |
+| **Frontend Image Protection** | ซ่อน URL รูปภาพด้วย Blob URLs และแทรกแซง Event (คลิกขวา, ลากรูป) |
 | **JWT + JWKS** | Clerk RS256, cached signing keys (1hr), issuer validation |
 | **RBAC** | `AdminUser` / `CurrentUser` / `OptionalUser` dependencies |
 | **Primary Admin Protection** | Cannot demote, config-based (`PRIMARY_ADMIN_EMAIL`) |
