@@ -24,7 +24,7 @@ interface Props {
 }
 
 export function ThemeSwitcher({ token, isPrimaryAdmin }: Props) {
-    const { theme, setTheme } = useTheme();
+    const { theme, setTheme, isLoading } = useTheme();
     const [saving, setSaving] = useState(false);
 
     if (!isPrimaryAdmin) return null;
@@ -32,7 +32,11 @@ export function ThemeSwitcher({ token, isPrimaryAdmin }: Props) {
     const handleSelect = async (t: ThemeType) => {
         if (t === theme || saving) return;
 
+        // Optimistic UI: เปลี่ยนธีมทันทีก่อนรอ API
+        const previousTheme = theme;
+        setTheme(t);
         setSaving(true);
+
         try {
             const res = await fetch(`${API}/settings/theme`, {
                 method: "POST",
@@ -43,11 +47,13 @@ export function ThemeSwitcher({ token, isPrimaryAdmin }: Props) {
                 body: JSON.stringify({ theme: t }),
             });
 
-            if (res.ok) {
-                setTheme(t);
+            if (!res.ok) {
+                // API ล้มเหลว → Rollback กลับธีมเดิม
+                setTheme(previousTheme);
             }
         } catch {
-            /* fail silently */
+            // Network error → Rollback กลับธีมเดิม
+            setTheme(previousTheme);
         } finally {
             setSaving(false);
         }
@@ -58,19 +64,20 @@ export function ThemeSwitcher({ token, isPrimaryAdmin }: Props) {
             <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
                 <Palette className="h-3 w-3" />
                 ธีมเทศกาล
-                {saving && <Loader2 className="ml-auto h-3 w-3 animate-spin text-gold" />}
+                {(saving || isLoading) && <Loader2 className="ml-auto h-3 w-3 animate-spin text-gold" />}
             </p>
             <div className="flex flex-wrap gap-1.5">
                 {THEMES.map((t) => (
                     <button
                         key={t.id}
                         onClick={() => handleSelect(t.id)}
-                        disabled={saving}
+                        disabled={saving || isLoading}
                         className={cn(
                             "flex items-center gap-1 rounded-lg border px-2 py-1.5 text-[11px] transition",
                             theme === t.id
                                 ? "border-gold/50 bg-gold/15 text-gold"
-                                : "border-white/10 text-gray-400 hover:border-white/20 hover:text-white"
+                                : "border-white/10 text-gray-400 hover:border-white/20 hover:text-white",
+                            (saving || isLoading) && "opacity-50 cursor-not-allowed"
                         )}
                     >
                         <span>{t.icon}</span>
@@ -82,3 +89,4 @@ export function ThemeSwitcher({ token, isPrimaryAdmin }: Props) {
         </div>
     );
 }
+
