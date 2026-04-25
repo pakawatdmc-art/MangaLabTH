@@ -366,7 +366,7 @@ export default function MarketingDashboard() {
                                                 className="group flex items-center gap-4 rounded-xl border border-transparent p-2 transition hover:bg-surface-200/50 hover:border-white/5"
                                             >
                                                 <div className="relative h-14 w-10 shrink-0 overflow-hidden rounded-md bg-surface-200">
-                                                    <Image src={manga.cover_image || "/placeholder.jpg"} alt={manga.title} fill className="object-cover" />
+                                                    <Image src={manga.cover_image || "/placeholder.webp"} alt={manga.title} fill className="object-cover" />
                                                     <div className="absolute -left-1 -top-1 flex h-6 w-6 items-center justify-center rounded-br-lg bg-black/80 text-[10px] font-bold text-gold backdrop-blur-sm">
                                                         {index + 1}
                                                     </div>
@@ -411,7 +411,7 @@ export default function MarketingDashboard() {
                                                 className="group flex items-center gap-4 rounded-xl border border-transparent p-2 transition hover:bg-surface-200/50 hover:border-white/5"
                                             >
                                                 <div className="relative h-14 w-10 shrink-0 overflow-hidden rounded-md bg-surface-200">
-                                                    <Image src={manga.cover_image || "/placeholder.jpg"} alt={manga.title} fill className="object-cover" />
+                                                    <Image src={manga.cover_image || "/placeholder.webp"} alt={manga.title} fill className="object-cover" />
                                                     <div className="absolute -left-1 -top-1 flex h-6 w-6 items-center justify-center rounded-br-lg bg-black/80 text-[10px] font-bold text-emerald-400 backdrop-blur-sm">
                                                         {index + 1}
                                                     </div>

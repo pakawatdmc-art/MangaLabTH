@@ -217,7 +217,7 @@ export default function AdminChaptersPage() {
               <div className="mt-3 flex items-start gap-3 rounded-lg border border-white/5 bg-white/5 p-2.5">
                 <div className="relative h-12 w-9 shrink-0 overflow-hidden rounded bg-surface-300 shadow-sm">
                   <Image
-                    src={selectedManga.cover_url || "/placeholder.png"}
+                    src={selectedManga.cover_url || "/placeholder.webp"}
                     alt={selectedManga.title}
                     fill
                     unoptimized

@@ -34,7 +34,7 @@ export default function UpdateMangaCard({ manga, priority = false }: Props) {
             {/* Thumbnail Container */}
             <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl bg-surface-200 shadow-md ring-1 ring-white/10 transition-all group-hover:ring-gold/40 group-hover:shadow-gold/20">
                 <Image
-                    src={manga.cover_url || "/placeholder.png"}
+                    src={manga.cover_url || "/placeholder.webp"}
                     alt={manga.title}
                     fill
                     className="object-cover transition-transform duration-500 group-hover:scale-105 text-transparent"

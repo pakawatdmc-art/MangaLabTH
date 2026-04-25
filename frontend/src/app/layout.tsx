@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/og-default.png",
+        url: "/og-default.webp",
         width: 1200,
         height: 630,
         alt: "MangaLabTH — อ่านมังงะแปลไทยออนไลน์ฟรี",
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
     title: "MangaLabTH — อ่านมังงะแปลไทย มังงะเกาหลี อ่านการ์ตูนฟรี",
     description:
       "MangaLabTH แพลตฟอร์ม อ่านมังงะ ที่ดีที่สุด รวบรวม มังงะแปลไทย และ มังงะเกาหลี ไว้อ่านฟรีเพียบ ภาพคมชัดจุใจบนมือถือ",
-    images: ["/og-default.png"],
+    images: ["/og-default.webp"],
   },
   alternates: {
     canonical: process.env.NEXT_PUBLIC_SITE_URL || "https://mangalab-th.com",
