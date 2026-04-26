@@ -57,7 +57,7 @@ export default async function HomePage({ searchParams }: Props) {
               MangaLab<span className="text-gold">TH</span>
             </h1>
             <span className="mb-5 block text-sm sm:text-base font-medium text-gold/80 tracking-wide">
-              เว็บอ่านมังงะ มังงะแปลไทย มังงะเกาหลี อันดับ 1
+              เว็บอ่านมังงะ มังงะแปลไทย มังงะเกาหลี คุณภาพพรีเมียม
             </span>
           </FadeUp>
           <FadeUp delay={0.2}>
