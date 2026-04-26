@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import ReadingTrickPopup from "@/components/ReadingTrickPopup";
 
 export default function ReaderLayout({
   children,
@@ -11,6 +12,7 @@ export default function ReaderLayout({
       <Navbar />
       <main className="flex-1">{children}</main>
       <Footer />
+      <ReadingTrickPopup />
     </div>
   );
 }

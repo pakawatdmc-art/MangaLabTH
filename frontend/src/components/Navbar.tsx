@@ -12,6 +12,7 @@ import {
   Shield,
   User,
   X,
+  Info,
 } from "lucide-react";
 import { cn, formatNumber } from "@/lib/utils";
 import { SignedIn, SignedOut, UserButton, useAuth } from "@clerk/nextjs";
@@ -29,6 +30,7 @@ declare global {
 const NAV_LINKS = [
   { href: "/", label: "หน้าแรก", icon: Home },
   { href: "/search", label: "ค้นหา", icon: Search },
+  { href: "/about", label: "เกี่ยวกับเรา", icon: Info },
 ];
 
 export default function Navbar() {

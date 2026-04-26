@@ -242,6 +242,7 @@ export function ChapterImageManager({
 
         setLoadingInitial(true);
         setFiles([]);
+        hadExistingPages.current = false;
         setError("");
         setSuccessMsg("");
 
@@ -304,7 +305,8 @@ export function ChapterImageManager({
     const removeFile = (index: number) => {
         setFiles((prev) => {
             const removed = prev[index];
-            if (removed.file) {
+            if (!removed) return prev;
+            if (removed.file && removed.preview.startsWith("blob:")) {
                 URL.revokeObjectURL(removed.preview);
             }
             return prev.filter((_, i) => i !== index);
@@ -372,7 +374,7 @@ export function ChapterImageManager({
             }
 
             if (pendingUploads.length > 0) {
-                const CONCURRENCY_LIMIT = 5;
+                const CONCURRENCY_LIMIT = 3;
                 for (let i = 0; i < pendingUploads.length; i += CONCURRENCY_LIMIT) {
                     // Refresh token for every batch to prevent JWT expiry during long uploads
                     const batchToken = await getToken();
@@ -543,7 +545,10 @@ export function ChapterImageManager({
                                     accept="image/*"
                                     multiple
                                     className="hidden"
-                                    onChange={(e) => e.target.files && addFiles(e.target.files)}
+                                    onChange={(e) => {
+                                        if (e.target.files) addFiles(e.target.files);
+                                        e.target.value = "";
+                                    }}
                                 />
                             </div>
 

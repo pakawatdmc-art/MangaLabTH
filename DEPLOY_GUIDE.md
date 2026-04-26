@@ -1,186 +1,109 @@
-# MangaLabTH — คู่มือ Deploy Production
-
-## สถาปัตยกรรม
-
-```
-[Next.js 16.2.4 / Vercel] ⇆ [FastAPI / Google Cloud Run] ⇆ [PostgreSQL (Supabase)]
-                             ↑↓
-                      [Cloudflare R2]     ← Storage
-                      [FeelFreePay]       ← Payments (PromptPay QR / TrueWallet)
-                      [Clerk]             ← Authentication (JWT + RBAC)
-                      [Google APIs]       ← Indexing API (SEO)
-```
+<div align="center">
+  <h1>📜 The Master Blueprint: คู่มือกางอาณาเขต MangaLabTH</h1>
+  <p><i>"คู่มือฉบับสมบูรณ์สำหรับผู้ดูแลระบบ เพื่อนำอาณาจักร MangaLabTH ขึ้นสู่โลกออนไลน์ (Production)"</i></p>
+</div>
 
 ---
 
-## 1. Backend → Google Cloud Run (Docker)
+ก่อนที่คุณจะเปิดประตูเมืองต้อนรับนักอ่านนับหมื่น นี่คือพิมพ์เขียวที่คุณต้องทำตามอย่างเคร่งครัด เพื่อให้มั่นใจว่าระบบจะ **ลื่นไหล ปลอดภัย และไร้ช่องโหว่**
 
-Google Cloud Run จะนำ `Dockerfile` ไปสร้าง Image และรันโดยอัตโนมัติ
+## 🏗️ Chapter 1: เตรียมฐานทัพ (Prerequisites)
 
-### ขั้นตอน Deploy
+ก่อนเริ่มร่ายเวทย์ คุณต้องมีทรัพยากรเหล่านี้อยู่ในมือ:
+1. **Google Cloud Platform (GCP):** บัญชีที่มีเครดิต (แนะนำให้ใช้บัญชี Free Trial $300)
+2. **Vercel:** สำหรับวางหน้าร้าน (Frontend)
+3. **Cloudflare:** สำหรับจัดการโดเมน (Domain) และเป็นโกดังเก็บรูปภาพ (R2)
+4. **Supabase:** สำหรับเก็บข้อมูลทั้งหมดของโลกนี้ (Database)
+5. **Clerk:** สำหรับจัดการบัตรผ่านเข้าเมือง (Authentication)
+6. **FeelFreePay:** ศูนย์แลกเปลี่ยนเงินตรา
 
-1. ติดตั้ง `gcloud` CLI และทำการ Login: `gcloud auth login`
-2. สร้าง Google Cloud Project และตั้งค่า Billing
-3. ไปที่โฟลเดอร์ `backend` และรันคำสั่ง Deploy:
+---
+
+## 🏛️ Chapter 2: เสาเข็มและโกดังไร้ก้น (Database & Storage)
+
+### 1. เสาเข็มแห่งความจำ (Supabase PostgreSQL)
+1. เข้าไปที่ [Supabase](https://supabase.com/) และสร้าง Project ใหม่
+2. ไปที่ `Settings -> Database -> Connection string`
+3. เลือก **Session Pooler (IPv4)** แล้วคัดลอก URL มา
+4. ⚠️ **เคล็ดลับ:** อย่าลืมเปลี่ยนคำนำหน้าจาก `postgresql://` เป็น `postgresql+asyncpg://` เพื่อให้ Backend ของเรา (FastAPI) คุยด้วยภาษาที่เร็วที่สุด
+
+### 2. โกดังไร้ก้น (Cloudflare R2)
+1. ไปที่ Cloudflare Dashboard เลือก **R2 Object Storage**
+2. สร้าง Bucket ชื่อว่า `factory-manga-storage`
+3. ตั้งค่า **Custom Domain** ให้เป็น `cdn.mangalab-th.com` (สำคัญมาก! เพื่อป้องกันการโดนแบนจาก WAF ในอนาคต)
+4. สร้าง **R2 API Token** และจดค่า `Access Key ID` กับ `Secret Access Key` ไว้
+5. **กฎเหล็กของ `R2_PUBLIC_URL`:**
+   - ✅ ต้องมี `https://` นำหน้า (เช่น `https://cdn.mangalab-th.com`)
+   - ❌ **ห้าม** มี `/` ต่อท้ายเด็ดขาด! (เช่น `https://cdn.mangalab-th.com/` = พัง)
+
+---
+
+## 💰 Chapter 3: พลังเวทย์และระบบเงินตรา (Auth & Economy)
+
+### 1. บัตรผ่านเข้าเมือง (Clerk)
+เราใช้ Clerk ในการดูแลรักษาระบบสมาชิก
+1. สร้างโปรเจกต์ใน Clerk
+2. คัดลอก `Publishable Key` และ `Secret Key` เตรียมไว้
+3. อย่าลืมไปเอา `JWKS URL` จากตั้งค่า JWT Templates เพื่อให้ Backend นำไปตรวจสอบบัตรผ่าน (Token) ได้อย่างแม่นยำ
+
+### 2. ศูนย์แลกเปลี่ยน (FeelFreePay)
+ระบบเศรษฐกิจของเราขับเคลื่อนด้วยเหรียญ การรับเงินต้องเสถียร 100%:
+1. ไปที่ FeelFreePay Profile กด **Gen Token** เพื่อเอา `Customer Key`
+2. คัดลอก `Public Key` และ `Secret Key` จาก Dashboard
+3. **เวทย์มนต์ Webhook:** คุณไม่จำเป็นต้องไปตั้งค่า Webhook ในหน้าเว็บ FeelFreePay! ระบบ Backend ของเราฉลาดพอที่จะสร้าง URL Webhook ส่งไปพร้อมกับคำสั่งซื้อโดยอัตโนมัติ
+
+---
+
+## 🚀 Chapter 4: ปล่อยของ (Deployment)
+
+เมื่อของวิเศษครบแล้ว ถึงเวลาเปิดสวิตช์!
+
+### Phase 1: โรงงานหลังบ้าน (Google Cloud Run)
+เราจะนำ Backend ขึ้นไปไว้บน Google Cloud Run เพื่อให้ขยายร่างออโต้เมื่อมีคนเข้ามาเยอะๆ
+1. เปิด Terminal ในเครื่อง เข้าไปที่โฟลเดอร์ `backend`
+2. พิมพ์คำสั่งศักดิ์สิทธิ์:
    ```bash
-   cd backend
-   gcloud run deploy mangalabth-backend --source .
+   gcloud run deploy mangalabth-backend --source . --region asia-southeast1 --allow-unauthenticated
    ```
-4. เลือก Region (เช่น `asia-southeast1` สิงคโปร์)
-5. กดยอมรับการอนุญาตเข้าถึงแบบ Unauthenticated (สาธารณะ)
-6. ใส่ Environment Variables ผ่าน Cloud Console หรือ CLI argument
-7. *หมายเหตุ:* Backend ตั้งค่า `ProxyHeadersMiddleware` ไว้แล้ว ใช้งานกับ Cloud Run Load Balancer ได้
+3. กำหนดค่าตัวแปร (Environment Variables) ผ่านหน้า Cloud Console (ดูรายการตัวแปรได้ที่ไฟล์ `.env.example`)
+4. ⚠️ **สำคัญ:** ต้องรันคำสั่ง `alembic upgrade head` (บนเครื่องคุณเองหรือเครื่องที่ต่อกับ Database) ก่อนเพื่อให้ตารางข้อมูลถูกสร้างเรียบร้อย
+5. ตั้งค่าตัวแปร `APP_ENV=production` เพื่อซ่อนหน้าต่าง API Docs ไม่ให้คนภายนอกเห็น
 
-### Environment Variables (ตั้งใน Cloud Console)
-
-| Variable | ค่าตัวอย่าง | หมายเหตุ |
-|----------|------------|----------|
-| `DATABASE_URL` | `postgresql+asyncpg://user:pass@xxx.supabase.com:5432/postgres` | Supabase PostgreSQL (IPv4 Session Pooler) |
-| `CLERK_PUBLISHABLE_KEY` | `pk_live_xxxx` | จาก Clerk Dashboard → API Keys |
-| `CLERK_SECRET_KEY` | `sk_live_xxxx` | จาก Clerk Dashboard → API Keys |
-| `CLERK_JWKS_URL` | `https://xxxx.clerk.accounts.dev/.well-known/jwks.json` | จาก Clerk Dashboard → JWT Templates |
-| `R2_ENDPOINT_URL` | `https://8ad5a2c7xxxxx.r2.cloudflarestorage.com` | **ต้องมี `https://` นำหน้าเสมอ** |
-| `R2_ACCESS_KEY_ID` | `abcdef1234567890` | จาก R2 API Token |
-| `R2_SECRET_ACCESS_KEY` | `secret_key_here` | จาก R2 API Token |
-| `R2_BUCKET_NAME` | `mangafactory` | ชื่อ Bucket ที่สร้างใน R2 |
-| `R2_PUBLIC_URL` | `https://cdn.mangalab-th.com` | **ต้องเป็น Custom Domain ที่ผูกกับ Cloudflare (ห้ามลงท้ายด้วย /)** |
-| `FFP_CUSTOMER_KEY` | `cust_xxxx` | จาก FeelFreePay Dashboard → Profile > Gen Token |
-| `FFP_PUBLIC_KEY` | `pub_xxxx` | จาก FeelFreePay Dashboard |
-| `FFP_SECRET_KEY` | `sec_xxxx` | จาก FeelFreePay Dashboard |
-| `FFP_BASE_URL` | `https://api.feelfreepay.com` | Production URL (test: `https://api-test.feelfreepay.com`) |
-| `APP_ENV` | `production` | **ต้องตั้งเป็น `production`** (ปิด /docs, /redoc) |
-| `CORS_ORIGINS` | `https://mangalab-th.com,https://www.mangalab-th.com` | URL ของ Frontend (คั่นด้วย `,`) |
-| `FRONTEND_URL` | `https://mangalab-th.com` | URL ของ Vercel (สำหรับ Revalidate Cache) |
-| `REVALIDATION_SECRET` | `super-secret-xxx` | รหัสลับสำหรับสั่งเคลียร์ Cache |
-| `SITE_URL` | `https://mangalab-th.com` | ใช้สำหรับ Auto Google Ping (**ต้องตั้ง**) |
-| `GOOGLE_INDEXING_CREDENTIALS` | `<JSON string or Base64>` | Service Account JSON สำหรับ Google Indexing API |
-| `PRIMARY_ADMIN_EMAIL` | `email@example.com` | Email ของ Primary Admin (auto-assign role admin ตอน login ครั้งแรก) |
-
-### ตรวจสอบ Health Check
-
-```
-GET https://<cloud-run-url>/health
-→ {"status": "ok"}
-```
-
-> **หมายเหตุ:** Production mode จะไม่แสดง `env` field ใน response
+### Phase 2: หน้าร้าน (Vercel)
+1. นำ Source Code ของเราไปเชื่อมกับ [Vercel](https://vercel.com/)
+2. ตั้ง **Root Directory** ไปที่โฟลเดอร์ `frontend`
+3. Vercel จะรู้ใจเราโดยอัตโนมัติ (Build command: `next build`)
+4. ใส่ตัวแปร (Environment Variables) ให้ครบถ้วน
+5. กดปุ่ม **Deploy** แล้วรอรับความสำเร็จ!
 
 ---
 
-## 2. Frontend → Vercel
+## 🛡️ Chapter 5: กางอาณาเขต (WAF & Security)
 
-### ขั้นตอน Deploy
+เพื่อป้องกัน **"ปลิง"** หรือบอทที่พยายามจะมาดูดรูปภาพของเราไปใช้ฟรีๆ เราต้องกางอาณาเขตบน **Cloudflare WAF**
 
-1. สร้างโปรเจคใหม่ใน [Vercel](https://vercel.com/)
-2. นำเข้า Repository นี้จาก GitHub
-3. ไปที่ตั้งค่า **Root Directory** เลือกโฟลเดอร์ `frontend`
-4. Vercel จะตรวจสอบและรู้ว่าเป็น Next.js โดยอัตโนมัติ (Build command: `next build`)
-5. กำหนด Environment Variables
-6. กดปุ่ม `Deploy`
+1. ไปที่ Cloudflare Dashboard เลือกโดเมน `mangalab-th.com`
+2. เมนูซ้ายมือ เลือก **Security -> WAF -> Custom rules**
+3. สร้าง Rule ใหม่ เลือก **Use expression builder**
+4. ⚠️ **ใส่คาถากางอาณาเขตนี้ลงไปในช่อง (ก๊อปปี้ไปวางบรรทัดเดียว):**
+   ```
+   (http.host eq "cdn.mangalab-th.com" and not http.referer contains "mangalab-th.com" and not http.referer contains "localhost" and not starts_with(http.request.uri.path, "/covers/"))
+   ```
+5. Choose action ให้ตั้งเป็น **Block**
+6. กด **Save**
 
-### Environment Variables (ตั้งใน Vercel)
-
-| Variable | ค่าตัวอย่าง | หมายเหตุ |
-|----------|------------|----------|
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | `pk_live_xxxx` | ค่าเดียวกับ Backend |
-| `CLERK_SECRET_KEY` | `sk_live_xxxx` | ค่าเดียวกับ Backend |
-| `NEXT_PUBLIC_CLERK_SIGN_IN_URL` | `/sign-in` | Path หน้า Login |
-| `NEXT_PUBLIC_CLERK_SIGN_UP_URL` | `/sign-up` | Path หน้าสมัคร |
-| `NEXT_PUBLIC_API_URL` | `https://<cloud-run-url>/api/v1` | URL ของ Backend (**ต้องลงท้ายด้วย `/api/v1`**) |
-| `NEXT_PUBLIC_R2_PUBLIC_URL` | `https://cdn.mangalab-th.com` | Custom Domain ที่ผ่าน WAF (ใช้ใน `next.config.ts`) |
-| `NEXT_PUBLIC_SITE_URL` | `https://mangalab-th.com` | Base URL (สำหรับ SEO / robots.ts) |
-| `REVALIDATION_SECRET` | `super-secret-xxx` | ค่าเดียวกับ Backend (สำหรับรับ Webhook เคลียร์ Cache) |
-
-> **สำคัญ:** ตัวแปร `NEXT_PUBLIC_*` จะถูก inline ตอน Build — ต้องตั้งก่อน build ไม่ใช่ Runtime
+*ผลลัพธ์: บอทที่พยายามดึงรูปตอน (pages) ไปโชว์เว็บอื่นจะขึ้น Error 403 ทันที แต่รูปภาพปก (covers) จะยังโชว์ได้ปกติเพื่อประโยชน์ทาง SEO!*
 
 ---
 
-## 3. Cloudflare R2 — ตั้งค่า Bucket
+## ✅ Final Checklist (ก่อนประกาศเปิดเมือง)
 
-1. ไปที่ Cloudflare Dashboard → **R2 Object Storage**
-2. สร้าง Bucket ชื่อ `factory-manga-storage`
-3. ตั้งค่า **Custom Domain** → ผูก Subdomain `cdn.mangalab-th.com` เข้ากับ Bucket (ผ่าน Cloudflare Proxy)
-4. สร้าง **R2 API Token** → จด Access Key ID + Secret Access Key
-5. จด **Account ID** จาก URL bar → สร้าง Endpoint URL: `https://<account_id>.r2.cloudflarestorage.com`
+- [ ] เช็ค `/health` ของ Backend ตอบกลับว่า `"ok"`
+- [ ] รูปภาพจาก R2 (Custom Domain) โชว์บนหน้าเว็บปกติ
+- [ ] สมัครสมาชิก / ล็อกอิน ผ่าน Clerk ได้
+- [ ] บัญชี Admin มีสิทธิ์จัดการหลังบ้าน (เช็ค `PRIMARY_ADMIN_EMAIL`)
+- [ ] ทดลองเติมเหรียญ (แสกน QR) และเหรียญเข้ากระเป๋าจริง
+- [ ] กดปลดล็อกตอนมังงะได้ และเงินหักถูกต้อง
+- [ ] ตั้งค่า Google Indexing API (Service Account) เรียบร้อย เพื่อให้ Google วิ่งมาเก็บข้อมูลเว็บไวๆ
 
-### ข้อสำคัญเกี่ยวกับ R2_PUBLIC_URL
-
-- ระบบปัจจุบันใช้ **Custom Domain (cdn.mangalab-th.com)** เพื่อซ่อน URL จริงและป้องกันการโดนดูดรูป
-- **ต้องขึ้นต้นด้วย `https://`** เสมอ
-- **ห้ามมี `/` ต่อท้าย** (trailing slash)
-- ✅ ถูก: `https://cdn.mangalab-th.com`
-- ❌ ผิด: `https://cdn.mangalab-th.com/` (มี trailing slash)
-- ❌ ผิด: `https://pub-xxxxx.r2.dev` (URL สำรอง จะทำให้ WAF ไม่ทำงาน)
-
-### Cloudflare WAF (Anti-Scraping Level 5)
-
-เพื่อป้องกันบอทและ Extension ดูดรูปภาพ ต้องตั้งค่า **WAF Custom Rule** ใน Cloudflare:
-- **Field:** `Hostname` equals `cdn.mangalab-th.com`
-- **AND:** `Referer` does not contain `mangalab-th.com`
-- **AND:** `Referer` does not contain `localhost`
-- **Action:** `Block`
-
-> **หมายเหตุ DNS:** ตรวจสอบให้แน่ใจว่า CNAME ของ Clerk (ระบบล็อกอิน) ได้ถูกเพิ่มเข้าไปในหน้า DNS ของ Cloudflare เรียบร้อยแล้ว (เปิดโหมด DNS-only สีเทา) มิฉะนั้นระบบสมาชิกจะพัง (`ERR_NAME_NOT_RESOLVED`)
-
----
-
-## 4. Supabase PostgreSQL
-
-### Database Setup
-1. สร้าง Project ใน [Supabase](https://supabase.com/)
-2. ไปที่ Settings → Database → Connection string
-3. เลือก **Session Pooler (IPv4)** → คัดลอก URL
-4. แทนที่ `postgresql://` ด้วย `postgresql+asyncpg://` สำหรับใช้ใน `DATABASE_URL`
-
-### Run Migrations (ครั้งแรก)
-```bash
-cd backend
-source .venv/bin/activate
-alembic upgrade head
-```
-
-### Seed Coin Packages
-```bash
-python scripts/seed_coin_packages.py
-```
-
----
-
-## 5. FeelFreePay — ตั้งค่า Payment Gateway
-
-1. สมัครบัญชีที่ [FeelFreePay](https://feelfreepay.com/)
-2. ไปที่ Profile → **Gen Token** → คัดลอก Customer Key
-3. จดค่า Public Key, Secret Key จาก Dashboard
-4. Webhook URL จะถูกสร้างแบบ Dynamic (ไม่ต้องตั้งค่าในหน้า FFP) — Backend สร้าง `backgroundUrl` อัตโนมัติจาก `request.base_url`
-5. สำหรับ Testing: ใช้ `FFP_BASE_URL=https://api-test.feelfreepay.com`
-6. สำหรับ Production: ใช้ `FFP_BASE_URL=https://api.feelfreepay.com`
-
-> **หมายเหตุ Local Dev:** FFP CloudFront WAF จับ URL ที่มี "localhost" — ใช้ `lvh.me` แทน (resolves to 127.0.0.1)
-
----
-
-## 6. Google Indexing API (SEO)
-
-1. สร้าง Service Account ใน Google Cloud Console
-2. Enable **Indexing API** สำหรับ project
-3. Export JSON key → แปลงเป็น Base64 หรือใช้ raw JSON
-4. ใส่ใน env var `GOOGLE_INDEXING_CREDENTIALS`
-5. เพิ่ม Email ของ Service Account เป็น **Owner** ใน Google Search Console
-
----
-
-## 7. Checklist ก่อน Go Live
-
-- [ ] Backend health check ผ่าน (`/health` return `"ok"`)
-- [ ] Frontend เปิดได้ที่ Vercel URL
-- [ ] รูปจาก R2 แสดงผลถูกต้อง
-- [ ] Clerk sign-in / sign-up ทำงาน
-- [ ] CORS ไม่มี error ใน browser console
-- [ ] Admin pages เข้าถึงได้ (ต้อง login + role admin)
-- [ ] FeelFreePay QR payment ทดสอบผ่าน
-- [ ] FeelFreePay webhook ตอบ success
-- [ ] ตั้งค่า `SITE_URL` บน Cloud Run (สำหรับ Auto Google Ping)
-- [ ] ยืนยันเว็บบน Google Search Console
-- [ ] ส่ง `sitemap.xml` บน Google Search Console
-- [ ] ตั้งค่า `GOOGLE_INDEXING_CREDENTIALS` + เพิ่ม Service Account เป็น Owner
-- [ ] Seed coin packages ผ่าน `seed_coin_packages.py`
+**ถ้าคุณติ๊กถูกครบทุกข้อ... ยินดีด้วยครับ! อาณาจักร MangaLabTH ของคุณพร้อมให้บริการแล้ว 🚀**

@@ -62,7 +62,16 @@ async def _fulfill_payment(
     if not package:
         return {"status": "error", "reason": "package not found"}
     coins = package.coins
-    note = f"Purchased {package.name}"
+    
+    # Determine payment method from the pending transaction note
+    method_suffix = ""
+    if existing and existing.note:
+        if " qr " in existing.note:
+            method_suffix = " [ QR code ]"
+        elif " truewallet " in existing.note:
+            method_suffix = " [ TrueWallet ]"
+            
+    note = f"Purchased {package.name}{method_suffix}"
 
     # Lock user for atomic balance update
     user_stmt = select(User).where(User.id == user_id).with_for_update()
