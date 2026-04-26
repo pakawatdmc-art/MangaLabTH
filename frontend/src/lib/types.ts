@@ -3,7 +3,7 @@
 // Enums
 export type MangaCategory =
   | "action" | "romance" | "comedy" | "drama" | "fantasy"
-  | "horror" | "slice_of_life" | "isekai" | "school" | "sci_fi" | "other";
+  | "horror" | "school" | "sci_fi" | "other";
 
 export type MangaStatus = "ongoing" | "completed" | "hiatus" | "dropped";
 export type UserRole = "reader" | "admin";
@@ -17,8 +17,6 @@ export const CATEGORY_LABELS: Record<MangaCategory, string> = {
   drama: "ดราม่า",
   fantasy: "แฟนตาซี",
   horror: "สยองขวัญ",
-  slice_of_life: "ชีวิตประจำวัน",
-  isekai: "อิเซไก",
   school: "โรงเรียน",
   sci_fi: "ไซไฟ",
   other: "อื่นๆ",

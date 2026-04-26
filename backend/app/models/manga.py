@@ -19,8 +19,6 @@ class MangaCategory(str, enum.Enum):
     DRAMA = "drama"
     FANTASY = "fantasy"
     HORROR = "horror"
-    SLICE_OF_LIFE = "slice_of_life"
-    ISEKAI = "isekai"
     SCHOOL = "school"
     SCI_FI = "sci_fi"
     OTHER = "other"
