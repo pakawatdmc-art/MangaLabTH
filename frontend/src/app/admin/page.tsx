@@ -53,6 +53,7 @@ export default function AdminDashboard() {
       value: stats ? formatNumber(stats.total_manga) : "—",
       icon: BookOpen,
       color: "text-blue-400",
+      href: "/admin/analytics/mangas",
       glow: "group-hover:shadow-blue-500/20",
     },
     {
@@ -60,6 +61,7 @@ export default function AdminDashboard() {
       value: stats ? formatNumber(stats.total_chapters) : "—",
       icon: Layers,
       color: "text-emerald-400",
+      href: "/admin/analytics/chapters",
       glow: "group-hover:shadow-emerald-500/20",
     },
     {
@@ -67,6 +69,7 @@ export default function AdminDashboard() {
       value: stats ? formatNumber(stats.total_users) : "—",
       icon: Users,
       color: "text-purple-400",
+      href: "/admin/analytics/users",
       glow: "group-hover:shadow-purple-500/20",
     },
     {
@@ -74,6 +77,7 @@ export default function AdminDashboard() {
       value: stats ? formatNumber(stats.total_coins_in_circulation) : "—",
       icon: Coins,
       color: "text-gold",
+      href: "/admin/analytics/coins",
       glow: "group-hover:shadow-gold/20",
     },
     {

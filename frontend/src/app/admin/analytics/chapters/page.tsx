@@ -4,53 +4,61 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import dynamic from "next/dynamic";
 import { formatNumber } from "@/lib/utils";
-import { getMarketingAnalytics } from "@/lib/api";
+import { getChapterDeepdiveAnalytics } from "@/lib/api";
 import {
     ArrowLeft,
-    Eye,
+    Layers,
     Loader2,
-    TrendingUp,
-    BarChart3,
     ArrowUpRight,
     ArrowDownRight,
     PieChart,
+    Coins,
+    BarChart3,
     BookOpen,
-    Activity
+    Key,
+    Flame
 } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 
-// ApexCharts needs to be dynamically imported because it references window
+// ApexCharts needs to be dynamically imported
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
     ssr: false,
     loading: () => (
         <div className="flex h-[300px] items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
+            <Loader2 className="h-8 w-8 animate-spin text-emerald-400" />
         </div>
     ),
 });
 
-interface AnalyticsData {
+interface ChapterAnalyticsData {
     summary: {
-        total_views: number;
-        total_reads: number;
-        new_users: number;
-        total_users: number;
+        total_chapters: number;
+        new_chapters: number;
+        total_unlocks: number;
+        coins_burned: number;
     };
     previous_summary: {
-        total_views: number;
-        total_reads: number;
-        new_users: number;
-        total_users: number;
+        total_chapters: number;
+        new_chapters: number;
+        total_unlocks: number;
+        coins_burned: number;
     };
-    views_by_category: { category: string; views: number }[];
-    chart_data: { date: string; views: number; reads: number }[];
-    top_traffic_mangas: { id: string; title: string; slug: string; cover_image: string; views: number; reads: number }[];
+    segments: {
+        paid_chapters: number;
+        free_chapters: number;
+    };
+    unlock_trend: { date: string; unlocks: number; coins_burned: number }[];
+    top_chapters: {
+        manga_title: string;
+        chapter_number: number;
+        unlocks: number;
+        coins_earned: number;
+    }[];
 }
 
-export default function TrafficDashboard() {
+export default function ChapterAnalyticsDashboard() {
     const { getToken, isLoaded } = useAuth();
-    const [data, setData] = useState<AnalyticsData | null>(null);
+    const [data, setData] = useState<ChapterAnalyticsData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [timeRange, setTimeRange] = useState<number>(7); // days
@@ -62,7 +70,7 @@ export default function TrafficDashboard() {
                 setLoading(true);
                 const token = await getToken();
                 if (!token) throw new Error("No token");
-                const result = await getMarketingAnalytics(token, timeRange);
+                const result = await getChapterDeepdiveAnalytics(token, timeRange);
                 setData(result);
             } catch (err: unknown) {
                 setError(err instanceof Error ? err.message : "Error loading analytics");
@@ -95,22 +103,22 @@ export default function TrafficDashboard() {
         );
     };
 
-    // ── Chart 1: Views vs Reads Trend ────────────────────────────────────────────────
+    // ── Chart 1: Unlock Trend (Area Chart) ──────────────────────────────────
     const trendSeries = [
         {
-            name: "ยอดวิวรวม (Page Views)",
-            data: (data?.chart_data || []).map((d) => ({
+            name: "เหรียญที่ถูกเบิร์น (Coins Burned)",
+            data: (data?.unlock_trend || []).map((d) => ({
                 x: new Date(d.date).getTime(),
-                y: d.views,
+                y: d.coins_burned,
             })),
         },
         {
-            name: "ยอดเข้าอ่านจริง (Chapter Reads)",
-            data: (data?.chart_data || []).map((d) => ({
+            name: "จำนวนครั้งที่ปลดล็อก (Unlocks)",
+            data: (data?.unlock_trend || []).map((d) => ({
                 x: new Date(d.date).getTime(),
-                y: d.reads,
+                y: d.unlocks,
             })),
-        },
+        }
     ];
 
     const trendOptions: ApexCharts.ApexOptions = {
@@ -121,10 +129,15 @@ export default function TrafficDashboard() {
             toolbar: { show: false },
             animations: { enabled: true }
         },
-        colors: ["#3B82F6", "#10B981"], // Blue for Views, Emerald for Reads
+        colors: ["#FBBF24", "#10B981"], // Yellow (Coins), Emerald (Unlocks)
         fill: {
             type: "gradient",
-            gradient: { shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0.05, stops: [0, 90, 100] }
+            gradient: {
+                shadeIntensity: 1,
+                opacityFrom: 0.4,
+                opacityTo: 0.05,
+                stops: [0, 90, 100]
+            }
         },
         dataLabels: { enabled: false },
         stroke: { curve: "smooth", width: 2 },
@@ -135,20 +148,31 @@ export default function TrafficDashboard() {
             axisBorder: { show: false },
             axisTicks: { show: false },
         },
-        yaxis: {
-            labels: { style: { colors: "#9CA3AF" }, formatter: (value) => formatNumber(Math.floor(value)) },
-        },
+        yaxis: [
+            {
+                labels: { style: { colors: "#FBBF24" }, formatter: (value) => formatNumber(Math.floor(value)) },
+                title: { text: "Coins", style: { color: "#FBBF24" } }
+            },
+            {
+                opposite: true,
+                labels: { style: { colors: "#10B981" }, formatter: (value) => formatNumber(Math.floor(value)) },
+                title: { text: "Unlocks", style: { color: "#10B981" } }
+            }
+        ],
         grid: { borderColor: "rgba(255,255,255,0.05)", strokeDashArray: 4 },
-        legend: { position: 'top', horizontalAlign: 'right', offsetY: 0, labels: { colors: "#9ca3af" } },
         tooltip: { theme: "dark", x: { format: "dd MMM yyyy" } },
     };
 
-    // ── Chart 2: Category Popularity (Donut) ──────────────────────────────────
-    const categorySeries = (data?.views_by_category || []).map(c => c.views);
-    const categoryOptions: ApexCharts.ApexOptions = {
+    // ── Chart 2: Content Mix (Donut) ──────────────────────────────────
+    const mixSeries = [
+        data?.segments.free_chapters || 0,
+        data?.segments.paid_chapters || 0
+    ];
+    
+    const mixOptions: ApexCharts.ApexOptions = {
         chart: { type: "donut", background: "transparent", animations: { enabled: true } },
-        labels: (data?.views_by_category || []).map(c => c.category),
-        colors: ["#60A5FA", "#34D399", "#FBBF24", "#F87171", "#A78BFA", "#F472B6"],
+        labels: ["ตอนฟรี (Free)", "ตอนเสียเงิน (Paid)"],
+        colors: ["#3B82F6", "#FBBF24"], // Blue, Yellow
         stroke: { show: true, colors: ["#131826"], width: 2 },
         theme: { mode: "dark" },
         plotOptions: {
@@ -159,18 +183,14 @@ export default function TrafficDashboard() {
                         show: true,
                         name: { show: true, color: "#9CA3AF" },
                         value: { show: true, color: "#FFF", fontSize: "24px", fontWeight: 700, formatter: (val) => formatNumber(Number(val)) },
-                        total: { show: true, showAlways: true, label: "Total Views", color: "#9CA3AF", formatter: (w) => formatNumber(w.globals.seriesTotals.reduce((a: number, b: number) => a + b, 0)) }
+                        total: { show: true, showAlways: true, label: "Total Chapters", color: "#9CA3AF", formatter: (w) => formatNumber(w.globals.seriesTotals.reduce((a: number, b: number) => a + b, 0)) }
                     }
                 }
             }
         },
         legend: { position: "bottom", labels: { colors: "#9CA3AF" } },
-        tooltip: { theme: "dark", y: { formatter: (val) => formatNumber(val) + " Views" } },
+        tooltip: { theme: "dark", y: { formatter: (val) => formatNumber(val) + " ตอน" } },
     };
-
-    // Calculate Engagement Rate
-    const currentEngagement = data?.summary.total_views ? (data.summary.total_reads / data.summary.total_views) * 100 : 0;
-    const prevEngagement = data?.previous_summary.total_views ? (data.previous_summary.total_reads / data.previous_summary.total_views) * 100 : 0;
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500 pb-10">
@@ -185,10 +205,10 @@ export default function TrafficDashboard() {
                     </Link>
                     <div>
                         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                            <Activity className="h-6 w-6 text-blue-400" />
-                            Traffic & Engagement Dashboard
+                            <Layers className="h-6 w-6 text-emerald-400" />
+                            Chapter Analytics Dashboard
                         </h1>
-                        <p className="text-sm text-gray-400">สถิติเชิงลึกสำหรับวิเคราะห์ความสนใจและพฤติกรรมการเข้าชม</p>
+                        <p className="text-sm text-gray-400">สถิติเชิงลึกสำหรับวิเคราะห์ประสิทธิภาพการทำเงินของคอนเทนต์</p>
                     </div>
                 </div>
 
@@ -220,40 +240,47 @@ export default function TrafficDashboard() {
                 </div>
             ) : (
                 <>
-                    {/* Key Traffic Metrics */}
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    {/* Key Metrics */}
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         {[
                             {
-                                label: `ยอดวิวรวม`,
-                                value: data?.summary?.total_views || 0,
-                                prev: data?.previous_summary?.total_views || 0,
-                                icon: Eye,
+                                label: `ตอนทั้งหมด`,
+                                value: data?.summary?.total_chapters || 0,
+                                prev: data?.previous_summary?.total_chapters || 0,
+                                icon: Layers,
                                 color: "text-blue-400",
                                 bgColor: "bg-blue-400/10",
                             },
                             {
-                                label: `ยอดเข้าอ่านจริง (Reads)`,
-                                value: data?.summary?.total_reads || 0,
-                                prev: data?.previous_summary?.total_reads || 0,
+                                label: `ตอนที่อัปเดตใหม่ (${timeRange} วัน)`,
+                                value: data?.summary?.new_chapters || 0,
+                                prev: data?.previous_summary?.new_chapters || 0,
                                 icon: BookOpen,
                                 color: "text-emerald-400",
                                 bgColor: "bg-emerald-400/10",
                             },
                             {
-                                label: `อัตราการเข้าอ่าน`,
-                                value: currentEngagement,
-                                prev: prevEngagement,
-                                isPercent: true,
-                                icon: TrendingUp,
+                                label: `จำนวนครั้งที่ปลดล็อก (Unlocks)`,
+                                value: data?.summary?.total_unlocks || 0,
+                                prev: data?.previous_summary?.total_unlocks || 0,
+                                icon: Key,
                                 color: "text-purple-400",
                                 bgColor: "bg-purple-400/10",
+                            },
+                            {
+                                label: `เหรียญที่ถูกใช้ (Coins Burned)`,
+                                value: data?.summary?.coins_burned || 0,
+                                prev: data?.previous_summary?.coins_burned || 0,
+                                icon: Flame,
+                                color: "text-orange-400",
+                                bgColor: "bg-orange-400/10",
                             },
                         ].map((card, i) => (
                             <div
                                 key={i}
                                 className="relative overflow-hidden rounded-2xl border border-white/5 bg-[linear-gradient(135deg,#1b2130_0%,#131826_100%)] p-6 shadow-xl ring-1 ring-white/10 transition-transform hover:scale-[1.02]"
                             >
-                                <div className="absolute right-0 top-0 -mr-6 -mt-6 rounded-full blur-3xl opacity-20 w-32 h-32" style={{ backgroundColor: "currentColor", color: card.color === "text-blue-400" ? "#60A5FA" : card.color === "text-emerald-400" ? "#10B981" : card.color === "text-purple-400" ? "#C084FC" : "#FB923C" }} />
+                                <div className="absolute right-0 top-0 -mr-6 -mt-6 rounded-full blur-3xl opacity-20 w-32 h-32" style={{ backgroundColor: "currentColor", color: card.color === "text-blue-400" ? "#60A5FA" : card.color === "text-emerald-400" ? "#10B981" : card.color === "text-purple-400" ? "#C084FC" : "#F97316" }} />
 
                                 <div className="flex items-start justify-between">
                                     <div className="relative">
@@ -262,7 +289,7 @@ export default function TrafficDashboard() {
                                         </div>
                                         <div className="flex items-baseline gap-3">
                                             <p className="text-3xl font-bold text-white drop-shadow-md">
-                                                {loading ? "..." : card.isPercent ? `${card.value.toFixed(1)}%` : formatNumber(card.value)}
+                                                {loading ? "..." : formatNumber(card.value)}
                                             </p>
                                             {!loading && card.prev !== undefined && renderGrowthBadge(card.value, card.prev)}
                                         </div>
@@ -277,15 +304,15 @@ export default function TrafficDashboard() {
 
                     {/* Middle Row: Trend & Demographics */}
                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                        {/* Traffic Trend Chart */}
+                        {/* Unlock Trend Chart */}
                         <div className="lg:col-span-2 rounded-2xl border border-white/5 bg-[linear-gradient(135deg,#1b2130_0%,#131826_100%)] p-6 shadow-xl ring-1 ring-white/10">
                             <div className="mb-4 flex items-center justify-between">
                                 <div>
                                     <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                                        <BarChart3 className="h-5 w-5 text-blue-400" />
-                                        แนวโน้มความสนใจ (Traffic Trend)
+                                        <BarChart3 className="h-5 w-5 text-emerald-400" />
+                                        Unlock Velocity (เทรนด์การปลดล็อก)
                                     </h2>
-                                    <p className="text-xs text-gray-400 mt-1">เปรียบเทียบยอดการเปิดหน้า (Views) และการกดอ่านตอน (Reads)</p>
+                                    <p className="text-xs text-gray-400 mt-1">จำนวนเหรียญที่ถูกใช้และจำนวนครั้งที่ปลดล็อกในช่วง {timeRange} วันที่ผ่านมา</p>
                                 </div>
                             </div>
                             <div className="h-[300px] w-full">
@@ -293,47 +320,43 @@ export default function TrafficDashboard() {
                                     <ReactApexChart options={trendOptions} series={trendSeries} type="area" height="100%" />
                                 ) : (
                                     <div className="flex h-full w-full flex-col items-center justify-center gap-3">
-                                        <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
+                                        <Loader2 className="h-8 w-8 animate-spin text-emerald-400" />
                                     </div>
                                 )}
                             </div>
                         </div>
 
-                        {/* Category Popularity Chart */}
+                        {/* Content Mix Chart */}
                         <div className="rounded-2xl border border-white/5 bg-[linear-gradient(135deg,#1b2130_0%,#131826_100%)] p-6 shadow-xl ring-1 ring-white/10">
                             <div className="mb-4 flex items-center justify-between">
                                 <div>
                                     <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                                        <PieChart className="h-5 w-5 text-purple-400" />
-                                        ความนิยมตามหมวดหมู่
+                                        <PieChart className="h-5 w-5 text-blue-400" />
+                                        Content Mix (สัดส่วนตอนฟรี/จ่ายเงิน)
                                     </h2>
-                                    <p className="text-xs text-gray-400 mt-1">สัดส่วนผู้เข้าชมแบ่งตาม Genre</p>
+                                    <p className="text-xs text-gray-400 mt-1">สัดส่วนของตอนที่อ่านฟรีและตอนที่ต้องใช้เหรียญปลดล็อก (ทั้งหมด)</p>
                                 </div>
                             </div>
                             <div className="h-[300px] w-full">
                                 {!loading && data ? (
-                                    data.views_by_category.length > 0 ? (
-                                        <ReactApexChart options={categoryOptions} series={categorySeries} type="donut" height="100%" />
-                                    ) : (
-                                        <div className="flex h-full items-center justify-center text-sm text-gray-500">ไม่มีข้อมูลหมวดหมู่</div>
-                                    )
+                                    <ReactApexChart options={mixOptions} series={mixSeries} type="donut" height="100%" />
                                 ) : (
                                     <div className="flex h-full w-full flex-col items-center justify-center gap-3">
-                                        <Loader2 className="h-8 w-8 animate-spin text-purple-400" />
+                                        <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
                                     </div>
                                 )}
                             </div>
                         </div>
                     </div>
 
-                    {/* Bottom Row: Top Traffic Drivers */}
+                    {/* Bottom Row: Top Earning Chapters */}
                     <div className="grid grid-cols-1 gap-6">
                         <div className="rounded-2xl border border-white/5 bg-[linear-gradient(135deg,#1b2130_0%,#131826_100%)] p-6 shadow-xl ring-1 ring-white/10 flex flex-col">
                             <h2 className="mb-1 text-lg font-bold text-white flex items-center gap-2">
-                                <TrendingUp className="h-5 w-5 text-emerald-400" />
-                                มังงะที่ดึงดูดทราฟฟิกสูงสุด (Top Traffic Drivers)
+                                <Coins className="h-5 w-5 text-gold" />
+                                Top Earning Chapters (สินค้าขายดี)
                             </h2>
-                            <p className="mb-6 text-xs text-gray-400">เรียงตามยอดเข้าชมในช่วง {timeRange} วันล่าสุด พร้อมวิเคราะห์อัตราการเข้าอ่าน</p>
+                            <p className="mb-6 text-xs text-gray-400">อันดับตอนที่ทำรายได้สูงสุด (เผาเหรียญผู้ใช้ได้เยอะที่สุด) ในช่วง {timeRange} วันที่ผ่านมา</p>
 
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-sm">
@@ -341,9 +364,9 @@ export default function TrafficDashboard() {
                                         <tr>
                                             <th className="rounded-l-lg px-4 py-3 font-semibold">อันดับ</th>
                                             <th className="px-4 py-3 font-semibold">มังงะ</th>
-                                            <th className="px-4 py-3 font-semibold text-right">ยอดเข้าชม (Views)</th>
-                                            <th className="px-4 py-3 font-semibold text-right">ยอดอ่านจริง (Reads)</th>
-                                            <th className="rounded-r-lg px-4 py-3 font-semibold text-right">อัตราการอ่าน</th>
+                                            <th className="px-4 py-3 font-semibold text-center">ตอนที่ (Chapter)</th>
+                                            <th className="px-4 py-3 font-semibold text-right">จำนวนครั้งที่ปลดล็อก</th>
+                                            <th className="rounded-r-lg px-4 py-3 font-semibold text-right text-gold">เหรียญที่ทำได้ (Revenue)</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-white/5">
@@ -353,34 +376,32 @@ export default function TrafficDashboard() {
                                                     <Loader2 className="mx-auto h-6 w-6 animate-spin" />
                                                 </td>
                                             </tr>
-                                        ) : data?.top_traffic_mangas.length === 0 ? (
+                                        ) : data?.top_chapters.length === 0 ? (
                                             <tr>
-                                                <td colSpan={5} className="py-8 text-center text-gray-500">ไม่พบข้อมูลการเข้าชม</td>
+                                                <td colSpan={5} className="py-8 text-center text-gray-500">ไม่พบข้อมูลการปลดล็อกตอนในช่วงเวลานี้</td>
                                             </tr>
                                         ) : (
-                                            data?.top_traffic_mangas.map((manga, index) => {
-                                                const rate = manga.views ? (manga.reads / manga.views) * 100 : 0;
+                                            data?.top_chapters.map((chapter, index) => {
                                                 return (
-                                                    <tr key={manga.id} className="transition hover:bg-white/[0.02]">
+                                                    <tr key={index} className="transition hover:bg-white/[0.02]">
                                                         <td className="px-4 py-3">
-                                                            <div className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold ${index === 0 ? 'bg-emerald-400/20 text-emerald-400' : index === 1 ? 'bg-blue-400/20 text-blue-400' : index === 2 ? 'bg-purple-400/20 text-purple-400' : 'bg-surface-200 text-gray-400'}`}>
+                                                            <div className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold ${index === 0 ? 'bg-yellow-400/20 text-yellow-400' : index === 1 ? 'bg-gray-400/20 text-gray-300' : index === 2 ? 'bg-orange-600/20 text-orange-400' : 'bg-surface-200 text-gray-400'}`}>
                                                                 #{index + 1}
                                                             </div>
                                                         </td>
                                                         <td className="px-4 py-3">
-                                                            <Link href={`/manga/${manga.slug}`} className="flex items-center gap-3 group">
-                                                                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md">
-                                                                    <Image src={manga.cover_image || "https://placehold.co/400x600/1A1A1A/EDEDED/png?text=No+Cover"} alt={manga.title} fill className="object-cover" sizes="40px" />
-                                                                </div>
-                                                                <span className="font-medium text-white group-hover:text-emerald-400 transition line-clamp-1">{manga.title}</span>
-                                                            </Link>
+                                                            <span className="font-medium text-white line-clamp-1">{chapter.manga_title}</span>
                                                         </td>
-                                                        <td className="px-4 py-3 text-right font-medium text-white">{formatNumber(manga.views)}</td>
-                                                        <td className="px-4 py-3 text-right text-gray-300">{formatNumber(manga.reads)}</td>
-                                                        <td className="px-4 py-3 text-right">
-                                                            <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${rate >= 50 ? 'bg-emerald-400/10 text-emerald-400' : rate >= 20 ? 'bg-blue-400/10 text-blue-400' : 'bg-orange-400/10 text-orange-400'}`}>
-                                                                {rate.toFixed(1)}%
+                                                        <td className="px-4 py-3 text-center">
+                                                            <span className="inline-flex items-center rounded-md bg-white/5 px-2 py-1 text-xs font-medium text-gray-300">
+                                                                Ch. {chapter.chapter_number}
                                                             </span>
+                                                        </td>
+                                                        <td className="px-4 py-3 text-right text-gray-300">
+                                                            {formatNumber(chapter.unlocks)} ครั้ง
+                                                        </td>
+                                                        <td className="px-4 py-3 text-right font-bold text-gold">
+                                                            {formatNumber(chapter.coins_earned)} เหรียญ
                                                         </td>
                                                     </tr>
                                                 );

@@ -56,9 +56,9 @@ export default async function HomePage({ searchParams }: Props) {
             <h1 className="mb-2 text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl drop-shadow-sm">
               MangaLab<span className="text-gold">TH</span>
             </h1>
-            <span className="mb-5 block text-sm sm:text-base font-medium text-gold/80 tracking-wide">
-              เว็บอ่านมังงะ มังงะแปลไทย มังงะเกาหลี คุณภาพพรีเมียม
-            </span>
+            <h2 className="mb-5 block text-sm sm:text-base font-medium text-gold/80 tracking-wide">
+              เว็บอ่านมังงะ มังงะแปลไทย มังงะเกาหลี การ์ตูนออนไลน์ คุณภาพพรีเมียม
+            </h2>
           </FadeUp>
           <FadeUp delay={0.2}>
             <p className="mx-auto mb-10 max-w-xl text-lg text-gray-400">
@@ -71,13 +71,12 @@ export default async function HomePage({ searchParams }: Props) {
             <SearchAutocomplete defaultValue={params.q || ""} />
           </FadeUp>
 
-          {/* SEO Text Component - Elegant and subtle */}
           <div className="mx-auto mt-6 max-w-3xl">
-            <h2 className="sr-only">อ่านมังงะ มังงะแปลไทย มังงะเกาหลี อ่านการ์ตูนฟรี - MangaLabTH</h2>
+            <h3 className="sr-only">อ่านมังงะ มังงะแปลไทย มังงะเกาหลี การ์ตูนออนไลน์ - MangaLabTH</h3>
             <p className="text-[11px] leading-relaxed text-gray-500/50 balance-text font-medium">
-              &quot;MangaLabTH แพลตฟอร์มระบบทันสมัยปี 2026 ตอบโจทย์คนชอบ <strong>อ่านมังงะ</strong> ที่คัดสรรเฉพาะ <strong>มังงะเกาหลี</strong> และเรื่องฮิตมาแรงที่สุด! เราเน้นคุณภาพเน้นๆ เพื่อให้คุณได้ <strong>อ่านการ์ตูน</strong> ตัวท็อปจาก Webtoon, Kakao, Comico 
+              &quot;MangaLabTH แพลตฟอร์มระบบทันสมัยปี 2026 ตอบโจทย์คนชอบ <strong>อ่านมังงะ</strong> ที่คัดสรรเฉพาะ <strong>มังงะเกาหลี</strong> และเรื่องฮิตมาแรงที่สุด! เราเน้นคุณภาพเน้นๆ เพื่อให้คุณได้อ่าน <strong>การ์ตูนออนไลน์</strong> ตัวท็อปจาก Webtoon, Kakao, Comico 
               สนุกจัดเต็มทั้ง <strong>มังงะแปลไทย</strong> จีน ญี่ปุ่น แบบไม่ตกเทรนด์ มั่นใจได้กับงานแปลที่ Admin แปลเองทุกเรื่อง อัปเดตตอนใหม่ล่าสุดก่อนใคร แถมราคาสุดคุ้มเหรียญไม่แพงแน่นอน 
-              หากมีมังงะดังเรื่องไหนที่คุณอยากอ่าน ทักบอกแอดมินผ่าน แฟนเพจ FB: Mangalab-th ได้เลย เรื่องไหนคนขอมาเยอะ เราพร้อมจัดให้ที่ MangaLabTH&quot;
+              หากมีมังงะดังเรื่องไหนที่คุณอยากอ่าน ทักบอกแอดมินผ่าน แฟนเพจ FB: Mangalab-th ได้เลย เรื่องไหนคนขอมาเยอะ เราพร้อมจัดให้ที่ <strong>มังงะแลป</strong> (MangaLabTH)&quot;
             </p>
           </div>
         </div>

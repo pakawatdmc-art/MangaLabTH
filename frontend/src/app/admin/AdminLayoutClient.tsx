@@ -20,10 +20,15 @@ import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 
 const SIDEBAR_LINKS = [
     { href: "/admin", label: "แดชบอร์ด", icon: LayoutDashboard },
+    { href: "/admin/analytics", label: "ยอดเข้าชม", icon: Sparkles },
+    { href: "/admin/analytics/coins", label: "ยอดเติมเหรียญ", icon: Coins },
+    { href: "/admin/analytics/users", label: "สถิติผู้ใช้งาน", icon: Users },
+    { href: "/admin/analytics/chapters", label: "สถิติตอน", icon: Layers },
+    { href: "/admin/analytics/mangas", label: "สถิติมังงะ", icon: BookOpen },
     { href: "/admin/manga", label: "จัดการมังงะ", icon: BookOpen },
     { href: "/admin/chapters", label: "จัดการตอน", icon: Layers },
-    { href: "/admin/users", label: "ผู้ใช้งาน", icon: Users },
-    { href: "/admin/transactions", label: "รายการเหรียญ", icon: Coins },
+    { href: "/admin/users", label: "จัดการบัญชีผู้ใช้", icon: Users },
+    { href: "/admin/transactions", label: "จัดการธุรกรรม", icon: Coins },
 ];
 
 interface Props {

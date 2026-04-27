@@ -1,4 +1,6 @@
-"use client";
+import re
+
+new_content = """"use client";
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
@@ -8,6 +10,7 @@ import { getMarketingAnalytics } from "@/lib/api";
 import {
     ArrowLeft,
     Eye,
+    Users,
     Loader2,
     TrendingUp,
     BarChart3,
@@ -53,7 +56,7 @@ export default function TrafficDashboard() {
     const [data, setData] = useState<AnalyticsData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-    const [timeRange, setTimeRange] = useState<number>(7); // days
+    const [timeRange, setTimeRange] = useState<number>(30); // days
 
     useEffect(() => {
         if (!isLoaded) return;
@@ -195,7 +198,6 @@ export default function TrafficDashboard() {
                 {/* Time range selector */}
                 <div className="inline-flex rounded-lg border border-white/10 bg-surface-100 p-1">
                     {[
-                        { label: "1 วัน", value: 1 },
                         { label: "7 วัน", value: 7 },
                         { label: "30 วัน", value: 30 },
                         { label: "90 วัน", value: 90 },
@@ -221,7 +223,7 @@ export default function TrafficDashboard() {
             ) : (
                 <>
                     {/* Key Traffic Metrics */}
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         {[
                             {
                                 label: `ยอดวิวรวม`,
@@ -247,6 +249,14 @@ export default function TrafficDashboard() {
                                 icon: TrendingUp,
                                 color: "text-purple-400",
                                 bgColor: "bg-purple-400/10",
+                            },
+                            {
+                                label: `ยอดสมัครสมาชิกใหม่`,
+                                value: data?.summary?.new_users || 0,
+                                prev: data?.previous_summary?.new_users || 0,
+                                icon: Users,
+                                color: "text-orange-400",
+                                bgColor: "bg-orange-400/10",
                             },
                         ].map((card, i) => (
                             <div
@@ -396,3 +406,9 @@ export default function TrafficDashboard() {
         </div>
     );
 }
+"""
+
+with open("frontend/src/app/admin/analytics/page.tsx", "w") as f:
+    f.write(new_content)
+
+print("Page replaced successfully!")

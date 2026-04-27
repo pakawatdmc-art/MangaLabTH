@@ -260,23 +260,19 @@ export async function getMarketingAnalytics(token: string, days = 30) {
   return fetcher<{
     summary: {
       total_views: number;
+      total_reads: number;
+      new_users: number;
       total_users: number;
-      coins_earned_30d: number;
-      coins_spent_30d: number;
     };
     previous_summary: {
       total_views: number;
+      total_reads: number;
+      new_users: number;
       total_users: number;
-      coins_earned_30d: number;
-      coins_spent_30d: number;
     };
-    user_segments: {
-      paid_users: number;
-      free_users: number;
-    };
-    chart_data: { date: string; views: number; coins_purchased: number; coins_spent: number }[];
-    top_grossing_mangas: { id: string; title: string; slug: string; cover_image: string; coins_earned: number }[];
-    top_viewed_mangas: { id: string; title: string; slug: string; cover_image: string; total_views: number }[];
+    views_by_category: { category: string; views: number }[];
+    chart_data: { date: string; views: number; reads: number }[];
+    top_traffic_mangas: { id: string; title: string; slug: string; cover_image: string; views: number; reads: number }[];
   }>(`/admin-stats/overview?days=${days}`, { token });
 }
 
@@ -453,4 +449,100 @@ export async function setTheme(theme: string, token: string) {
     body: JSON.stringify({ theme }),
     token,
   });
+}
+
+export async function getCoinDeepdiveAnalytics(token: string, days = 30) {
+  return fetcher<{
+    arppu: number;
+    conversion_rate: number;
+    package_popularity: { name: string; price_thb: number; coins: number; count: number }[];
+    top_grossing_chapters: { chapter_id: string; chapter_number: number; manga_title: string; manga_slug: string; coins_earned: number }[];
+    top_spenders: { user_id: string; display_name: string; total_spent: number }[];
+  }>(`/admin-stats/coin-deepdive?days=${days}`, { token });
+}
+
+export async function getUserDeepdiveAnalytics(token: string, days = 30) {
+  return fetcher<{
+    summary: {
+      total_users: number;
+      new_users: number;
+      active_spenders: number;
+    };
+    previous_summary: {
+      total_users: number;
+      new_users: number;
+      active_spenders: number;
+    };
+    segments: {
+      paid_users: number;
+      free_users: number;
+    };
+    registration_trend: { date: string; new_users: number }[];
+    wealth_distribution: { tier: string; count: number }[];
+    top_coin_holders: {
+      id: string;
+      display_name: string;
+      coin_balance: number;
+      created_at: string;
+    }[];
+  }>(`/admin-stats/users-deepdive?days=${days}`, { token });
+}
+
+export async function getChapterDeepdiveAnalytics(token: string, days = 30) {
+  return fetcher<{
+    summary: {
+      total_chapters: number;
+      new_chapters: number;
+      total_unlocks: number;
+      coins_burned: number;
+    };
+    previous_summary: {
+      total_chapters: number;
+      new_chapters: number;
+      total_unlocks: number;
+      coins_burned: number;
+    };
+    segments: {
+      paid_chapters: number;
+      free_chapters: number;
+    };
+    unlock_trend: { date: string; unlocks: number; coins_burned: number }[];
+    top_chapters: {
+      manga_title: string;
+      chapter_number: number;
+      unlocks: number;
+      coins_earned: number;
+    }[];
+  }>(`/admin-stats/chapters-deepdive?days=${days}`, { token });
+}
+
+export async function getMangaDeepdiveAnalytics(token: string, days = 30) {
+  return fetcher<{
+    summary: {
+      total_mangas: number;
+      new_mangas: number;
+      ongoing_mangas: number;
+      read_through_rate: number;
+    };
+    previous_summary: {
+      total_mangas: number;
+      new_mangas: number;
+      ongoing_mangas: number;
+      read_through_rate: number;
+    };
+    status_distribution: {
+      ongoing: number;
+      completed: number;
+      hiatus: number;
+      dropped: number;
+    };
+    revenue_by_category: { category: string; revenue: number }[];
+    top_franchises: {
+      id: string;
+      title: string;
+      views: number;
+      reads: number;
+      revenue: number;
+    }[];
+  }>(`/admin-stats/mangas-deepdive?days=${days}`, { token });
 }

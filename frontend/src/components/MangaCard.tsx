@@ -34,7 +34,7 @@ export default function MangaCard({ manga }: Props) {
       <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl bg-surface-200 shadow-md ring-1 ring-white/10 transition-all group-hover:ring-gold/40 group-hover:shadow-gold/20">
         <Image
           src={manga.cover_url || "/placeholder.webp"}
-          alt={manga.title}
+          alt={`อ่านมังงะแปลไทย ${manga.title} - มังงะแลป`}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-105 text-transparent"
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
