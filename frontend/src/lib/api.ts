@@ -455,6 +455,11 @@ export async function getCoinDeepdiveAnalytics(token: string, days = 30) {
   return fetcher<{
     arppu: number;
     conversion_rate: number;
+    total_earned: number;
+    total_burned: number;
+    prev_earned: number;
+    prev_burned: number;
+    coin_trend: { date: string; coins_purchased: number; coins_burned: number }[];
     package_popularity: { name: string; price_thb: number; coins: number; count: number }[];
     top_grossing_chapters: { chapter_id: string; chapter_number: number; manga_title: string; manga_slug: string; coins_earned: number }[];
     top_spenders: { user_id: string; display_name: string; total_spent: number }[];
