@@ -212,8 +212,13 @@ async def get_coin_deepdive_analytics(
     thai_now = datetime.now(timezone.utc) + timedelta(hours=7)
     today = thai_now.date()
     start_date = today - timedelta(days=days - 1)
+    prev_start_date = start_date - timedelta(days=days)
+    
     thai_start_dt = datetime.combine(start_date, datetime.min.time())
     utc_start_dt = (thai_start_dt - timedelta(hours=7)).replace(tzinfo=None)
+    
+    prev_thai_start_dt = datetime.combine(prev_start_date, datetime.min.time())
+    prev_utc_start_dt = (prev_thai_start_dt - timedelta(hours=7)).replace(tzinfo=None)
 
     # 1. ARPPU and Conversion
     from app.models.transaction import CoinPackage
@@ -323,9 +328,58 @@ async def get_coin_deepdive_analytics(
         for r in top_spenders_results
     ]
 
+    # 5. Coin Trend (Daily Purchased vs Burned)
+    all_transactions = (await session.execute(
+        select(Transaction.created_at, Transaction.amount, Transaction.type)
+        .where(Transaction.type.in_([TransactionType.COIN_PURCHASE, TransactionType.CHAPTER_UNLOCK]))
+        .where(Transaction.created_at >= utc_start_dt)
+    )).all()
+
+    trend_dict: dict = {}
+    total_earned_period = 0
+    total_burned_period = 0
+    for row in all_transactions:
+        local_dt = row.created_at + timedelta(hours=7)
+        d = local_dt.date()
+        if start_date <= d <= today:
+            if d not in trend_dict:
+                trend_dict[d] = {"purchased": 0, "burned": 0}
+            if row.type == TransactionType.COIN_PURCHASE and row.amount > 0:
+                trend_dict[d]["purchased"] += row.amount
+                total_earned_period += row.amount
+            elif row.type == TransactionType.CHAPTER_UNLOCK and row.amount < 0:
+                trend_dict[d]["burned"] += abs(row.amount)
+                total_burned_period += abs(row.amount)
+
+    coin_trend = []
+    current_date = start_date
+    while current_date <= today:
+        coin_trend.append({
+            "date": current_date.isoformat(),
+            "coins_purchased": trend_dict.get(current_date, {}).get("purchased", 0),
+            "coins_burned": trend_dict.get(current_date, {}).get("burned", 0),
+        })
+        current_date += timedelta(days=1)
+
+    # Previous period totals for growth badges
+    prev_transactions = (await session.execute(
+        select(Transaction.amount, Transaction.type)
+        .where(Transaction.type.in_([TransactionType.COIN_PURCHASE, TransactionType.CHAPTER_UNLOCK]))
+        .where(Transaction.created_at >= prev_utc_start_dt)
+        .where(Transaction.created_at < utc_start_dt)
+    )).all()
+
+    prev_earned = sum(r.amount for r in prev_transactions if r.type == TransactionType.COIN_PURCHASE and r.amount > 0)
+    prev_burned = sum(abs(r.amount) for r in prev_transactions if r.type == TransactionType.CHAPTER_UNLOCK and r.amount < 0)
+
     return {
         "arppu": arppu,
         "conversion_rate": conversion_rate,
+        "total_earned": total_earned_period,
+        "total_burned": total_burned_period,
+        "prev_earned": prev_earned,
+        "prev_burned": prev_burned,
+        "coin_trend": coin_trend,
         "package_popularity": package_popularity,
         "top_grossing_chapters": top_grossing_chapters,
         "top_spenders": top_spenders

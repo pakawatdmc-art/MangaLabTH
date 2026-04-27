@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import dynamic from "next/dynamic";
 import { formatNumber } from "@/lib/utils";
-import { getMarketingAnalytics, getCoinDeepdiveAnalytics } from "@/lib/api";
+import { getCoinDeepdiveAnalytics } from "@/lib/api";
 import {
     ArrowLeft,
     Coins,
@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+// ApexCharts needs to be dynamically imported
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
     ssr: false,
     loading: () => (
@@ -28,26 +29,15 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
     ),
 });
 
-// Types from API (matches GET /admin-stats/overview response)
-interface BasicData {
-    summary: {
-        total_views: number;
-        total_reads: number;
-        new_users: number;
-        total_users: number;
-    };
-    previous_summary: {
-        total_views: number;
-        total_reads: number;
-        new_users: number;
-        total_users: number;
-    };
-    chart_data: { date: string; views: number; reads: number }[];
-}
-
-interface DeepdiveData {
+// Types from API (matches GET /admin-stats/coin-deepdive response)
+interface CoinDeepdiveData {
     arppu: number;
     conversion_rate: number;
+    total_earned: number;
+    total_burned: number;
+    prev_earned: number;
+    prev_burned: number;
+    coin_trend: { date: string; coins_purchased: number; coins_burned: number }[];
     package_popularity: { name: string; price_thb: number; coins: number; count: number }[];
     top_grossing_chapters: { chapter_id: string; chapter_number: number; manga_title: string; manga_slug: string; coins_earned: number }[];
     top_spenders: { user_id: string; display_name: string; total_spent: number }[];
@@ -55,8 +45,7 @@ interface DeepdiveData {
 
 export default function CoinAnalyticsDashboard() {
     const { getToken, isLoaded } = useAuth();
-    const [basicData, setBasicData] = useState<BasicData | null>(null);
-    const [deepData, setDeepData] = useState<DeepdiveData | null>(null);
+    const [data, setData] = useState<CoinDeepdiveData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [timeRange, setTimeRange] = useState<number>(7);
@@ -68,12 +57,8 @@ export default function CoinAnalyticsDashboard() {
                 setLoading(true);
                 const token = await getToken();
                 if (!token) throw new Error("No token");
-                const [basicResult, deepResult] = await Promise.all([
-                    getMarketingAnalytics(token, timeRange),
-                    getCoinDeepdiveAnalytics(token, timeRange)
-                ]);
-                setBasicData(basicResult);
-                setDeepData(deepResult);
+                const result = await getCoinDeepdiveAnalytics(token, timeRange);
+                setData(result);
             } catch (err: unknown) {
                 setError(err instanceof Error ? err.message : "Error loading analytics");
             } finally {
@@ -106,8 +91,8 @@ export default function CoinAnalyticsDashboard() {
 
     // ── Chart 1: Coins Economy ────────────────────────────────────────────────
     const coinsSeries = [
-        { name: "ยอดเติมเหรียญ (Purchased)", data: (basicData?.chart_data || []).map((d) => ({ x: new Date(d.date).getTime(), y: d.coins_purchased })) },
-        { name: "เหรียญที่ถูกเบิร์น (Coins Burned)", data: (basicData?.chart_data || []).map((d) => ({ x: new Date(d.date).getTime(), y: d.coins_spent })) },
+        { name: "ยอดเติมเหรียญ (Purchased)", data: (data?.coin_trend || []).map((d) => ({ x: new Date(d.date).getTime(), y: d.coins_purchased })) },
+        { name: "เหรียญที่ถูกเบิร์น (Coins Burned)", data: (data?.coin_trend || []).map((d) => ({ x: new Date(d.date).getTime(), y: d.coins_burned })) },
     ];
     const coinsOptions: ApexCharts.ApexOptions = {
         chart: { type: "area", height: 350, background: "transparent", toolbar: { show: false }, animations: { enabled: true } },
@@ -126,14 +111,14 @@ export default function CoinAnalyticsDashboard() {
     // ── Chart 2: Package Popularity (Bar) ──────────────────────────────────
     const packageSeries = [{
         name: "จำนวนการซื้อ (ครั้ง)",
-        data: (deepData?.package_popularity || []).map(p => p.count)
+        data: (data?.package_popularity || []).map(p => p.count)
     }];
     const packageOptions: ApexCharts.ApexOptions = {
         chart: { type: "bar", background: "transparent", toolbar: { show: false }, animations: { enabled: true } },
         plotOptions: { bar: { borderRadius: 4, horizontal: true, distributed: true } },
         colors: ["#60A5FA", "#34D399", "#FBBF24", "#F87171", "#A78BFA", "#F472B6"],
         dataLabels: { enabled: true, formatter: (val) => formatNumber(Number(val)), style: { colors: ["#fff"] } },
-        xaxis: { categories: (deepData?.package_popularity || []).map(p => `${p.name} (${p.price_thb}฿)`), labels: { style: { colors: "#9CA3AF" } } },
+        xaxis: { categories: (data?.package_popularity || []).map(p => `${p.name} (${p.price_thb}฿)`), labels: { style: { colors: "#9CA3AF" } } },
         yaxis: { labels: { style: { colors: "#9CA3AF", fontWeight: 600 } } },
         grid: { borderColor: "rgba(255,255,255,0.05)", strokeDashArray: 4 },
         theme: { mode: "dark" },
@@ -192,10 +177,10 @@ export default function CoinAnalyticsDashboard() {
                     {/* Key Marketing Metrics */}
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         {[
-                            { label: `ARPPU (เหรียญเฉลี่ยต่อคน)`, value: deepData?.arppu || 0, isCoin: true, icon: Coins, color: "text-gold", bgColor: "bg-gold/10" },
-                            { label: `Conversion Rate (สายเปย์)`, value: deepData?.conversion_rate || 0, isPercent: true, icon: Flame, color: "text-emerald-400", bgColor: "bg-emerald-400/10" },
-                            { label: `ยอดเติมเหรียญรวม`, value: basicData?.summary?.coins_earned_30d || 0, prev: basicData?.previous_summary?.coins_earned_30d || 0, icon: TrendingUp, color: "text-blue-400", bgColor: "bg-blue-400/10" },
-                            { label: `เหรียญถูกใช้ไป`, value: basicData?.summary?.coins_spent_30d || 0, prev: basicData?.previous_summary?.coins_spent_30d || 0, icon: Wallet, color: "text-purple-400", bgColor: "bg-purple-400/10" },
+                            { label: `ARPPU (เหรียญเฉลี่ยต่อคน)`, value: data?.arppu || 0, isCoin: true, icon: Coins, color: "text-gold", bgColor: "bg-gold/10" },
+                            { label: `Conversion Rate (สายเปย์)`, value: data?.conversion_rate || 0, isPercent: true, icon: Flame, color: "text-emerald-400", bgColor: "bg-emerald-400/10" },
+                            { label: `ยอดเติมเหรียญรวม (${timeRange} วัน)`, value: data?.total_earned || 0, prev: data?.prev_earned || 0, icon: TrendingUp, color: "text-blue-400", bgColor: "bg-blue-400/10" },
+                            { label: `เหรียญที่ถูกเบิร์น (${timeRange} วัน)`, value: data?.total_burned || 0, prev: data?.prev_burned || 0, icon: Wallet, color: "text-purple-400", bgColor: "bg-purple-400/10" },
                         ].map((card, i) => (
                             <div
                                 key={i}
@@ -231,13 +216,13 @@ export default function CoinAnalyticsDashboard() {
                                 <div>
                                     <h2 className="text-lg font-bold text-white flex items-center gap-2">
                                         <Coins className="h-5 w-5 text-gold" />
-                                        วงจรเศรษฐกิจ (Coin Flow)
+                                        Coin Economy Trend
                                     </h2>
-                                    <p className="text-xs text-gray-400 mt-1">เปรียบเทียบยอดการเติมเข้า และการถูกใช้ปลดตอน</p>
+                                    <p className="text-xs text-gray-400 mt-1">เปรียบเทียบยอดเติมเหรียญ vs เหรียญที่ถูกเบิร์นรายวัน ในช่วง {timeRange} วันที่ผ่านมา</p>
                                 </div>
                             </div>
                             <div className="h-[300px] w-full">
-                                {!loading && basicData ? (
+                                {!loading && data ? (
                                     <ReactApexChart options={coinsOptions} series={coinsSeries} type="area" height="100%" />
                                 ) : (
                                     <div className="flex h-full w-full flex-col items-center justify-center gap-3">
@@ -253,17 +238,17 @@ export default function CoinAnalyticsDashboard() {
                                 <div>
                                     <h2 className="text-lg font-bold text-white flex items-center gap-2">
                                         <PieChart className="h-5 w-5 text-blue-400" />
-                                        แพ็กเกจยอดฮิต (Package Popularity)
+                                        Package Popularity (แพ็กเกจยอดฮิต)
                                     </h2>
-                                    <p className="text-xs text-gray-400 mt-1">จำนวนครั้งที่ลูกค้าเลือกซื้อแพ็กเกจแต่ละราคา</p>
+                                    <p className="text-xs text-gray-400 mt-1">จำนวนครั้งที่แพ็กเกจแต่ละตัวถูกซื้อในช่วง {timeRange} วันที่ผ่านมา</p>
                                 </div>
                             </div>
                             <div className="h-[300px] w-full">
-                                {!loading && deepData ? (
-                                    deepData.package_popularity.length > 0 ? (
+                                {!loading && data ? (
+                                    data.package_popularity.length > 0 ? (
                                         <ReactApexChart options={packageOptions} series={packageSeries} type="bar" height="100%" />
                                     ) : (
-                                        <div className="flex h-full items-center justify-center text-sm text-gray-500">ไม่มีข้อมูลการซื้อในช่วงนี้</div>
+                                        <div className="flex h-full items-center justify-center text-sm text-gray-500">ไม่มีข้อมูลการซื้อแพ็กเกจในช่วงเวลานี้</div>
                                     )
                                 ) : (
                                     <div className="flex h-full w-full flex-col items-center justify-center gap-3">
@@ -274,45 +259,61 @@ export default function CoinAnalyticsDashboard() {
                         </div>
                     </div>
 
-                    {/* Bottom Row: Top Performers & Whales */}
+                    {/* Bottom Row: Top Spenders */}
                     <div className="grid grid-cols-1 gap-6">
-                        {/* Top Spenders (Whales) */}
                         <div className="rounded-2xl border border-white/5 bg-[linear-gradient(135deg,#1b2130_0%,#131826_100%)] p-6 shadow-xl ring-1 ring-white/10 flex flex-col">
                             <h2 className="mb-1 text-lg font-bold text-white flex items-center gap-2">
                                 <Crown className="h-5 w-5 text-gold" />
-                                VIP / Top Spenders (มหาเศรษฐี)
+                                Top Spenders (ลูกค้าสายเปย์)
                             </h2>
-                            <p className="mb-6 text-xs text-gray-400">ลูกค้าชั้นดีที่เปย์หนักที่สุด (80/20 Rule) ในช่วง {timeRange} วัน</p>
+                            <p className="mb-6 text-xs text-gray-400">จัดอันดับผู้ใช้ที่เติมเหรียญมากที่สุดในช่วง {timeRange} วันที่ผ่านมา (Whale Users)</p>
 
-                            <div className="space-y-3 flex-1 overflow-y-auto pr-2 custom-scrollbar max-h-[350px]">
-                                {loading ? (
-                                    <div className="flex h-40 items-center justify-center">
-                                        <Loader2 className="h-6 w-6 animate-spin text-gray-500" />
-                                    </div>
-                                ) : deepData?.top_spenders.length === 0 ? (
-                                    <div className="flex h-40 items-center justify-center text-sm text-gray-500">
-                                        ไม่พบข้อมูลการเติมเงิน
-                                    </div>
-                                ) : (
-                                    deepData?.top_spenders.map((user, index) => (
-                                        <div 
-                                            key={user.user_id} 
-                                            className="flex items-center gap-4 rounded-xl border border-white/5 bg-surface-100/30 p-3"
-                                        >
-                                            <div className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold shrink-0 ${index === 0 ? 'bg-gold/20 text-gold' : index === 1 ? 'bg-gray-300/20 text-gray-300' : index === 2 ? 'bg-orange-400/20 text-orange-400' : 'bg-surface-200 text-gray-400'}`}>
-                                                #{index + 1}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <h3 className="truncate text-sm font-medium text-white">
-                                                    {user.display_name}
-                                                </h3>
-                                            </div>
-                                            <div className="flex items-center gap-1.5 rounded-lg bg-gold/10 px-2 py-1 shrink-0 border border-gold/20">
-                                                <span className="text-sm font-bold text-gold">{formatNumber(user.total_spent)} เหรียญ</span>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-sm">
+                                    <thead className="bg-surface-200/50 text-xs uppercase text-gray-400">
+                                        <tr>
+                                            <th className="rounded-l-lg px-4 py-3 font-semibold">อันดับ</th>
+                                            <th className="px-4 py-3 font-semibold">ผู้ใช้งาน</th>
+                                            <th className="rounded-r-lg px-4 py-3 font-semibold text-right text-gold">ยอดเติม (เหรียญ)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-white/5">
+                                        {loading ? (
+                                            <tr>
+                                                <td colSpan={3} className="py-8 text-center text-gray-500">
+                                                    <Loader2 className="mx-auto h-6 w-6 animate-spin" />
+                                                </td>
+                                            </tr>
+                                        ) : data?.top_spenders.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={3} className="py-8 text-center text-gray-500">ไม่พบข้อมูลการเติมเหรียญในช่วงเวลานี้</td>
+                                            </tr>
+                                        ) : (
+                                            data?.top_spenders.map((user, index) => {
+                                                return (
+                                                    <tr key={user.user_id} className="transition hover:bg-white/[0.02]">
+                                                        <td className="px-4 py-3">
+                                                            <div className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold ${index === 0 ? 'bg-yellow-400/20 text-yellow-400' : index === 1 ? 'bg-gray-400/20 text-gray-300' : index === 2 ? 'bg-orange-600/20 text-orange-400' : 'bg-surface-200 text-gray-400'}`}>
+                                                                #{index + 1}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-4 py-3">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-orange-500 text-xs font-bold text-white">
+                                                                    {user.display_name.charAt(0).toUpperCase()}
+                                                                </div>
+                                                                <span className="font-medium text-white">{user.display_name}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-4 py-3 text-right font-bold text-gold">
+                                                            {formatNumber(user.total_spent)} เหรียญ
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })
+                                        )}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
