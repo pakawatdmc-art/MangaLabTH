@@ -31,13 +31,13 @@ router = APIRouter(prefix="/transactions", tags=["Transactions"])
 async def list_all_transactions(
     session: DBSession,
     admin: AdminUser,
-    limit: int = Query(200, ge=1, le=1000),
+    limit: int = Query(1000, ge=1, le=5000),
 ):
     """Admin: list all transactions across all users (excluding pending)."""
     stmt = (
         select(Transaction)
         .where(
-            ~((Transaction.type == TransactionType.COIN_PURCHASE) & (Transaction.balance_after == 0))
+            ~((Transaction.type == TransactionType.COIN_PURCHASE) & (Transaction.amount == 0))
         )
         .order_by(col(Transaction.created_at).desc())
         .limit(limit)
