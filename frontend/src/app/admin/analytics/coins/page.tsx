@@ -28,17 +28,21 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
     ),
 });
 
-// Types from API
+// Types from API (matches GET /admin-stats/overview response)
 interface BasicData {
     summary: {
-        coins_earned_30d: number;
-        coins_spent_30d: number;
+        total_views: number;
+        total_reads: number;
+        new_users: number;
+        total_users: number;
     };
     previous_summary: {
-        coins_earned_30d: number;
-        coins_spent_30d: number;
+        total_views: number;
+        total_reads: number;
+        new_users: number;
+        total_users: number;
     };
-    chart_data: { date: string; coins_purchased: number; coins_spent: number }[];
+    chart_data: { date: string; views: number; reads: number }[];
 }
 
 interface DeepdiveData {
