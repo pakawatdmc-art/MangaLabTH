@@ -42,7 +42,7 @@ class Settings(BaseSettings):
 
     # ── Resend Email ──────────────────────────────────
     RESEND_API_KEY: str = ""
-    EMAIL_FROM: str = "MangaLabTH <noreply@mangalab-th.com>"
+    EMAIL_FROM: str = "MangaLabTH <support@mangalab-th.com>"
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
