@@ -24,12 +24,15 @@ export async function generateMetadata({ params }: Props): Promise<import("next"
   const { slug } = await params;
   try {
     const manga = await getMangaBySlug(slug, undefined, { noTrack: true });
+    const seoDesc = `อ่านการ์ตูนออนไลน์ ${manga.title} มังงะแปลไทย มังงะเกาหลี อัปเดตตอนใหม่ล่าสุดที่ มังงะแลป (MangaLabTH)`;
     const desc = manga.description
-      ? manga.description.slice(0, 160)
-      : `อ่าน ${manga.title} มังงะแปลไทย ออนไลน์ฟรี ภาพคมชัด`;
+      ? `${manga.description.slice(0, 80)}... | ${seoDesc}`
+      : seoDesc;
+
     return {
       title: manga.title,
       description: desc,
+      keywords: ["มังงะเกาหลี", "มังงะแปลไทย", "อ่านการ์ตูนออนไลน์", "มังงะแลป", manga.title],
       openGraph: {
         title: `${manga.title} — MangaLabTH`,
         description: desc,

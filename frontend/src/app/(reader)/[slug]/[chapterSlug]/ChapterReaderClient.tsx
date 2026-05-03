@@ -323,7 +323,7 @@ export default function ChapterReaderClient({
           <div key={pg.id} className="relative w-full">
             <ProtectedImage
               src={pg.image_url}
-              alt="MangaLabTH"
+              alt={`${manga.title} ตอนที่ ${chapter.number} หน้าที่ ${pg.number} - มังงะแปลไทย`}
               width={pg.width || 900}
               height={pg.height || 1350}
               eager={pg.number <= 3}

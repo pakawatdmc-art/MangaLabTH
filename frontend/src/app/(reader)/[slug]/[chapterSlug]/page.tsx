@@ -26,23 +26,27 @@ export async function generateMetadata({ params }: Props): Promise<import("next"
     const chTitle = matchedChapter.title
       ? `ตอนที่ ${matchedChapter.number} — ${matchedChapter.title}`
       : `ตอนที่ ${matchedChapter.number}`;
+      
+    const seoDesc = `อ่านการ์ตูนออนไลน์ ${manga.title} ${chTitle} มังงะแปลไทย มังงะเกาหลี อัปเดตตอนใหม่ล่าสุดที่ มังงะแลป (MangaLabTH) ภาพคมชัด ไม่มีสะดุด`;
+
     return {
       title: `${manga.title} ${chTitle}`,
-      description: `อ่าน ${manga.title} ${chTitle} แปลไทย ออนไลน์ฟรี ภาพคมชัด — MangaLabTH`,
+      description: seoDesc,
+      keywords: ["มังงะเกาหลี", "มังงะแปลไทย", "อ่านการ์ตูนออนไลน์", "มังงะแลป", manga.title],
       robots: { index: true, follow: true },
       alternates: {
         canonical: `${siteUrl}/${encodeURIComponent(decodedSlug)}/${encodeURIComponent(`ตอนที่-${matchedChapter.number}`)}`,
       },
       openGraph: {
         title: `${manga.title} ${chTitle} — MangaLabTH`,
-        description: `อ่าน ${manga.title} ${chTitle} แปลไทย ออนไลน์ฟรี ภาพคมชัด`,
+        description: seoDesc,
         images: manga.cover_url ? [{ url: manga.cover_url, width: 400, height: 600 }] : [],
         type: "article",
       },
       twitter: {
         card: "summary_large_image",
         title: `${manga.title} ${chTitle} — MangaLabTH`,
-        description: `อ่าน ${manga.title} ${chTitle} แปลไทย ออนไลน์ฟรี ภาพคมชัด`,
+        description: seoDesc,
         images: manga.cover_url ? [manga.cover_url] : [],
       },
     };
