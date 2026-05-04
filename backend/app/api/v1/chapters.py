@@ -275,11 +275,9 @@ async def delete_chapter(
     await session.delete(chapter)
     await session.commit()
 
-    # Delete from R2 after DB commit (best-effort)
-    try:
-        delete_objects(r2_keys)
-    except Exception:
-        pass
+    # Delete from R2 in background (best-effort, non-blocking)
+    if r2_keys:
+        background_tasks.add_task(delete_objects, r2_keys)
 
     paths = ["/"]
     if manga:
@@ -331,7 +329,7 @@ async def replace_pages(
     for pg in created:
         await session.refresh(pg)
 
-    # Cleanup old files that are no longer referenced by new pages (best-effort)
+    # Cleanup old files that are no longer referenced by new pages (best-effort, non-blocking)
     removable_keys = []
     kept_urls = set(new_urls)
     for url in old_urls:
@@ -341,10 +339,8 @@ async def replace_pages(
         if key:
             removable_keys.append(key)
 
-    try:
-        delete_objects(removable_keys)
-    except Exception:
-        pass
+    if removable_keys:
+        background_tasks.add_task(delete_objects, removable_keys)
 
     manga = await session.get(Manga, chapter.manga_id)
     background_tasks.add_task(revalidate_paths, ["/"] + ([f"/manga/{manga.slug}"] if manga else []))

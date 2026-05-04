@@ -367,7 +367,7 @@ export async function uploadCoverImage(file: File, token: string): Promise<strin
   throw lastError || new Error("อัปโหลดรูปภาพล้มเหลว หลังจากลองหลายครั้ง");
 }
 
-export async function uploadChapterPage(file: File, key: string, token: string): Promise<{ public_url: string; key: string }> {
+export async function uploadChapterPage(file: File, key: string, token: string): Promise<{ public_url: string; key: string; width: number; height: number }> {
   const MAX_RETRIES = 3;
   const TIMEOUT_MS = 60000;
   let lastError: unknown;
@@ -428,6 +428,14 @@ export async function getPresignedUploadUrls(
     "/upload/presigned",
     { method: "POST", body: JSON.stringify({ files }), token }
   );
+}
+
+export async function cleanupOrphanedFiles(keys: string[], token: string) {
+  return fetcher<void>("/upload/cleanup", {
+    method: "POST",
+    body: JSON.stringify({ keys }),
+    token,
+  });
 }
 
 export async function getChaptersForManga(mangaId: string, token?: string) {

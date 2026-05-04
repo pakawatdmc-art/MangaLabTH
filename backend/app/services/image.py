@@ -30,4 +30,4 @@ def process_image_to_webp(image_bytes: bytes, quality: int = 80, max_width: Opti
     output = io.BytesIO()
     img.save(output, format="WEBP", quality=quality, method=4) # method 4 = good balance of speed vs compression (6 is ~3x slower for only ~5% smaller)
     
-    return output.getvalue(), "image/webp"
+    return output.getvalue(), "image/webp", img.width, img.height

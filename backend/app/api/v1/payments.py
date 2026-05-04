@@ -11,6 +11,7 @@ from app.models.user import User
 from app.models.transaction import CoinPackage, Transaction, TransactionType
 from app.config import get_settings
 from app.api.deps import CurrentUser, DBSession
+import asyncio
 import logging
 from typing import Any, List
 from uuid import uuid4
@@ -270,11 +271,21 @@ async def feelfreepay_webhook(request: Request, session: DBSession):
     if result_code != "00":
         return {"status": "ignored", "reason": f"resultCode is {result_code}"}
 
-    # Security: Double check with Check Status API
-    try:
-        status_data = await check_payment_status(reference_no)
-    except Exception as e:
-        logger.error("Webhook verify failed for %s: %s", reference_no, e)
+    # Security: Double check with Check Status API (with retry for transient FFP failures)
+    status_data = None
+    last_verify_error = None
+    for attempt in range(3):
+        try:
+            status_data = await check_payment_status(reference_no)
+            break
+        except Exception as e:
+            last_verify_error = e
+            logger.warning("Webhook verify attempt %d/3 failed for %s: %s", attempt + 1, reference_no, e)
+            if attempt < 2:
+                await asyncio.sleep(1.0)
+    
+    if status_data is None:
+        logger.error("All webhook verify attempts failed for %s: %s", reference_no, last_verify_error)
         raise HTTPException(status_code=400, detail="Status verification failed")
         
     # Check Status API returns "00" for success, "S" for Settle, "G" for Granted (TrueWallet)
@@ -331,10 +342,22 @@ async def confirm_checkout_payment(
 ):
     """Confirm checkout result from frontend polling.
     
-    If webhook is delayed, frontend calls this to trigger a manual check_status.
+    If webhook is delayed or failed, frontend calls this to trigger a manual check_status.
+    Handles both QR and TrueWallet: accepts 'G' (Granted) for TrueWallet since it means paid.
     """
     if not reference_no:
         raise HTTPException(status_code=400, detail="Missing reference_no")
+    
+    # Look up the pending transaction to determine payment method
+    existing_tx = (
+        await session.execute(
+            select(Transaction).where(Transaction.ffp_reference_no == reference_no)
+        )
+    ).scalar_one_or_none()
+    
+    # Already fulfilled? Return immediately without calling FFP
+    if existing_tx and existing_tx.balance_after > 0:
+        return {"status": "success", "new_balance": existing_tx.balance_after, "coins": existing_tx.amount}
         
     try:
         status_data = await check_payment_status(reference_no)
@@ -345,10 +368,13 @@ async def confirm_checkout_payment(
     verify_result_code = status_data.get("resultCode")
     verify_status = status_data.get("txn.status") or status_data.get("status")
 
-    # IMPORTANT: Only accept "S" (Settled) here, NOT "G" (Generated).
-    # For QR: "G" means QR was generated but NOT yet paid — must wait for "S".
-    # For TrueWallet: "G" means Granted (paid), but TrueWallet is handled by webhook instead.
-    if verify_result_code != "00" or verify_status != "S":
+    # Determine accepted statuses based on payment method:
+    # - QR Code: Only accept "S" (Settled). "G" means QR generated but NOT paid.
+    # - TrueWallet: Accept both "S" and "G" (Granted = paid).
+    is_truewallet = existing_tx and existing_tx.note and "truewallet" in existing_tx.note.lower()
+    accepted_statuses = {"S", "G"} if is_truewallet else {"S"}
+    
+    if verify_result_code != "00" or verify_status not in accepted_statuses:
         return {"status": "pending", "reason": "payment_not_settled"}
         
     user_id = status_data.get("txn.merchantDefined1")
@@ -357,14 +383,19 @@ async def confirm_checkout_payment(
     
     # Fallback for QR Codes which lack metadata
     if not user_id or not package_id:
-        existing_tx = (
-            await session.execute(
-                select(Transaction).where(Transaction.ffp_reference_no == reference_no)
-            )
-        ).scalar_one_or_none()
         if existing_tx:
             user_id = user_id or existing_tx.user_id
             package_id = package_id or existing_tx.package_id
+        else:
+            # Re-fetch if we haven't loaded it yet
+            refetch_tx = (
+                await session.execute(
+                    select(Transaction).where(Transaction.ffp_reference_no == reference_no)
+                )
+            ).scalar_one_or_none()
+            if refetch_tx:
+                user_id = user_id or refetch_tx.user_id
+                package_id = package_id or refetch_tx.package_id
 
     if user_id != user.id:
         raise HTTPException(

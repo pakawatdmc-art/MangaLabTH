@@ -5,13 +5,13 @@ import re
 import time
 from typing import List
 
-from fastapi import APIRouter, HTTPException, Request, UploadFile, File, Form
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, UploadFile, File, Form, status
 from pydantic import BaseModel, field_validator
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from app.api.deps import AdminUser
-from app.services.storage import generate_presigned_upload_url, upload_file_to_r2
+from app.services.storage import generate_presigned_upload_url, upload_file_to_r2, delete_objects
 from app.services.image import process_image_to_webp
 
 router = APIRouter(prefix="/upload", tags=["Upload"])
@@ -148,7 +148,7 @@ async def upload_cover(
 
     # --- Optimization: Convert to WebP and Resize to 500px ---
     try:
-        contents, content_type = process_image_to_webp(contents, max_width=500)
+        contents, content_type, _, _ = process_image_to_webp(contents, max_width=500)
     except Exception as e:
         logger.error("Cover image processing failed: %s", e)
         raise HTTPException(
@@ -167,6 +167,8 @@ async def upload_cover(
 class ChapterUploadResponse(BaseModel):
     public_url: str
     key: str
+    width: int = 0
+    height: int = 0
 
 
 @router.post("/chapter_page", response_model=ChapterUploadResponse)
@@ -196,7 +198,7 @@ async def upload_chapter_page(
 
     # Optimization: Convert to WebP
     try:
-        contents, content_type = process_image_to_webp(contents)
+        contents, content_type, img_width, img_height = process_image_to_webp(contents)
     except Exception as e:
         logger.error("Chapter page processing failed: %s", e)
         raise HTTPException(
@@ -206,4 +208,23 @@ async def upload_chapter_page(
     final_key = key.rsplit(".", 1)[0] + ".webp"
 
     public_url = upload_file_to_r2(final_key, contents, content_type)
-    return ChapterUploadResponse(public_url=public_url, key=final_key)
+    return ChapterUploadResponse(
+        public_url=public_url, key=final_key, width=img_width, height=img_height
+    )
+
+
+class CleanupRequest(BaseModel):
+    keys: List[str]
+
+
+@router.post("/cleanup", status_code=status.HTTP_204_NO_CONTENT)
+async def cleanup_orphaned_files(
+    body: CleanupRequest,
+    admin: AdminUser,
+    background_tasks: BackgroundTasks,
+):
+    """Admin: delete orphaned R2 files from failed chapter uploads."""
+    # Security: Only allow chapter page keys (manga/*/chapters/*)
+    valid_keys = [k for k in body.keys if k.startswith("manga/") and "/chapters/" in k]
+    if valid_keys:
+        background_tasks.add_task(delete_objects, valid_keys)

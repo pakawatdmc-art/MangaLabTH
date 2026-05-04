@@ -35,7 +35,7 @@ import {
 import { useAuth } from "@clerk/nextjs";
 import type { Chapter, Manga } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { getChapter, uploadChapterPage, replacePages } from "@/lib/api";
+import { getChapter, uploadChapterPage, replacePages, cleanupOrphanedFiles } from "@/lib/api";
 
 interface FileItem {
     id: string; // Unique ID for tracking mapping
@@ -43,6 +43,7 @@ interface FileItem {
     preview: string; // Blob URL or absolute URL for existing
     status: "existing" | "pending" | "uploading" | "done" | "error";
     publicUrl?: string; // Valid when done or existing
+    r2Key?: string; // R2 storage key (for cleanup of orphaned files)
     originalWidth?: number;
     originalHeight?: number;
 }
@@ -182,6 +183,7 @@ export function ChapterImageManager({
     const [files, setFiles] = useState<FileItem[]>([]);
     const filesRef = useRef<FileItem[]>([]);
     const hadExistingPages = useRef(false);
+    const savedSuccessfully = useRef(false);
     const [isDragging, setIsDragging] = useState(false);
     const [loadingInitial, setLoadingInitial] = useState(false);
     
@@ -233,16 +235,32 @@ export function ChapterImageManager({
     // Fetch existing pages when opened; clean up blob URLs when closed
     useEffect(() => {
         if (!isOpen || !chapter) {
-            // RISK #4 fix: Revoke blob URLs when modal closes
+            // Revoke blob URLs when modal closes
             filesRef.current.forEach((f) => {
                 if (f.file && f.preview.startsWith("blob:")) URL.revokeObjectURL(f.preview);
             });
+            // Cleanup orphaned R2 files if save was not completed
+            if (!savedSuccessfully.current) {
+                const orphanedKeys = filesRef.current
+                    .filter(f => f.status === "done" && f.r2Key)
+                    .map(f => f.r2Key!);
+                if (orphanedKeys.length > 0) {
+                    getToken().then(token => {
+                        if (token) {
+                            cleanupOrphanedFiles(orphanedKeys, token).catch(err => {
+                                console.error("[ChapterImageManager] Orphan cleanup failed:", err);
+                            });
+                        }
+                    });
+                }
+            }
             return;
         }
 
         setLoadingInitial(true);
         setFiles([]);
         hadExistingPages.current = false;
+        savedSuccessfully.current = false;
         setError("");
         setSuccessMsg("");
 
@@ -374,7 +392,7 @@ export function ChapterImageManager({
             }
 
             if (pendingUploads.length > 0) {
-                const CONCURRENCY_LIMIT = 3;
+                const CONCURRENCY_LIMIT = 5;
                 for (let i = 0; i < pendingUploads.length; i += CONCURRENCY_LIMIT) {
                     // Refresh token for every batch to prevent JWT expiry during long uploads
                     const batchToken = await getToken();
@@ -408,6 +426,9 @@ export function ChapterImageManager({
                                 ...updatedFiles[globalIdx],
                                 status: "done",
                                 publicUrl: res.public_url,
+                                r2Key: res.key,
+                                originalWidth: res.width,
+                                originalHeight: res.height,
                             };
                         } catch {
                             updatedFiles[globalIdx] = { ...updatedFiles[globalIdx], status: "error" };
@@ -449,6 +470,7 @@ export function ChapterImageManager({
                 throw new Error("เซสชันหมดอายุ กรุณาโหลดหน้าเว็บใหม่");
             }
             await replacePages(chapter.id, finalPagesData, finalToken);
+            savedSuccessfully.current = true;
 
             setSuccessMsg(`บันทึกทั้ง ${finalPagesData.length} หน้าสำเร็จ!`);
             setTimeout(() => {
@@ -457,14 +479,6 @@ export function ChapterImageManager({
             }, 1500);
 
         } catch (err: unknown) {
-            // BUG #2: Log orphaned R2 files for manual cleanup if replacePages failed
-            const orphanedUrls = updatedFiles
-                .filter(f => f.status === "done" && f.publicUrl)
-                .map(f => f.publicUrl);
-            if (orphanedUrls.length > 0) {
-                console.warn("[ChapterImageManager] Possible orphaned R2 files:", orphanedUrls);
-            }
-
             setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการบันทึก");
         } finally {
             setUploading(false);

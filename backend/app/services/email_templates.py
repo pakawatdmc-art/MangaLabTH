@@ -72,39 +72,76 @@ def welcome_email_html(display_name: str, site_url: str) -> str:
     """Generate Welcome Email HTML for new users."""
     content = f"""
     <div style="text-align:center;margin-bottom:32px;">
-        <img src="https://mangalab-th.com/og-default.png" alt="Welcome to MangaLabTH" style="width:100%;max-width:400px;border-radius:16px;box-shadow:0 4px 20px rgba(251,189,35,0.15);">
+        <h1 style="margin:0 0 12px;font-size:26px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">
+            ยินดีต้อนรับสู่ MangaLabTH!
+        </h1>
+        <p style="margin:0;font-size:16px;color:#a0a0a0;line-height:1.5;">
+            ขอบคุณที่สมัครสมาชิก คุณ <strong style="color:#ffffff;">{display_name}</strong>
+        </p>
     </div>
 
-    <h1 style="margin:0 0 12px;font-size:26px;font-weight:800;color:#ffffff;text-align:center;letter-spacing:-0.5px;">
-        ยินดีต้อนรับสู่ <span style="color:#fbbd23;">MangaLabTH</span>
-    </h1>
-    <p style="margin:0 0 32px;font-size:16px;color:#a0a0a0;text-align:center;line-height:1.5;">
-        สวัสดีคุณ <strong style="color:#ffffff;">{display_name}</strong> 🎉<br>
-        ขอบคุณที่เข้ามาร่วมเป็นส่วนหนึ่งของแพลตฟอร์มเรา
-    </p>
+    <!-- Welcome Badge -->
+    <div style="background-color:#111111;border-radius:16px;padding:32px;margin-bottom:24px;border:1px solid #2a2a2a;text-align:center;">
+        <p style="margin:0 0 8px;font-size:48px;line-height:1;">🎉</p>
+        <p style="margin:0 0 16px;font-size:14px;font-weight:700;color:#fbbd23;text-transform:uppercase;letter-spacing:1px;">
+            สมาชิกใหม่
+        </p>
+        <p style="margin:0;font-size:15px;color:#a0a0a0;line-height:1.6;">
+            คุณเป็นส่วนหนึ่งของครอบครัว MangaLabTH แล้ว!<br>
+            เริ่มสำรวจการ์ตูนหลากหลายเรื่องได้เลย
+        </p>
+    </div>
 
-    <div style="background:linear-gradient(145deg,#1a1a1a,#111111);border-radius:16px;padding:28px;margin-bottom:32px;border:1px solid #2a2a2a;">
-        <p style="margin:0 0 20px;font-size:15px;color:#ffffff;font-weight:600;">เริ่มต้นใช้งาน MangaLabTH:</p>
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+    <!-- Features Card -->
+    <div style="background-color:#111111;border-radius:16px;padding:32px;margin-bottom:32px;border:1px solid #2a2a2a;">
+        <p style="margin:0 0 24px;font-size:14px;font-weight:700;color:#fbbd23;text-transform:uppercase;letter-spacing:1px;text-align:center;">
+            สิ่งที่คุณทำได้
+        </p>
+
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:15px;">
             <tr>
-                <td width="32" valign="top" style="padding-bottom:16px;font-size:20px;">📖</td>
-                <td style="padding-bottom:16px;font-size:15px;color:#cccccc;line-height:1.4;">
-                    <strong style="color:#ffffff;">อ่านการ์ตูนคุณภาพสูง</strong><br>
-                    อัปเดตตอนใหม่ทุกวัน ภาพคมชัด แปลภาษาไทยสละสลวย
+                <td style="padding-bottom:20px;border-bottom:1px solid #1e1e1e;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                            <td width="44" valign="top">
+                                <div style="width:36px;height:36px;border-radius:10px;background-color:#fbbd23;background:linear-gradient(135deg,#fbbd23,#d4a843);text-align:center;line-height:36px;font-size:18px;">📖</div>
+                            </td>
+                            <td style="padding-left:12px;">
+                                <p style="margin:0 0 2px;font-size:15px;font-weight:700;color:#ffffff;">อ่านการ์ตูนคุณภาพสูง</p>
+                                <p style="margin:0;font-size:13px;color:#888888;line-height:1.4;">อัปเดตตอนใหม่ทุกวัน ภาพคมชัด แปลไทยสละสลวย</p>
+                            </td>
+                        </tr>
+                    </table>
                 </td>
             </tr>
             <tr>
-                <td width="32" valign="top" style="padding-bottom:16px;font-size:20px;">🪙</td>
-                <td style="padding-bottom:16px;font-size:15px;color:#cccccc;line-height:1.4;">
-                    <strong style="color:#ffffff;">ปลดล็อกตอนพิเศษ</strong><br>
-                    อ่านล่วงหน้าก่อนใคร ด้วยระบบเหรียญที่คุ้มค่า
+                <td style="padding:20px 0;border-bottom:1px solid #1e1e1e;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                            <td width="44" valign="top">
+                                <div style="width:36px;height:36px;border-radius:10px;background-color:#fbbd23;background:linear-gradient(135deg,#fbbd23,#d4a843);text-align:center;line-height:36px;font-size:18px;">🪙</div>
+                            </td>
+                            <td style="padding-left:12px;">
+                                <p style="margin:0 0 2px;font-size:15px;font-weight:700;color:#ffffff;">ปลดล็อกตอนพิเศษ</p>
+                                <p style="margin:0;font-size:13px;color:#888888;line-height:1.4;">อ่านล่วงหน้าก่อนใคร ด้วยระบบเหรียญสุดคุ้มค่า</p>
+                            </td>
+                        </tr>
+                    </table>
                 </td>
             </tr>
             <tr>
-                <td width="32" valign="top" style="font-size:20px;">💬</td>
-                <td style="font-size:15px;color:#cccccc;line-height:1.4;">
-                    <strong style="color:#ffffff;">ขอเรื่องที่อยากอ่าน</strong><br>
-                    ถ้าไม่มีเรื่องที่หาอยู่ ทักมาขอแอดมินได้เลยที่ <a href="https://www.facebook.com/Mangalabth" target="_blank" style="color:#fbbd23;text-decoration:none;">Facebook Page</a>
+                <td style="padding-top:20px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                            <td width="44" valign="top">
+                                <div style="width:36px;height:36px;border-radius:10px;background-color:#fbbd23;background:linear-gradient(135deg,#fbbd23,#d4a843);text-align:center;line-height:36px;font-size:18px;">💬</div>
+                            </td>
+                            <td style="padding-left:12px;">
+                                <p style="margin:0 0 2px;font-size:15px;font-weight:700;color:#ffffff;">ขอเรื่องที่อยากอ่าน</p>
+                                <p style="margin:0;font-size:13px;color:#888888;line-height:1.4;">ไม่มีเรื่องที่หา? ทักมาขอแอดมินได้ที่ <a href="https://www.facebook.com/Mangalabth" target="_blank" style="color:#fbbd23;text-decoration:none;font-weight:600;">Facebook Page</a></p>
+                            </td>
+                        </tr>
+                    </table>
                 </td>
             </tr>
         </table>
