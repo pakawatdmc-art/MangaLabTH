@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { ChevronDown, ChevronUp, Coins, Loader2, Search, Shield, Sparkles, Trash2, Users as UsersIcon } from "lucide-react";
+import { ChevronDown, ChevronUp, Coins, Loader2, Search, Shield, Sparkles, Trash2, Users } from "lucide-react";
 import type { User } from "@/lib/types";
 import { listUsers, adminGrantCoins, updateUser, deleteUser } from "@/lib/api";
 import { formatDateTime } from "@/lib/utils";
