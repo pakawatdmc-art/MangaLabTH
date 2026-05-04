@@ -1,121 +1,96 @@
 <div align="center">
-  <h1>🌟 MangaLabTH: The Enterprise Manga Platform</h1>
-  <p><i>"เมื่อเว็บอ่านการ์ตูนธรรมดาไม่ตอบโจทย์ เราจึงสร้างอาณาจักรใหม่ที่เร็วกว่า ปลอดภัยกว่า และเหนือชั้นกว่า"</i></p>
+  <h1>MangaLabTH: Enterprise Manga Platform</h1>
+  <p>แพลตฟอร์มเว็บแอปพลิเคชันอ่านการ์ตูนออนไลน์ระดับ Enterprise</p>
 </div>
 
 ---
 
-## 📖 The Vision: จุดเริ่มต้นของโปรเจกต์นี้
+## ข้อมูลทั่วไปของโปรเจกต์ (Project Overview)
 
-ในยุคที่เว็บอ่านมังงะส่วนใหญ่โหลดช้า โดนขโมยรูปภาพ (Scraping) ได้ง่ายดาย และระบบตัดเหรียญที่มักจะมีปัญหาหักเงินซ้ำซ้อนเวลาคนอ่านแห่กันเข้ามาพร้อมกันหลักหมื่นคน... 
-
-เราจึงตัดสินใจสร้าง **MangaLabTH** 🚀 
-นี่ไม่ใช่แค่เว็บไซต์อ่านการ์ตูน แต่มันคือ **Full-Stack Application** ที่ถูกหล่อหลอมขึ้นมาจากสถาปัตยกรรมระดับ Enterprise ผสานกับระบบ Cloud-native สมัยใหม่ เพื่อมอบประสบการณ์การอ่านที่ลื่นไหลที่สุด พร้อมด้วยระบบเศรษฐกิจเหรียญ (Coin Economy) ที่แข็งแกร่งดั่งหินผา
+MangaLabTH เป็นแพลตฟอร์ม Full-Stack Application สำหรับการอ่านมังงะออนไลน์ ที่ได้รับการออกแบบและพัฒนาด้วยสถาปัตยกรรมระดับ Enterprise มุ่งเน้นประสิทธิภาพการทำงานที่รวดเร็ว (High Performance) ความมั่นคงปลอดภัยของข้อมูล (Security & Anti-Scraping) และระบบเศรษฐกิจแบบเหรียญ (Coin Economy) ที่มีความเสถียรสูงสุด เพื่อรองรับผู้ใช้งานจำนวนมหาศาลพร้อมกัน
 
 ---
 
-## 🏰 The Engine: ขุมพลังเบื้องหลัง (Architecture)
+## สถาปัตยกรรมระบบ (System Architecture)
 
-เพื่อให้รองรับนักอ่านจำนวนมหาศาล ระบบจึงถูกแบ่งออกเป็นส่วนๆ อย่างชัดเจน เหมือนมีหน้าร้านที่สวยงาม และมีโรงงานหลังบ้านที่ทรงพลัง:
+ระบบถูกแบ่งออกเป็น 3 ส่วนหลัก เพื่อประสิทธิภาพในการขยายขีดความสามารถ (Scalability):
 
-```mermaid
-graph TD
-    subgraph "✨ The Frontend (Vercel)"
-        UI[Next.js 16.2.4 App Router]
-        Tailwind[Tailwind CSS v4]
-    end
-
-    subgraph "🏭 The Backend (Google Cloud Run)"
-        API[FastAPI Python]
-        DB[(PostgreSQL via Supabase)]
-    end
-
-    subgraph "🛡️ The Fortresses (External Services)"
-        Storage[Cloudflare R2 + WAF]
-        Auth[Clerk Auth]
-        Pay[FeelFreePay Gateway]
-        SEO[Google Indexing API]
-    end
-
-    Reader((ผู้อ่าน)) -->|เข้าชมเว็บ| UI
-    UI <-->|ดึงข้อมูล (ISR/REST)| API
-    UI -->|โหลดรูปภาพ (CDN)| Storage
-    UI -->|ล็อกอิน| Auth
-    API <-->|จัดการข้อมูล| DB
-    API -->|รับชำระเงิน| Pay
-    API -->|ดันอันดับ Google| SEO
-```
-
-| พลังวิเศษ | เทคโนโลยีที่เลือกใช้ | หน้าที่หลัก |
-|-----------|----------------|-------------|
-| **ความเร็วแสง** | Next.js 16.2.4 + Turbopack | โหลดหน้าแรกในเสี้ยววินาที (LCP < 1s) |
-| **สมองกล** | FastAPI + Python | ประมวลผลตรรกะทั้งหมดอย่างรวดเร็ว |
-| **ตู้เซฟเหล็ก** | PostgreSQL (Supabase) | เก็บข้อมูลและล็อกธุรกรรมการเงิน |
-| **โกดังไร้ก้น** | Cloudflare R2 | เก็บภาพมังงะ แปลง WebP อัตโนมัติ |
-| **นายทวาร** | Clerk | ตรวจสอบตัวตนและจัดการสิทธิ์ (RBAC) |
-| **นักธนาคาร** | FeelFreePay | รับจ่ายเงิน PromptPay/TrueWallet |
+1. **Frontend (Vercel):**
+   - พัฒนาด้วย Next.js 16.2.4 (App Router) และ Tailwind CSS v4
+   - รองรับ Server-Side Rendering (SSR) และ Incremental Static Regeneration (ISR) เพื่อให้สามารถโหลดหน้าเว็บ (LCP < 1s) ได้อย่างรวดเร็ว
+2. **Backend (Google Cloud Run):**
+   - พัฒนาด้วย FastAPI (Python)
+   - ฐานข้อมูล PostgreSQL บริหารจัดการโดย Supabase
+   - ประมวลผลตรรกะระบบ การจัดการผู้ใช้ และระบบธุรกรรมการเงินอย่างมีประสิทธิภาพ
+3. **External Services (Third-Party Integrations):**
+   - **Cloudflare R2 & WAF:** จัดเก็บรูปภาพมังงะและป้องกันการเข้าถึงจากโดเมนภายนอก (Anti-Scraping)
+   - **Clerk:** ระบบตรวจสอบและยืนยันตัวตน (Authentication) พร้อมการจัดการสิทธิ์ (RBAC)
+   - **FeelFreePay:** บริการ Payment Gateway สำหรับระบบเติมเหรียญ (PromptPay, TrueMoney)
+   - **Brevo Email Service:** ระบบส่งอีเมลแจ้งเตือนอัตโนมัติ
+   - **Google Indexing API:** ระบบการทำ SEO และ Indexing อัตโนมัติ
 
 ---
 
-## ⚡ The Magic: ฟีเจอร์ระดับพลังพิเศษ
+## คุณสมบัติเด่นของระบบ (Key Features)
 
-### 🛡️ โล่ป้องกันการดูดวิญญาณ (Anti-Scraping Level 5)
-หมดยุคที่บอทจะมาขโมยรูปไปลงเว็บอื่น! เราสร้างเกราะป้องกันหลายชั้น:
-- **Cloudflare WAF Custom Rules**: บล็อกการเข้าถึงรูปภาพจากเว็บอื่นโดยสมบูรณ์ หากไม่มี `Referer` ที่ถูกต้อง
-- **Frontend Image Protection**: ซ่อน URL รูปภาพ, ห้ามคลิกขวา, ห้ามลากรูป (Drag & Drop)
+### 1. ระบบรักษาความปลอดภัยรูปภาพ (Anti-Scraping)
+- **Cloudflare WAF Custom Rules:** บล็อกการเข้าถึงไฟล์รูปภาพหากไม่มี HTTP Referer ที่ถูกต้อง
+- **ProtectedImage Component:** สร้าง Blob URL ชั่วคราวผ่านการ Fetch เพื่อซ่อน URL จริงของไฟล์รูปภาพจาก DOM ป้องกันการขโมยรูปภาพ (Scraping)
 
-### ⚖️ สัจจะแห่งการเงิน (Atomic Transactions)
-ด้วยระบบ `SELECT FOR UPDATE` ระดับ Database ทุกการซื้อเหรียญและการปลดล็อกตอนจะถูกล็อกเป็นคิว (Queue) อย่างแม่นยำ แม้คนหมื่นคนจะกดปลดล็อกการ์ตูนตอนเดียวกันในเสี้ยววินาที ระบบก็จะไม่หักเงินซ้ำซ้อนหรือติดลบเด็ดขาด
+### 2. ระบบธุรกรรมการเงิน (Atomic Transactions)
+- ใช้กลไก `SELECT FOR UPDATE` ระดับ Database เพื่อจัดการคิวการปลดล็อกตอนมังงะ
+- ป้องกันปัญหาการหักเหรียญซ้ำซ้อนหรือยอดเหรียญติดลบ (Race Conditions) ในกรณีที่มีผู้ใช้งานทำการปลดล็อกจำนวนมากพร้อมกัน
 
-### ⏱️ ประตูมิติเวลา (Automated Timed Unlocks)
-ผู้ดูแลระบบสามารถตั้งเวลาล่วงหน้าให้ "ตอนที่เสียเงิน" กลายเป็น "ตอนฟรี" ได้โดยอัตโนมัติ ระบบหลังบ้านและหน้าบ้านจะซิงค์เวลามาตรฐานโลกอย่างไร้รอยต่อ ทันทีที่เวลานับถอยหลังจบลง ประตูจะเปิดออกให้นักอ่านเข้าชมได้ทันที
+### 3. ระบบจัดการเนื้อหาอัตโนมัติ (Automated Timed Unlocks)
+- ระบบตั้งเวลาให้ตอนที่เสียเหรียญกลายเป็น "ตอนฟรี" โดยอัตโนมัติ
+- รองรับการซิงโครไนซ์เวลามาตรฐานโลกอย่างไร้รอยต่อ
 
-### 🔍 ปรมาจารย์แห่งการค้นหา (SEO Mastery)
-MangaLabTH สื่อสารกับ Google โดยตรง! ด้วย **Google Indexing API** ทันทีที่คุณอัปโหลดตอนใหม่ ระบบจะ "สะกิด" ให้ Google Bot รีบมาเก็บข้อมูลทันที พร้อมโครงสร้าง JSON-LD สไตล์ ComicSeries ที่ถูกต้องตามหลัก SEO ขั้นสูงสุด
+### 4. ระบบแจ้งเตือนทางอีเมล (Automated Chapter Notifications)
+- เชื่อมต่อ API ของ Brevo เพื่อส่งอีเมลแจ้งเตือนเมื่อมีตอนใหม่
+- มีระบบ Debounce (หน่วงเวลา 10 นาที) เพื่อรวบรวมตอนที่อัปเดตใหม่หลายตอนเข้าด้วยกันก่อนส่งอีเมล
+- สามารถคัดกรองผู้อ่าน Top 50 ที่มีการใช้เหรียญสูงสุดต่อเรื่อง เพื่อส่งอีเมลแจ้งเตือนแบบเฉพาะเจาะจง (Targeted Notification)
 
-### 📈 ตาทิพย์แห่งการตลาด (Marketing Analytics)
-Dashboard สำหรับผู้ดูแลระบบที่เผยให้เห็นทุกการเติบโตผ่านกราฟสุดล้ำ (Area, Donut, Dual Area) พร้อมเชื่อมต่อ **Google Analytics 4** เพื่อดู Conversion (เติมเงิน, ปลดล็อกตอน) ได้แบบเรียลไทม์
+### 5. ระบบวิเคราะห์และรายงานผล (Marketing Analytics)
+- Dashboard สถิติสำหรับผู้ดูแลระบบ แสดงผลผ่านกราฟ (Area, Donut, Dual Area) ครอบคลุม 5 โมดูลสำคัญ
+- การทำ SEO เต็มรูปแบบด้วย Google Indexing API และโครงสร้าง JSON-LD 
 
 ---
 
-## 💻 คู่มือสำหรับผู้สืบทอด (Local Development)
+## คู่มือการติดตั้งสำหรับนักพัฒนา (Local Development Setup)
 
-หากคุณคือผู้ถูกเลือกให้มาพัฒนาอาณาจักรนี้ต่อ นี่คือคาถาอัญเชิญระบบ:
-
-### 🐍 ปลุกวิญญาณ Backend (FastAPI)
+### 1. การตั้งค่า Backend
 ```bash
 cd backend
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-# คัดลอกคาถาลับและปรับแก้ให้ตรงกับของคุณ
+# คัดลอกและกำหนดค่า Environment Variables
 cp .env.example .env
 
-# สร้างตารางข้อมูล
+# สร้างโครงสร้างฐานข้อมูล
 alembic upgrade head
-# เริ่มเดินเครื่อง
+
+# รันเซิร์ฟเวอร์ Backend
 uvicorn app.main:app --reload --port 8000
 ```
 
-### ⚛️ สร้างโลก Frontend (Next.js)
+### 2. การตั้งค่า Frontend
 ```bash
 cd frontend
 npm install
 
-# คัดลอกคาถาลับ
+# คัดลอกและกำหนดค่า Environment Variables
 cp .env.example .env.local
 
-# รันระบบหน้าบ้าน (http://localhost:3000)
+# รันเซิร์ฟเวอร์ Frontend (http://localhost:3000)
 npm run dev
 ```
 
-> **พร้อมที่จะนำขึ้นระบบจริงแล้วหรือยัง?** <br>
-> อ่านคัมภีร์ [DEPLOY_GUIDE.md](./DEPLOY_GUIDE.md) เพื่อศึกษาวิธีกางอาณาเขตบน Production!
+> หมายเหตุ: สำหรับการนำระบบขึ้นใช้งานจริง (Production) โปรดอ้างอิงคู่มือ [DEPLOY_GUIDE.md](./DEPLOY_GUIDE.md)
 
 ---
 
 <p align="center">
-  สร้างสรรค์ด้วย ❤️ สำหรับคนรักการอ่านมังงะตัวจริง<br>
-  <i>(License: MIT)</i>
+  <i>License: MIT</i>
 </p>

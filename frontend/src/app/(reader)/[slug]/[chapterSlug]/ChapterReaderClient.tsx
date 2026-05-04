@@ -326,7 +326,7 @@ export default function ChapterReaderClient({
               alt={`${manga.title} ตอนที่ ${chapter.number} หน้าที่ ${pg.number} - มังงะแปลไทย`}
               width={pg.width || 900}
               height={pg.height || 1350}
-              eager={pg.number <= 3}
+              eager={pg.number <= 5}
             />
           </div>
         ))}

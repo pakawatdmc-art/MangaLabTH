@@ -51,7 +51,7 @@ export default function ProtectedImage({
           observer.disconnect();
         }
       },
-      { rootMargin: "600px" } // เริ่มโหลดล่วงหน้า 600px ก่อนถึงจอ
+      { rootMargin: "2000px" } // เริ่มโหลดล่วงหน้า 2000px ก่อนถึงจอ (ให้เร็วขึ้น)
     );
 
     observer.observe(el);
@@ -109,7 +109,7 @@ export default function ProtectedImage({
         <img
           src={blobUrl}
           alt={alt}
-          className={`w-full h-auto block transition-opacity duration-300 ${isLoaded ? "opacity-100" : "opacity-0"}`}
+          className={`w-full h-auto block transition-opacity duration-150 ${isLoaded ? "opacity-100" : "opacity-0"}`}
           draggable={false}
           onLoad={() => setIsLoaded(true)}
           onContextMenu={(e) => e.preventDefault()}
