@@ -61,24 +61,29 @@ async def get_transaction_summary(
     if type_filter:
         base_filter = base_filter & (Transaction.type == type_filter)
     if q:
-        base_filter = base_filter & (col(Transaction.note).ilike(f"%{q}%"))
+        search_pattern = f"%{q}%"
+        q_filter = (
+            col(Transaction.note).ilike(search_pattern) |
+            col(User.username).ilike(search_pattern) |
+            col(User.display_name).ilike(search_pattern) |
+            col(User.email).ilike(search_pattern) |
+            col(User.clerk_id).ilike(search_pattern)
+        )
+        base_filter = base_filter & q_filter
+
+    def _apply_join(stmt):
+        return stmt.select_from(Transaction).join(User, Transaction.user_id == User.id)
 
     # Sum of positive amounts (credits)
-    in_stmt = (
-        select(sa_func.coalesce(sa_func.sum(Transaction.amount), 0))
-        .where(base_filter & (Transaction.amount > 0))
-    )
+    in_stmt = _apply_join(select(sa_func.coalesce(sa_func.sum(Transaction.amount), 0))).where(base_filter & (Transaction.amount > 0))
     total_in = (await session.execute(in_stmt)).scalar_one()
 
     # Sum of absolute negative amounts (debits)
-    out_stmt = (
-        select(sa_func.coalesce(sa_func.sum(sa_func.abs(Transaction.amount)), 0))
-        .where(base_filter & (Transaction.amount < 0))
-    )
+    out_stmt = _apply_join(select(sa_func.coalesce(sa_func.sum(sa_func.abs(Transaction.amount)), 0))).where(base_filter & (Transaction.amount < 0))
     total_out = (await session.execute(out_stmt)).scalar_one()
 
     # Total count
-    count_stmt = select(sa_func.count()).select_from(Transaction).where(base_filter)
+    count_stmt = _apply_join(select(sa_func.count())).where(base_filter)
     total_count = (await session.execute(count_stmt)).scalar_one()
 
     return TransactionSummary(
@@ -108,10 +113,18 @@ async def list_all_transactions(
     if type_filter:
         base_filter = base_filter & (Transaction.type == type_filter)
     if q:
-        base_filter = base_filter & (col(Transaction.note).ilike(f"%{q}%"))
+        search_pattern = f"%{q}%"
+        q_filter = (
+            col(Transaction.note).ilike(search_pattern) |
+            col(User.username).ilike(search_pattern) |
+            col(User.display_name).ilike(search_pattern) |
+            col(User.email).ilike(search_pattern) |
+            col(User.clerk_id).ilike(search_pattern)
+        )
+        base_filter = base_filter & q_filter
 
     # Total count for pagination metadata
-    count_stmt = select(sa_func.count()).select_from(Transaction).where(base_filter)
+    count_stmt = select(sa_func.count()).select_from(Transaction).join(User, Transaction.user_id == User.id).where(base_filter)
     total = (await session.execute(count_stmt)).scalar_one()
 
     # Paginated query with User Join
@@ -142,6 +155,7 @@ async def list_all_transactions(
         page=page,
         per_page=per_page,
         total_pages=total_pages,
+
     )
 
 
