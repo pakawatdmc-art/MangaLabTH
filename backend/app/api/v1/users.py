@@ -65,9 +65,13 @@ async def list_users(
     role: Optional[str] = Query(None),
 ):
     """Admin: list users with server-side pagination and search."""
-    base_filter = True
+    
+    count_stmt = select(sa_func.count()).select_from(User)
+    stmt = select(User)
+
     if role:
-        base_filter = (User.role == role)
+        count_stmt = count_stmt.where(User.role == role)
+        stmt = stmt.where(User.role == role)
 
     if q:
         search_pattern = f"%{q}%"
@@ -75,23 +79,18 @@ async def list_users(
             col(User.email).ilike(search_pattern) |
             col(User.username).ilike(search_pattern) |
             col(User.display_name).ilike(search_pattern) |
-            col(User.clerk_id).ilike(search_pattern) |
-            col(User.role).ilike(search_pattern)
+            col(User.clerk_id).ilike(search_pattern)
         )
-        if base_filter is True:
-            base_filter = q_filter
-        else:
-            base_filter = base_filter & q_filter
+        count_stmt = count_stmt.where(q_filter)
+        stmt = stmt.where(q_filter)
 
     # Total count
-    count_stmt = select(sa_func.count()).select_from(User).where(base_filter)
     total = (await session.execute(count_stmt)).scalar_one()
 
     # Paginated query
     offset = (page - 1) * per_page
     stmt = (
-        select(User)
-        .where(base_filter)
+        stmt
         .order_by(User.role, col(User.created_at).desc())
         .offset(offset)
         .limit(per_page)
