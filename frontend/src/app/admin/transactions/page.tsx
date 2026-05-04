@@ -44,22 +44,20 @@ export default function AdminTransactionsPage() {
       try {
         const token = await getToken();
         if (!token) return;
-        const data = await listAllTransactions(token);
-        setTransactions(
-          [...data].sort(
-            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-          )
-        );
 
-        // Fetch users for username lookup
-        try {
-          const users = await listUsers(token);
-          const map = new Map<string, User>();
-          users.forEach((u) => map.set(u.id, u));
-          setUserMap(map);
-        } catch {
-          // Non-critical: fallback to showing user_id
-        }
+        // ดึงข้อมูลธุรกรรมและผู้ใช้พร้อมกัน (Concurrent Request) เพื่อความเร็ว
+        const [data, users] = await Promise.all([
+          listAllTransactions(token),
+          listUsers(token).catch(() => [] as User[]) // หากดึงผู้ใช้ล้มเหลวให้เป็น array ว่าง
+        ]);
+
+        // ไม่ต้อง sort ใน frontend เพราะ backend order_by(created_at.desc()) มาให้แล้ว
+        setTransactions(data);
+
+        // Map users
+        const map = new Map<string, User>();
+        users.forEach((u) => map.set(u.id, u));
+        setUserMap(map);
 
         setError("");
       } catch (err: unknown) {
