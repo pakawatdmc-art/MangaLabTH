@@ -75,3 +75,4 @@ backend/backend.log
 # ── Test / Debug scripts ──────────────────────
 test_*.py
 backend/test_*.py
+scripts/
