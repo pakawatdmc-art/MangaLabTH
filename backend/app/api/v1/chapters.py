@@ -8,6 +8,7 @@ from sqlmodel import select, col
 
 from app.services.analytics import record_manga_read_task, is_bot_request
 from app.services.google_notify import notify_google_updated
+from app.services.notification_service import schedule_chapter_notification
 
 from app.api.deps import AdminUser, DBSession, OptionalUser
 from app.models.manga import Chapter, Manga, Page
@@ -215,6 +216,18 @@ async def create_chapter(
     background_tasks.add_task(
         notify_google_updated, [f"/manga/{manga.slug}", "/", chapter_url]
     )
+    # Schedule debounced email notification to readers
+    import asyncio
+    asyncio.create_task(schedule_chapter_notification(
+        manga_id=manga_id,
+        manga_title=manga.title,
+        manga_slug=manga.slug,
+        cover_url=manga.cover_url or "",
+        chapter_number=chapter.number,
+        chapter_title=chapter.title or "",
+        is_free=chapter.is_free,
+        coin_price=chapter.coin_price,
+    ))
     return data
 
 

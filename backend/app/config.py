@@ -40,8 +40,9 @@ class Settings(BaseSettings):
     FFP_SECRET_KEY: str = ""
     FFP_BASE_URL: str = "https://api-test.feelfreepay.com"
 
-    # ── Resend Email ──────────────────────────────────
-    RESEND_API_KEY: str = ""
+    # ── Email Service (Brevo) ──────────────────────────────────
+    RESEND_API_KEY: str = "" # Deprecated, use Brevo
+    BREVO_API_KEY: str = ""
     EMAIL_FROM: str = "MangaLabTH <support@mangalab-th.com>"
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
