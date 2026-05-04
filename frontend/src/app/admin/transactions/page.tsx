@@ -33,7 +33,6 @@ const ITEMS_PER_PAGE = 20;
 export default function AdminTransactionsPage() {
   const { getToken } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [userMap, setUserMap] = useState<Map<string, User>>(new Map());
   const [loading, setLoading] = useState(true);
   const [tableLoading, setTableLoading] = useState(false);
   const [error, setError] = useState("");
@@ -82,17 +81,16 @@ export default function AdminTransactionsPage() {
     }
   }, [getToken]);
 
-  // ── Initial load: summary + users + first page in parallel ──
+  // ── Initial load: summary + first page in parallel ──
   useEffect(() => {
     const init = async () => {
       try {
         const token = await getToken();
         if (!token) return;
 
-        const [pageData, summaryData, users] = await Promise.all([
+        const [pageData, summaryData] = await Promise.all([
           listAllTransactions(token, { page: 1, per_page: ITEMS_PER_PAGE }),
           getTransactionSummary(token),
-          listUsers(token).catch(() => [] as User[]),
         ]);
 
         setTransactions(pageData.items);
@@ -101,10 +99,6 @@ export default function AdminTransactionsPage() {
         setCurrentPage(pageData.page);
 
         setSummary(summaryData);
-
-        const map = new Map<string, User>();
-        users.forEach((u) => map.set(u.id, u));
-        setUserMap(map);
 
         setError("");
       } catch (err: unknown) {
@@ -267,11 +261,11 @@ export default function AdminTransactionsPage() {
                       <td className="px-4 py-2.5">
                         <div className="flex flex-col" title={`User ID: ${tx.user_id}`}>
                           <span className="text-white text-xs font-medium">
-                            @{userMap.get(tx.user_id)?.username || tx.user_id.slice(0, 12) + "…"}
+                            @{tx.user_username || tx.user_clerk_id || tx.user_id.slice(0, 12) + "…"}
                           </span>
-                          {userMap.get(tx.user_id)?.email && (
-                            <span className="text-[10px] text-gray-500 truncate max-w-[180px]" title={userMap.get(tx.user_id)!.email}>
-                              {userMap.get(tx.user_id)!.email}
+                          {tx.user_email && (
+                            <span className="text-[10px] text-gray-500 truncate max-w-[180px]" title={tx.user_email}>
+                              {tx.user_email}
                             </span>
                           )}
                         </div>

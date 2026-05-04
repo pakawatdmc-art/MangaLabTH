@@ -112,6 +112,9 @@ export interface Transaction {
   chapter_id?: string;
   note: string;
   created_at: string;
+  user_email?: string;
+  user_clerk_id?: string;
+  user_username?: string;
 }
 
 export interface CoinPackage {

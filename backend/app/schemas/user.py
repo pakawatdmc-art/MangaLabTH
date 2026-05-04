@@ -22,6 +22,12 @@ class UserRead(BaseModel):
 
     model_config = {"from_attributes": True}
 
+class PaginatedUsers(BaseModel):
+    items: list[UserRead]
+    total: int
+    page: int
+    per_page: int
+    total_pages: int
 
 class UserUpdate(BaseModel):
     display_name: Optional[str] = Field(None, max_length=128)

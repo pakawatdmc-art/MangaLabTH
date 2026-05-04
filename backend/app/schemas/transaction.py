@@ -21,6 +21,12 @@ class TransactionRead(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class AdminTransactionRead(TransactionRead):
+    user_email: Optional[str] = None
+    user_clerk_id: Optional[str] = None
+    user_username: Optional[str] = None
+
+
 class CoinPackageRead(BaseModel):
     id: str
     name: str

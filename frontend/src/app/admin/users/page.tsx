@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { ChevronDown, ChevronUp, Coins, Loader2, Search, Shield, Sparkles, Trash2, Users } from "lucide-react";
+import { ChevronDown, ChevronUp, Coins, Loader2, Search, Shield, Sparkles, Trash2, Users as UsersIcon } from "lucide-react";
 import type { User } from "@/lib/types";
 import { listUsers, adminGrantCoins, updateUser, deleteUser } from "@/lib/api";
 import { formatDateTime } from "@/lib/utils";
@@ -16,13 +16,23 @@ function getUsername(u: User): string {
 
 export default function AdminUsersPage() {
   const { getToken, userId } = useAuth();
-  const [users, setUsers] = useState<User[]>([]);
+  const [admins, setAdmins] = useState<User[]>([]);
+  const [readers, setReaders] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tableLoading, setTableLoading] = useState(false);
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
   const [isAdminTableOpen, setIsAdminTableOpen] = useState(false);
+  
+  // Pagination for readers
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [totalPages, setTotalPages] = useState(1);
+  const [readerTotal, setReaderTotal] = useState(0);
+  const [adminTotal, setAdminTotal] = useState(0);
+  const itemsPerPage = 20;
+
+  // Debounce timer for search
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Grant coins modal
   const [grantTarget, setGrantTarget] = useState<User | null>(null);
@@ -30,61 +40,57 @@ export default function AdminUsersPage() {
   const [grantNote, setGrantNote] = useState("");
   const [granting, setGranting] = useState(false);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async (page: number, q?: string) => {
     try {
       const token = await getToken();
       if (!token) return;
-      const data = await listUsers(token);
-      setUsers(data);
+      
+      setTableLoading(true);
+
+      // Fetch Admins and Readers in parallel
+      const [adminRes, readerRes] = await Promise.all([
+        listUsers(token, { role: "admin", per_page: 100, q: q }),
+        listUsers(token, { role: "reader", page: page, per_page: itemsPerPage, q: q }),
+      ]);
+
+      setAdmins(adminRes.items);
+      setAdminTotal(adminRes.total);
+      
+      setReaders(readerRes.items);
+      setReaderTotal(readerRes.total);
+      setTotalPages(readerRes.total_pages);
+      setCurrentPage(readerRes.page);
+      
       setError("");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "โหลดข้อมูลผู้ใช้ล้มเหลว");
     } finally {
       setLoading(false);
+      setTableLoading(false);
     }
-  };
-
-  const filteredUsers = users.filter((u) => {
-    const q = query.trim().toLowerCase();
-    if (!q) return true;
-
-    const searchable = [
-      getUsername(u),
-      u.username || "",
-      u.display_name || "",
-      u.email || "",
-      u.clerk_id || "",
-      u.role || "",
-    ]
-      .join(" ")
-      .toLowerCase();
-
-    return searchable.includes(q);
-  });
-  const adminCount = users.filter((u) => u.role === "admin").length;
-  const readerCount = users.length - adminCount;
-  const filteredAdmins = filteredUsers.filter((u) => u.role === "admin");
-  const filteredReaders = filteredUsers.filter((u) => u.role !== "admin");
-
-  // Pagination for readers
-  const totalPages = Math.ceil(filteredReaders.length / itemsPerPage);
-  const paginatedReaders = filteredReaders.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  // Reset page when search query changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [query]);
-
-  const currentUser = users.find((u) => u.clerk_id === userId);
-  const isPrimaryAdmin = currentUser?.is_primary_admin || false;
+  }, [getToken, itemsPerPage]);
 
   useEffect(() => {
-    fetchUsers();
+    fetchUsers(1, "");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleSearchChange = (value: string) => {
+    setQuery(value);
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
+      setCurrentPage(1);
+      fetchUsers(1, value);
+    }, 400);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages || page === currentPage) return;
+    fetchUsers(page, query);
+  };
+
+  const currentUser = admins.find((u) => u.clerk_id === userId) || readers.find((u) => u.clerk_id === userId);
+  const isPrimaryAdmin = currentUser?.is_primary_admin || false;
 
   const handleGrant = async () => {
     if (!grantTarget || grantAmount <= 0) return;
@@ -97,7 +103,7 @@ export default function AdminUsersPage() {
       setGrantAmount(0);
       setGrantNote("");
       setError("");
-      await fetchUsers();
+      await fetchUsers(currentPage, query);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "เติมเหรียญล้มเหลว");
     } finally {
@@ -113,7 +119,8 @@ export default function AdminUsersPage() {
       if (!token) return;
       await updateUser(user.id, { role: newRole }, token);
       setError("");
-      await fetchUsers();
+      // Reset to page 1 because user role changed
+      await fetchUsers(1, query);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "เปลี่ยนสิทธิ์ล้มเหลว");
     }
@@ -127,7 +134,7 @@ export default function AdminUsersPage() {
       if (!token) return;
       await deleteUser(user.id, token);
       setError("");
-      await fetchUsers();
+      await fetchUsers(currentPage, query);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "ลบผู้ใช้ล้มเหลว");
     }
@@ -254,7 +261,7 @@ export default function AdminUsersPage() {
             ผู้ใช้งาน
           </h1>
           <p className="mt-1 text-sm text-gray-300">
-            จัดการบัญชีผู้ใช้ สิทธิ์ และยอดเหรียญ — ทั้งหมด {users.length} คน
+            จัดการบัญชีผู้ใช้ สิทธิ์ และยอดเหรียญ — ทั้งหมด {adminTotal + readerTotal} คน
           </p>
           <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs text-gold">
             <Sparkles className="h-3.5 w-3.5" />
@@ -267,19 +274,19 @@ export default function AdminUsersPage() {
         <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="rounded-xl border border-white/10 bg-surface-200/50 px-3 py-2.5">
             <p className="text-[11px] uppercase tracking-wide text-gray-500">ผู้ใช้ทั้งหมด</p>
-            <p className="text-lg font-semibold text-white">{users.length}</p>
+            <p className="text-lg font-semibold text-white">{adminTotal + readerTotal}</p>
           </div>
           <div className="rounded-xl border border-white/10 bg-surface-200/50 px-3 py-2.5">
             <p className="text-[11px] uppercase tracking-wide text-gray-500">แอดมิน</p>
-            <p className="text-lg font-semibold text-gold">{adminCount}</p>
+            <p className="text-lg font-semibold text-gold">{adminTotal}</p>
           </div>
           <div className="rounded-xl border border-white/10 bg-surface-200/50 px-3 py-2.5">
             <p className="text-[11px] uppercase tracking-wide text-gray-500">ผู้อ่าน</p>
-            <p className="text-lg font-semibold text-emerald-300">{readerCount}</p>
+            <p className="text-lg font-semibold text-emerald-300">{readerTotal}</p>
           </div>
           <div className="rounded-xl border border-white/10 bg-surface-200/50 px-3 py-2.5">
-            <p className="text-[11px] uppercase tracking-wide text-gray-500">ผลลัพธ์ค้นหา</p>
-            <p className="text-lg font-semibold text-white">{filteredUsers.length}</p>
+            <p className="text-[11px] uppercase tracking-wide text-gray-500">แสดงผลหน้านี้</p>
+            <p className="text-lg font-semibold text-white">{admins.length + readers.length}</p>
           </div>
         </div>
 
@@ -288,7 +295,7 @@ export default function AdminUsersPage() {
           <input
             type="text"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             placeholder="ค้นหา username, email, clerk id, role..."
             className="h-10 w-full rounded-xl border border-white/10 bg-surface-200 pl-9 pr-3 text-sm text-white placeholder:text-gray-500 focus:border-gold/40 focus:outline-none"
           />
@@ -375,7 +382,7 @@ export default function AdminUsersPage() {
           </div>
           <div className="flex items-center gap-3">
             <span className="rounded-full border border-gold/25 bg-gold/10 px-2.5 py-1 text-xs font-medium text-gold">
-              {filteredAdmins.length} คน
+              {adminTotal} คน
             </span>
             {isAdminTableOpen ? (
               <ChevronUp className="h-5 w-5 text-gray-400" />
@@ -385,7 +392,7 @@ export default function AdminUsersPage() {
           </div>
         </button>
         {isAdminTableOpen && renderUserTable(
-          filteredAdmins,
+          admins,
           query ? "ไม่พบแอดมินที่ตรงกับคำค้นหา" : "ยังไม่มีบัญชีแอดมิน"
         )}
       </section>
@@ -397,23 +404,31 @@ export default function AdminUsersPage() {
             ตารางผู้ใช้ทั่วไป
           </h2>
           <span className="rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-300">
-            {filteredReaders.length} คน
+            {readerTotal} คน
           </span>
         </div>
-        {renderUserTable(
-          paginatedReaders,
+        
+        {tableLoading && (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-5 w-5 animate-spin text-emerald-300" />
+            <span className="ml-2 text-sm text-gray-400">กำลังโหลด...</span>
+          </div>
+        )}
+        
+        {!tableLoading && renderUserTable(
+          readers,
           query ? "ไม่พบผู้ใช้ทั่วไปที่ตรงกับคำค้นหา" : "ยังไม่มีบัญชีผู้ใช้ทั่วไป"
         )}
         
         {/* Pagination Controls */}
-        {totalPages > 1 && (
+        {!tableLoading && totalPages > 1 && (
           <div className="flex items-center justify-between px-2 pt-2 pb-4">
             <p className="text-xs text-gray-500">
-              แสดง {(currentPage - 1) * itemsPerPage + 1} ถึง {Math.min(currentPage * itemsPerPage, filteredReaders.length)} จากทั้งหมด {filteredReaders.length} รายการ
+              แสดง {(currentPage - 1) * itemsPerPage + 1} ถึง {Math.min(currentPage * itemsPerPage, readerTotal)} จากทั้งหมด {readerTotal} รายการ
             </p>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
                 className="rounded-lg border border-white/10 bg-surface-200 px-3 py-1.5 text-xs text-white transition hover:bg-surface-100 disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -432,7 +447,7 @@ export default function AdminUsersPage() {
                     return (
                       <button
                         key={i}
-                        onClick={() => setCurrentPage(i + 1)}
+                        onClick={() => handlePageChange(i + 1)}
                         className={`flex h-8 w-8 items-center justify-center rounded-lg border text-xs transition ${
                           currentPage === i + 1
                             ? "border-emerald-500/50 bg-emerald-500/20 text-emerald-400 font-medium"
@@ -457,7 +472,7 @@ export default function AdminUsersPage() {
               </div>
 
               <button
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
                 className="rounded-lg border border-white/10 bg-surface-200 px-3 py-1.5 text-xs text-white transition hover:bg-surface-100 disabled:opacity-50 disabled:cursor-not-allowed"
               >

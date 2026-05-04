@@ -29,20 +29,20 @@ router = APIRouter(prefix="/transactions", tags=["Transactions"])
 # ── Response schemas for paginated listing ────────
 
 
+from app.schemas.transaction import AdminTransactionRead
+
 class PaginatedTransactions(BaseModel):
-    items: List[TransactionRead]
+    items: List[AdminTransactionRead]
     total: int
     page: int
     per_page: int
     total_pages: int
-
 
 class TransactionSummary(BaseModel):
     total_in: int
     total_out: int
     net_balance: int
     total_count: int
-
 
 # ── Admin: transaction summary (lightweight) ─────
 
@@ -114,21 +114,30 @@ async def list_all_transactions(
     count_stmt = select(sa_func.count()).select_from(Transaction).where(base_filter)
     total = (await session.execute(count_stmt)).scalar_one()
 
-    # Paginated query
+    # Paginated query with User Join
     offset = (page - 1) * per_page
     stmt = (
-        select(Transaction)
+        select(Transaction, User)
+        .join(User, Transaction.user_id == User.id)
         .where(base_filter)
         .order_by(col(Transaction.created_at).desc())
         .offset(offset)
         .limit(per_page)
     )
-    results = (await session.execute(stmt)).scalars().all()
+    results = (await session.execute(stmt)).all()
 
     total_pages = max(1, -(-total // per_page))  # ceil division
 
+    items = []
+    for tx, u in results:
+        data = AdminTransactionRead.model_validate(tx)
+        data.user_email = u.email
+        data.user_clerk_id = u.clerk_id
+        data.user_username = u.username or u.display_name
+        items.append(data)
+
     return PaginatedTransactions(
-        items=[TransactionRead.model_validate(t) for t in results],
+        items=items,
         total=total,
         page=page,
         per_page=per_page,

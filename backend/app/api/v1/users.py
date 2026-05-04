@@ -50,30 +50,66 @@ async def update_me(
     return _to_user_read(user)
 
 
+from fastapi import Query
+from sqlalchemy import func as sa_func
+from app.schemas.user import PaginatedUsers
+
 # ── Admin ────────────────────────────────────────
-
-
-@router.get("", response_model=List[UserRead])
+@router.get("", response_model=PaginatedUsers)
 async def list_users(
     session: DBSession,
     admin: AdminUser,
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    q: Optional[str] = Query(None),
+    role: Optional[str] = Query(None),
 ):
-    """Admin: list all users."""
-    stmt = select(User).order_by(User.role, col(User.created_at).desc())
-    results = (await session.execute(stmt)).scalars().all()
-    profiles = []
-    chunk_size = 10
-    for i in range(0, len(results), chunk_size):
-        chunk = results[i:i + chunk_size]
-        chunk_profiles = await asyncio.gather(
-            *[get_clerk_profile(u.clerk_id) for u in chunk]
-        )
-        profiles.extend(chunk_profiles)
+    """Admin: list users with server-side pagination and search."""
+    base_filter = True
+    if role:
+        base_filter = (User.role == role)
 
-    items: List[UserRead] = []
-    for u, profile in zip(results, profiles):
-        items.append(_to_user_read(u, profile))
-    return items
+    if q:
+        search_pattern = f"%{q}%"
+        q_filter = (
+            col(User.email).ilike(search_pattern) |
+            col(User.username).ilike(search_pattern) |
+            col(User.display_name).ilike(search_pattern) |
+            col(User.clerk_id).ilike(search_pattern) |
+            col(User.role).ilike(search_pattern)
+        )
+        if base_filter is True:
+            base_filter = q_filter
+        else:
+            base_filter = base_filter & q_filter
+
+    # Total count
+    count_stmt = select(sa_func.count()).select_from(User).where(base_filter)
+    total = (await session.execute(count_stmt)).scalar_one()
+
+    # Paginated query
+    offset = (page - 1) * per_page
+    stmt = (
+        select(User)
+        .where(base_filter)
+        .order_by(User.role, col(User.created_at).desc())
+        .offset(offset)
+        .limit(per_page)
+    )
+    results = (await session.execute(stmt)).scalars().all()
+
+    total_pages = max(1, -(-total // per_page))
+
+    # ไม่เรียก Clerk API แล้ว ใช้ข้อมูลจาก Database โดยตรง
+    items = [_to_user_read(u) for u in results]
+
+    return PaginatedUsers(
+        items=items,
+        total=total,
+        page=page,
+        per_page=per_page,
+        total_pages=total_pages,
+    )
 
 
 @router.patch("/{user_id}", response_model=UserRead)

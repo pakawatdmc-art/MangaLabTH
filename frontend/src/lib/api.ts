@@ -223,8 +223,23 @@ export async function adminGrantCoins(
   });
 }
 
-export async function listUsers(token: string) {
-  return fetcher<User[]>("/users", { token });
+export async function listUsers(
+  token: string,
+  params?: { page?: number; per_page?: number; q?: string; role?: string }
+) {
+  const sp = new URLSearchParams();
+  if (params?.page) sp.set("page", String(params.page));
+  if (params?.per_page) sp.set("per_page", String(params.per_page));
+  if (params?.q) sp.set("q", params.q);
+  if (params?.role) sp.set("role", params.role);
+  const qs = sp.toString();
+  return fetcher<{
+    items: User[];
+    total: number;
+    page: number;
+    per_page: number;
+    total_pages: number;
+  }>(`/users${qs ? `?${qs}` : ""}`, { token });
 }
 
 export async function updateUser(userId: string, data: { role?: string; coin_balance?: number }, token: string) {
@@ -233,6 +248,16 @@ export async function updateUser(userId: string, data: { role?: string; coin_bal
 
 export async function deleteUser(userId: string, token: string) {
   return fetcher<void>(`/users/${userId}`, { method: "DELETE", token });
+}
+
+export async function adminGetStats(token: string) {
+  return fetcher<{
+    total_manga: number;
+    total_chapters: number;
+    total_users: number;
+    total_coins_in_circulation: number;
+    total_views: number;
+  }>("/users/stats", { token });
 }
 
 export async function listAllTransactions(
