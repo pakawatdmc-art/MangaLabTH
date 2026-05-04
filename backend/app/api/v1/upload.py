@@ -180,19 +180,30 @@ async def upload_chapter_page(
     file: UploadFile = File(...),
 ):
     """Admin: upload a chapter page, convert to WebP, and store directly."""
+    logger.info(
+        "[ChapterUpload] Start — key=%s, filename=%s, content_type=%s",
+        key, file.filename, file.content_type
+    )
     _validate_storage_key(key)
     
     if not file.content_type or not file.content_type.startswith("image/"):
+        logger.warning("[ChapterUpload] Rejected — invalid content_type: %s", file.content_type)
         raise HTTPException(
             status_code=400, detail="ไฟล์ต้องเป็นรูปภาพเท่านั้น")
 
     # Read file content (limit 15 MB since chapter pages can be long vertically)
     contents = await file.read()
+    file_size_kb = len(contents) / 1024
+    logger.info("[ChapterUpload] Read complete — %.1f KB", file_size_kb)
+
     if len(contents) > 15 * 1024 * 1024:
+        logger.warning("[ChapterUpload] Rejected — file too large: %.1f MB", file_size_kb / 1024)
         raise HTTPException(
             status_code=400, detail="ไฟล์ขนาดใหญ่เกินไป (สูงสุด 15 MB)")
 
     if not _validate_image_bytes(contents):
+        magic_hex = contents[:16].hex()
+        logger.warning("[ChapterUpload] Rejected — invalid magic bytes: %s", magic_hex)
         raise HTTPException(
             status_code=400, detail="ไฟล์ไม่ใช่รูปภาพที่ถูกต้อง")
 
@@ -200,14 +211,24 @@ async def upload_chapter_page(
     try:
         contents, content_type, img_width, img_height = process_image_to_webp(contents)
     except Exception as e:
-        logger.error("Chapter page processing failed: %s", e)
+        logger.error("[ChapterUpload] Image processing FAILED: %s — %s", type(e).__name__, e, exc_info=True)
         raise HTTPException(
             status_code=500, detail="เกิดข้อผิดพลาดในการประมวลผลรูปภาพ")
 
     # Force the key extension to be .webp
     final_key = key.rsplit(".", 1)[0] + ".webp"
 
-    public_url = upload_file_to_r2(final_key, contents, content_type)
+    try:
+        public_url = upload_file_to_r2(final_key, contents, content_type)
+    except Exception as e:
+        logger.error("[ChapterUpload] R2 upload FAILED: %s — %s", type(e).__name__, e, exc_info=True)
+        raise HTTPException(
+            status_code=500, detail="เกิดข้อผิดพลาดในการอัปโหลดไฟล์ไปยัง Storage")
+
+    logger.info(
+        "[ChapterUpload] Success — key=%s, size=%.1f KB, dimensions=%dx%d",
+        final_key, len(contents) / 1024, img_width, img_height
+    )
     return ChapterUploadResponse(
         public_url=public_url, key=final_key, width=img_width, height=img_height
     )
