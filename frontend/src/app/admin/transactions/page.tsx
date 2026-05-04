@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { ArrowDownCircle, ArrowUpCircle, Coins, History, Loader2, Search, Sparkles } from "lucide-react";
 import type { Transaction, User } from "@/lib/types";
 import { formatDateTime } from "@/lib/utils";
-import { listAllTransactions, listUsers } from "@/lib/api";
+import { listAllTransactions, getTransactionSummary, listUsers } from "@/lib/api";
 
 const TX_TYPE_LABELS: Record<string, { label: string; color: string }> = {
   coin_purchase: { label: "เติมเหรียญ", color: "text-emerald-400" },
@@ -28,33 +28,80 @@ function translateNote(note: string | null | undefined): string {
   return translated;
 }
 
+const ITEMS_PER_PAGE = 20;
+
 export default function AdminTransactionsPage() {
   const { getToken } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [userMap, setUserMap] = useState<Map<string, User>>(new Map());
   const [loading, setLoading] = useState(true);
+  const [tableLoading, setTableLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Pagination state (server-side)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+
+  // Summary state (separate lightweight query)
+  const [summary, setSummary] = useState({ total_in: 0, total_out: 0, net_balance: 0, total_count: 0 });
+
+  // Filter state
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
 
+  // Debounce timer for search
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ── Fetch transactions for current page ──
+  const fetchPage = useCallback(async (page: number, type?: string, q?: string) => {
+    try {
+      const token = await getToken();
+      if (!token) return;
+
+      setTableLoading(true);
+
+      const params: { page: number; per_page: number; type?: string; q?: string } = {
+        page,
+        per_page: ITEMS_PER_PAGE,
+      };
+      if (type && type !== "all") params.type = type;
+      if (q && q.trim()) params.q = q.trim();
+
+      const data = await listAllTransactions(token, params);
+
+      setTransactions(data.items);
+      setTotalPages(data.total_pages);
+      setTotalItems(data.total);
+      setCurrentPage(data.page);
+      setError("");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "โหลดรายการเหรียญล้มเหลว");
+    } finally {
+      setTableLoading(false);
+    }
+  }, [getToken]);
+
+  // ── Initial load: summary + users + first page in parallel ──
   useEffect(() => {
-    const fetchData = async () => {
+    const init = async () => {
       try {
         const token = await getToken();
         if (!token) return;
 
-        // ดึงข้อมูลธุรกรรมและผู้ใช้พร้อมกัน (Concurrent Request) เพื่อความเร็ว
-        const [data, users] = await Promise.all([
-          listAllTransactions(token),
-          listUsers(token).catch(() => [] as User[]) // หากดึงผู้ใช้ล้มเหลวให้เป็น array ว่าง
+        const [pageData, summaryData, users] = await Promise.all([
+          listAllTransactions(token, { page: 1, per_page: ITEMS_PER_PAGE }),
+          getTransactionSummary(token),
+          listUsers(token).catch(() => [] as User[]),
         ]);
 
-        // ไม่ต้อง sort ใน frontend เพราะ backend order_by(created_at.desc()) มาให้แล้ว
-        setTransactions(data);
+        setTransactions(pageData.items);
+        setTotalPages(pageData.total_pages);
+        setTotalItems(pageData.total);
+        setCurrentPage(pageData.page);
 
-        // Map users
+        setSummary(summaryData);
+
         const map = new Map<string, User>();
         users.forEach((u) => map.set(u.id, u));
         setUserMap(map);
@@ -66,48 +113,32 @@ export default function AdminTransactionsPage() {
         setLoading(false);
       }
     };
-    fetchData();
+    init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Summary calculations
-  const totalIn = transactions.filter((t) => t.amount > 0).reduce((s, t) => s + t.amount, 0);
-  const totalOut = transactions.filter((t) => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
-  const latestBalance = totalIn - totalOut;
-  const normalizedQuery = query.trim().toLowerCase();
-  const filteredTransactions = transactions.filter((tx) => {
-    const typeMatched = typeFilter === "all" || tx.type === typeFilter;
-    if (!typeMatched) return false;
-    if (!normalizedQuery) return true;
+  // ── Page change handler ──
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages || page === currentPage) return;
+    fetchPage(page, typeFilter, query);
+  };
 
-    const searchable = [
-      tx.type,
-      tx.user_id,
-      userMap.get(tx.user_id)?.username || "",
-      userMap.get(tx.user_id)?.email || "",
-      tx.note || "",
-      translateNote(tx.note),
-      String(tx.amount),
-      String(tx.balance_after),
-      formatDateTime(tx.created_at),
-    ]
-      .join(" ")
-      .toLowerCase();
-
-    return searchable.includes(normalizedQuery);
-  });
-
-  // Pagination for transactions
-  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
-  const paginatedTransactions = filteredTransactions.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  // Reset page when filters change
-  useEffect(() => {
+  // ── Filter change handlers ──
+  const handleTypeChange = (newType: string) => {
+    setTypeFilter(newType);
     setCurrentPage(1);
-  }, [query, typeFilter]);
+    fetchPage(1, newType, query);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setQuery(value);
+    // Debounce: รอ 400ms หลังพิมพ์เสร็จค่อยค้นหา
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
+      setCurrentPage(1);
+      fetchPage(1, typeFilter, value);
+    }, 400);
+  };
 
   if (loading) {
     return (
@@ -144,22 +175,22 @@ export default function AdminTransactionsPage() {
         <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="rounded-xl border border-white/10 bg-surface-200/50 px-3 py-2.5">
             <ArrowUpCircle className="mb-1 h-4 w-4 text-emerald-400" />
-            <p className="text-lg font-semibold text-white">{totalIn.toLocaleString()}</p>
+            <p className="text-lg font-semibold text-white">{summary.total_in.toLocaleString()}</p>
             <p className="text-[11px] uppercase tracking-wide text-gray-500">ยอดเติม</p>
           </div>
           <div className="rounded-xl border border-white/10 bg-surface-200/50 px-3 py-2.5">
             <ArrowDownCircle className="mb-1 h-4 w-4 text-orange-400" />
-            <p className="text-lg font-semibold text-white">{totalOut.toLocaleString()}</p>
+            <p className="text-lg font-semibold text-white">{summary.total_out.toLocaleString()}</p>
             <p className="text-[11px] uppercase tracking-wide text-gray-500">ยอดใช้</p>
           </div>
           <div className="rounded-xl border border-white/10 bg-surface-200/50 px-3 py-2.5">
             <Coins className="mb-1 h-4 w-4 text-gold" />
-            <p className="text-lg font-semibold text-white">{latestBalance.toLocaleString()}</p>
+            <p className="text-lg font-semibold text-white">{summary.net_balance.toLocaleString()}</p>
             <p className="text-[11px] uppercase tracking-wide text-gray-500">เหรียญคงเหลือล่าสุด</p>
           </div>
           <div className="rounded-xl border border-white/10 bg-surface-200/50 px-3 py-2.5">
             <History className="mb-1 h-4 w-4 text-blue-400" />
-            <p className="text-lg font-semibold text-white">{transactions.length}</p>
+            <p className="text-lg font-semibold text-white">{summary.total_count.toLocaleString()}</p>
             <p className="text-[11px] uppercase tracking-wide text-gray-500">รายการทั้งหมด</p>
           </div>
         </div>
@@ -170,14 +201,14 @@ export default function AdminTransactionsPage() {
             <input
               type="text"
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="ค้นหา user id, หมายเหตุ, จำนวน, วันที่..."
+              onChange={(e) => handleSearchChange(e.target.value)}
+              placeholder="ค้นหาหมายเหตุ..."
               className="h-10 w-full rounded-xl border border-white/10 bg-surface-200 pl-9 pr-3 text-sm text-white placeholder:text-gray-500 focus:border-gold/40 focus:outline-none"
             />
           </label>
           <select
             value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
+            onChange={(e) => handleTypeChange(e.target.value)}
             className="h-10 rounded-xl border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/40 focus:outline-none"
           >
             <option value="all">ทุกประเภท</option>
@@ -191,79 +222,89 @@ export default function AdminTransactionsPage() {
       </section>
 
       <div className="overflow-x-auto rounded-2xl border border-white/10 bg-surface-100/80 ring-1 ring-white/5">
-        <table className="w-full min-w-[860px] text-sm">
-          <thead>
-            <tr className="border-b border-white/5 text-left text-xs text-gray-500">
-              <th className="px-4 py-3">ประเภท</th>
-              <th className="px-4 py-3">ผู้ใช้</th>
-              <th className="px-4 py-3">จำนวน</th>
-              <th className="px-4 py-3">ยอดคงเหลือ</th>
-              <th className="px-4 py-3">หมายเหตุ</th>
-              <th className="px-4 py-3">วันที่</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredTransactions.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-gray-600">
-                  {transactions.length === 0
-                    ? "ยังไม่มีรายการ"
-                    : "ไม่พบรายการที่ตรงกับคำค้นหาหรือตัวกรอง"}
-                </td>
+        {/* Loading overlay for page transitions */}
+        {tableLoading && (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-5 w-5 animate-spin text-gold" />
+            <span className="ml-2 text-sm text-gray-400">กำลังโหลด...</span>
+          </div>
+        )}
+
+        {!tableLoading && (
+          <table className="w-full min-w-[860px] text-sm">
+            <thead>
+              <tr className="border-b border-white/5 text-left text-xs text-gray-500">
+                <th className="px-4 py-3">ประเภท</th>
+                <th className="px-4 py-3">ผู้ใช้</th>
+                <th className="px-4 py-3">จำนวน</th>
+                <th className="px-4 py-3">ยอดคงเหลือ</th>
+                <th className="px-4 py-3">หมายเหตุ</th>
+                <th className="px-4 py-3">วันที่</th>
               </tr>
-            ) : (
-              paginatedTransactions.map((tx) => {
-                const typeInfo = TX_TYPE_LABELS[tx.type] || {
-                  label: tx.type,
-                  color: "text-gray-400",
-                };
-                return (
-                  <tr key={tx.id} className="border-b border-white/5 hover:bg-white/[0.03]">
-                    <td className="px-4 py-2.5">
-                      <span className={`inline-flex rounded-full bg-white/5 px-2 py-0.5 text-xs font-medium ${typeInfo.color}`}>
-                        {typeInfo.label}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <div className="flex flex-col" title={`User ID: ${tx.user_id}`}>
-                        <span className="text-white text-xs font-medium">
-                          @{userMap.get(tx.user_id)?.username || tx.user_id.slice(0, 12) + "…"}
+            </thead>
+            <tbody>
+              {transactions.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-12 text-center text-gray-600">
+                    {totalItems === 0
+                      ? "ยังไม่มีรายการ"
+                      : "ไม่พบรายการที่ตรงกับคำค้นหาหรือตัวกรอง"}
+                  </td>
+                </tr>
+              ) : (
+                transactions.map((tx) => {
+                  const typeInfo = TX_TYPE_LABELS[tx.type] || {
+                    label: tx.type,
+                    color: "text-gray-400",
+                  };
+                  return (
+                    <tr key={tx.id} className="border-b border-white/5 hover:bg-white/[0.03]">
+                      <td className="px-4 py-2.5">
+                        <span className={`inline-flex rounded-full bg-white/5 px-2 py-0.5 text-xs font-medium ${typeInfo.color}`}>
+                          {typeInfo.label}
                         </span>
-                        {userMap.get(tx.user_id)?.email && (
-                          <span className="text-[10px] text-gray-500 truncate max-w-[180px]" title={userMap.get(tx.user_id)!.email}>
-                            {userMap.get(tx.user_id)!.email}
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <div className="flex flex-col" title={`User ID: ${tx.user_id}`}>
+                          <span className="text-white text-xs font-medium">
+                            @{userMap.get(tx.user_id)?.username || tx.user_id.slice(0, 12) + "…"}
                           </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <span className={tx.amount >= 0 ? "text-emerald-400 font-medium" : "text-orange-400 font-medium"}>
-                        {tx.amount >= 0 ? "+" : ""}
-                        {tx.amount.toLocaleString()}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2.5 text-gray-400 font-medium">{tx.balance_after.toLocaleString()}</td>
-                    <td className="max-w-[320px] px-4 py-2.5 text-xs text-gray-300 leading-relaxed break-words" title={translateNote(tx.note)}>
-                      {translateNote(tx.note)}
-                    </td>
-                    <td className="px-4 py-2.5 text-xs text-gray-500 whitespace-nowrap">{formatDateTime(tx.created_at)}</td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+                          {userMap.get(tx.user_id)?.email && (
+                            <span className="text-[10px] text-gray-500 truncate max-w-[180px]" title={userMap.get(tx.user_id)!.email}>
+                              {userMap.get(tx.user_id)!.email}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <span className={tx.amount >= 0 ? "text-emerald-400 font-medium" : "text-orange-400 font-medium"}>
+                          {tx.amount >= 0 ? "+" : ""}
+                          {tx.amount.toLocaleString()}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5 text-gray-400 font-medium">{tx.balance_after.toLocaleString()}</td>
+                      <td className="max-w-[320px] px-4 py-2.5 text-xs text-gray-300 leading-relaxed break-words" title={translateNote(tx.note)}>
+                        {translateNote(tx.note)}
+                      </td>
+                      <td className="px-4 py-2.5 text-xs text-gray-500 whitespace-nowrap">{formatDateTime(tx.created_at)}</td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        )}
         
         {/* Pagination Controls */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between border-t border-white/5 px-4 py-3">
             <p className="text-xs text-gray-500">
-              แสดง {(currentPage - 1) * itemsPerPage + 1} ถึง {Math.min(currentPage * itemsPerPage, filteredTransactions.length)} จากทั้งหมด {filteredTransactions.length} รายการ
+              แสดง {(currentPage - 1) * ITEMS_PER_PAGE + 1} ถึง {Math.min(currentPage * ITEMS_PER_PAGE, totalItems)} จากทั้งหมด {totalItems.toLocaleString()} รายการ
             </p>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1 || tableLoading}
                 className="rounded-lg border border-white/10 bg-surface-200 px-3 py-1.5 text-xs text-white transition hover:bg-surface-100 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 ก่อนหน้า
@@ -281,7 +322,8 @@ export default function AdminTransactionsPage() {
                     return (
                       <button
                         key={i}
-                        onClick={() => setCurrentPage(i + 1)}
+                        onClick={() => handlePageChange(i + 1)}
+                        disabled={tableLoading}
                         className={`flex h-8 w-8 items-center justify-center rounded-lg border text-xs transition ${
                           currentPage === i + 1
                             ? "border-emerald-500/50 bg-emerald-500/20 text-emerald-400 font-medium"
@@ -306,8 +348,8 @@ export default function AdminTransactionsPage() {
               </div>
 
               <button
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages || tableLoading}
                 className="rounded-lg border border-white/10 bg-surface-200 px-3 py-1.5 text-xs text-white transition hover:bg-surface-100 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 ถัดไป

@@ -4,9 +4,11 @@ Critical: all balance mutations use SELECT ... FOR UPDATE
 to guarantee atomicity under concurrent requests.
 """
 
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel
+from sqlalchemy import func as sa_func
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select, col
 
@@ -24,26 +26,114 @@ from app.schemas.transaction import (
 router = APIRouter(prefix="/transactions", tags=["Transactions"])
 
 
-# ── Admin: list all transactions ─────────────────
+# ── Response schemas for paginated listing ────────
 
 
-@router.get("", response_model=List[TransactionRead])
+class PaginatedTransactions(BaseModel):
+    items: List[TransactionRead]
+    total: int
+    page: int
+    per_page: int
+    total_pages: int
+
+
+class TransactionSummary(BaseModel):
+    total_in: int
+    total_out: int
+    net_balance: int
+    total_count: int
+
+
+# ── Admin: transaction summary (lightweight) ─────
+
+
+@router.get("/summary", response_model=TransactionSummary)
+async def get_transaction_summary(
+    session: DBSession,
+    admin: AdminUser,
+    type_filter: Optional[str] = Query(None, alias="type"),
+    q: Optional[str] = Query(None),
+):
+    """Admin: get aggregate summary of all transactions (fast DB query)."""
+    base_filter = ~(
+        (Transaction.type == TransactionType.COIN_PURCHASE) & (Transaction.amount == 0)
+    )
+    if type_filter:
+        base_filter = base_filter & (Transaction.type == type_filter)
+    if q:
+        base_filter = base_filter & (col(Transaction.note).ilike(f"%{q}%"))
+
+    # Sum of positive amounts (credits)
+    in_stmt = (
+        select(sa_func.coalesce(sa_func.sum(Transaction.amount), 0))
+        .where(base_filter & (Transaction.amount > 0))
+    )
+    total_in = (await session.execute(in_stmt)).scalar_one()
+
+    # Sum of absolute negative amounts (debits)
+    out_stmt = (
+        select(sa_func.coalesce(sa_func.sum(sa_func.abs(Transaction.amount)), 0))
+        .where(base_filter & (Transaction.amount < 0))
+    )
+    total_out = (await session.execute(out_stmt)).scalar_one()
+
+    # Total count
+    count_stmt = select(sa_func.count()).select_from(Transaction).where(base_filter)
+    total_count = (await session.execute(count_stmt)).scalar_one()
+
+    return TransactionSummary(
+        total_in=total_in,
+        total_out=total_out,
+        net_balance=total_in - total_out,
+        total_count=total_count,
+    )
+
+
+# ── Admin: list all transactions (paginated) ─────
+
+
+@router.get("", response_model=PaginatedTransactions)
 async def list_all_transactions(
     session: DBSession,
     admin: AdminUser,
-    limit: int = Query(1000, ge=1, le=5000),
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    type_filter: Optional[str] = Query(None, alias="type"),
+    q: Optional[str] = Query(None),
 ):
-    """Admin: list all transactions across all users (excluding pending)."""
+    """Admin: list all transactions with server-side pagination, filtering, and search."""
+    base_filter = ~(
+        (Transaction.type == TransactionType.COIN_PURCHASE) & (Transaction.amount == 0)
+    )
+    if type_filter:
+        base_filter = base_filter & (Transaction.type == type_filter)
+    if q:
+        base_filter = base_filter & (col(Transaction.note).ilike(f"%{q}%"))
+
+    # Total count for pagination metadata
+    count_stmt = select(sa_func.count()).select_from(Transaction).where(base_filter)
+    total = (await session.execute(count_stmt)).scalar_one()
+
+    # Paginated query
+    offset = (page - 1) * per_page
     stmt = (
         select(Transaction)
-        .where(
-            ~((Transaction.type == TransactionType.COIN_PURCHASE) & (Transaction.amount == 0))
-        )
+        .where(base_filter)
         .order_by(col(Transaction.created_at).desc())
-        .limit(limit)
+        .offset(offset)
+        .limit(per_page)
     )
     results = (await session.execute(stmt)).scalars().all()
-    return [TransactionRead.model_validate(t) for t in results]
+
+    total_pages = max(1, -(-total // per_page))  # ceil division
+
+    return PaginatedTransactions(
+        items=[TransactionRead.model_validate(t) for t in results],
+        total=total,
+        page=page,
+        per_page=per_page,
+        total_pages=total_pages,
+    )
 
 
 # ── Reader: list my transactions ─────────────────

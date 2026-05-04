@@ -235,8 +235,39 @@ export async function deleteUser(userId: string, token: string) {
   return fetcher<void>(`/users/${userId}`, { method: "DELETE", token });
 }
 
-export async function listAllTransactions(token: string) {
-  return fetcher<Transaction[]>("/transactions", { token });
+export async function listAllTransactions(
+  token: string,
+  params?: { page?: number; per_page?: number; type?: string; q?: string }
+) {
+  const sp = new URLSearchParams();
+  if (params?.page) sp.set("page", String(params.page));
+  if (params?.per_page) sp.set("per_page", String(params.per_page));
+  if (params?.type) sp.set("type", params.type);
+  if (params?.q) sp.set("q", params.q);
+  const qs = sp.toString();
+  return fetcher<{
+    items: Transaction[];
+    total: number;
+    page: number;
+    per_page: number;
+    total_pages: number;
+  }>(`/transactions${qs ? `?${qs}` : ""}`, { token });
+}
+
+export async function getTransactionSummary(
+  token: string,
+  params?: { type?: string; q?: string }
+) {
+  const sp = new URLSearchParams();
+  if (params?.type) sp.set("type", params.type);
+  if (params?.q) sp.set("q", params.q);
+  const qs = sp.toString();
+  return fetcher<{
+    total_in: number;
+    total_out: number;
+    net_balance: number;
+    total_count: number;
+  }>(`/transactions/summary${qs ? `?${qs}` : ""}`, { token });
 }
 
 
