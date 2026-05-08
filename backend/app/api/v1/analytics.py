@@ -643,6 +643,7 @@ async def get_chapters_deepdive_analytics(
         select(
             Chapter.manga_id,
             Manga.title.label("manga_title"),
+            Manga.slug.label("manga_slug"),
             Chapter.number.label("chapter_number"),
             func.count(Transaction.id).label("unlocks"),
             func.sum(func.abs(Transaction.amount)).label("coins_earned")
@@ -660,6 +661,7 @@ async def get_chapters_deepdive_analytics(
     top_chapters = [
         {
             "manga_title": r.manga_title,
+            "manga_slug": r.manga_slug,
             "chapter_number": float(r.chapter_number),
             "unlocks": int(r.unlocks),
             "coins_earned": int(r.coins_earned)
@@ -778,6 +780,7 @@ async def get_mangas_deepdive_analytics(
         select(
             Manga.id,
             Manga.title,
+            Manga.slug,
             Manga.total_views,
             Manga.total_reads,
             func.sum(func.abs(Transaction.amount)).label("revenue")
@@ -796,6 +799,7 @@ async def get_mangas_deepdive_analytics(
         {
             "id": r.id,
             "title": r.title,
+            "slug": r.slug,
             "views": int(r.total_views),
             "reads": int(r.total_reads),
             "revenue": int(r.revenue)

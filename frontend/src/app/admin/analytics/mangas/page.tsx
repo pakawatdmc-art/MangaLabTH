@@ -395,7 +395,7 @@ export default function MangaAnalyticsDashboard() {
                                                             </div>
                                                         </td>
                                                         <td className="px-4 py-3">
-                                                            <Link href={`/admin/manga/${franchise.id}`} className="font-medium text-white hover:text-emerald-400 transition line-clamp-1">
+                                                            <Link href={`/manga/${franchise.slug}`} target="_blank" className="font-medium text-white hover:text-emerald-400 transition line-clamp-1">
                                                                 {franchise.title}
                                                             </Link>
                                                         </td>

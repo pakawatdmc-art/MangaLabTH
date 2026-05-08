@@ -317,7 +317,7 @@ export default function CoinAnalyticsDashboard() {
                                                             </div>
                                                         </td>
                                                         <td className="px-4 py-3">
-                                                            <span className="font-medium text-white line-clamp-1">{ch.manga_title}</span>
+                                                            <Link href={`/manga/${ch.manga_slug}`} target="_blank" className="font-medium text-white hover:text-emerald-400 transition line-clamp-1">{ch.manga_title}</Link>
                                                         </td>
                                                         <td className="px-4 py-3 text-center">
                                                             <span className="inline-flex items-center rounded-md bg-white/5 px-2 py-1 text-xs font-medium text-gray-300">
