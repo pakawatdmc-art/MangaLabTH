@@ -578,6 +578,7 @@ export async function getChapterDeepdiveAnalytics(token: string, days = 30) {
     unlock_trend: { date: string; unlocks: number; coins_burned: number }[];
     top_chapters: {
       manga_title: string;
+      manga_slug: string;
       chapter_number: number;
       unlocks: number;
       coins_earned: number;
@@ -609,6 +610,7 @@ export async function getMangaDeepdiveAnalytics(token: string, days = 30) {
     top_franchises: {
       id: string;
       title: string;
+      slug: string;
       views: number;
       reads: number;
       revenue: number;

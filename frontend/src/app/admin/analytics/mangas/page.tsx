@@ -56,6 +56,7 @@ interface MangaAnalyticsData {
     top_franchises: {
         id: string;
         title: string;
+        slug: string;
         views: number;
         reads: number;
         revenue: number;
