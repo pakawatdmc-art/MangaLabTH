@@ -24,7 +24,7 @@ export default async function HomePage({ searchParams }: Props) {
   const page = Number(params.page) || 1;
 
   let updatedManga = { items: [] as Manga[], total: 0 };
-  let manga = { items: [] as Manga[], total: 0, page: 1, per_page: 24, pages: 1 };
+  let manga = { items: [] as Manga[], total: 0, page: 1, per_page: 18, pages: 1 };
   try {
     const isSearchActive = !!params.q;
 
@@ -34,11 +34,11 @@ export default async function HomePage({ searchParams }: Props) {
 
     manga = await getMangaList({
       page,
-      per_page: 24,
+      per_page: 18,
       category: params.category,
       status: params.status,
       q: params.q,
-      sort: params.sort,
+      sort: params.sort || "updated",
     });
   } catch (err) {
     console.error("Failed to fetch manga list:", err);
@@ -173,21 +173,65 @@ export default async function HomePage({ searchParams }: Props) {
               )}
 
               {/* Pagination */}
-              {manga.pages > 1 && (
-                <div className="mt-12 flex justify-center gap-2">
-                  {Array.from({ length: manga.pages }, (_, i) => i + 1).map((p) => (
+              {manga.total > 0 && (
+                <div className="mt-12 flex justify-center items-center gap-2">
+                  {/* Previous Button */}
+                  {page > 1 ? (
                     <Link
-                      key={p}
-                      href={`/?page=${p}${params.category ? `&category=${params.category}` : ""
-                        }${params.q ? `&q=${params.q}` : ""}${params.sort ? `&sort=${params.sort}` : ""}`}
-                      className={`flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold transition-all ${p === page
-                        ? "bg-gold text-black shadow-lg shadow-gold/20"
-                        : "bg-surface-100/50 text-gray-400 hover:bg-surface-100 hover:text-white ring-1 ring-white/5"
-                        }`}
+                      href={`/?page=${page - 1}${params.category ? `&category=${params.category}` : ""}${params.q ? `&q=${params.q}` : ""}${params.sort ? `&sort=${params.sort}` : ""}`}
+                      className="flex h-10 items-center justify-center rounded-xl bg-surface-100/50 px-4 text-sm font-semibold text-gray-400 ring-1 ring-white/5 transition-all hover:bg-surface-100 hover:text-white"
                     >
-                      {p}
+                      ก่อนหน้า
                     </Link>
-                  ))}
+                  ) : (
+                    <div className="flex h-10 items-center justify-center rounded-xl bg-surface-200/20 px-4 text-sm font-semibold text-gray-600 ring-1 ring-white/5 cursor-not-allowed">
+                      ก่อนหน้า
+                    </div>
+                  )}
+
+                  {/* Page Numbers */}
+                  <div className="hidden sm:flex gap-2">
+                    {Array.from({ length: manga.pages }, (_, i) => i + 1)
+                      .filter(p => p === 1 || p === manga.pages || Math.abs(p - page) <= 1)
+                      .map((p, i, arr) => {
+                        return (
+                          <div key={p} className="flex gap-2">
+                            {i > 0 && p - arr[i - 1] > 1 && (
+                              <span className="flex h-10 w-10 items-center justify-center text-gray-500">...</span>
+                            )}
+                            <Link
+                              href={`/?page=${p}${params.category ? `&category=${params.category}` : ""}${params.q ? `&q=${params.q}` : ""}${params.sort ? `&sort=${params.sort}` : ""}`}
+                              className={`flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold transition-all ${
+                                p === page
+                                  ? "bg-gold text-black shadow-lg shadow-gold/20"
+                                  : "bg-surface-100/50 text-gray-400 ring-1 ring-white/5 hover:bg-surface-100 hover:text-white"
+                              }`}
+                            >
+                              {p}
+                            </Link>
+                          </div>
+                        );
+                      })}
+                  </div>
+                  
+                  {/* Mobile Page Indicator */}
+                  <div className="flex sm:hidden h-10 items-center justify-center px-4 text-sm font-semibold text-gray-400">
+                    หน้า {page} / {manga.pages}
+                  </div>
+
+                  {/* Next Button */}
+                  {page < manga.pages ? (
+                    <Link
+                      href={`/?page=${page + 1}${params.category ? `&category=${params.category}` : ""}${params.q ? `&q=${params.q}` : ""}${params.sort ? `&sort=${params.sort}` : ""}`}
+                      className="flex h-10 items-center justify-center rounded-xl bg-surface-100/50 px-4 text-sm font-semibold text-gray-400 ring-1 ring-white/5 transition-all hover:bg-surface-100 hover:text-white"
+                    >
+                      ถัดไป
+                    </Link>
+                  ) : (
+                    <div className="flex h-10 items-center justify-center rounded-xl bg-surface-200/20 px-4 text-sm font-semibold text-gray-600 ring-1 ring-white/5 cursor-not-allowed">
+                      ถัดไป
+                    </div>
+                  )}
                 </div>
               )}
             </div>
