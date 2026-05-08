@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { ChevronDown, ChevronUp, Coins, Loader2, Search, Shield, Sparkles, Trash2, Users } from "lucide-react";
 import type { User } from "@/lib/types";
-import { listUsers, adminGrantCoins, updateUser, deleteUser } from "@/lib/api";
+import { listUsers, adminGrantCoins, updateUser, deleteUser, getStats } from "@/lib/api";
 import { formatDateTime } from "@/lib/utils";
 
 function getUsername(u: User): string {
@@ -29,6 +29,7 @@ export default function AdminUsersPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [readerTotal, setReaderTotal] = useState(0);
   const [adminTotal, setAdminTotal] = useState(0);
+  const [totalCoins, setTotalCoins] = useState(0);
   const itemsPerPage = 20;
 
   // Debounce timer for search
@@ -47,10 +48,11 @@ export default function AdminUsersPage() {
       
       setTableLoading(true);
 
-      // Fetch Admins and Readers in parallel
-      const [adminRes, readerRes] = await Promise.all([
+      // Fetch Admins, Readers, and Stats in parallel
+      const [adminRes, readerRes, statsRes] = await Promise.all([
         listUsers(token, { role: "admin", per_page: 100, q: q }),
         listUsers(token, { role: "reader", page: page, per_page: itemsPerPage, q: q }),
+        getStats(token),
       ]);
 
       setAdmins(adminRes.items);
@@ -60,6 +62,7 @@ export default function AdminUsersPage() {
       setReaderTotal(readerRes.total);
       setTotalPages(readerRes.total_pages);
       setCurrentPage(readerRes.page);
+      setTotalCoins(statsRes.total_coins_in_circulation);
       
       setError("");
     } catch (err: unknown) {
@@ -285,8 +288,8 @@ export default function AdminUsersPage() {
             <p className="text-lg font-semibold text-emerald-300">{readerTotal}</p>
           </div>
           <div className="rounded-xl border border-white/10 bg-surface-200/50 px-3 py-2.5">
-            <p className="text-[11px] uppercase tracking-wide text-gray-500">แสดงผลหน้านี้</p>
-            <p className="text-lg font-semibold text-white">{admins.length + readers.length}</p>
+            <p className="text-[11px] uppercase tracking-wide text-gray-500">เหรียญรวมในระบบ</p>
+            <p className="text-lg font-semibold text-gold">{totalCoins.toLocaleString()}</p>
           </div>
         </div>
 
