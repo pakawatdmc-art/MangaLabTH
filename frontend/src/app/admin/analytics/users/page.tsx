@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { AnalyticsNav } from "../AnalyticsNav";
+import { TablePagination } from "@/components/TablePagination";
 
 // ApexCharts needs to be dynamically imported
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
@@ -62,6 +64,7 @@ export default function UserAnalyticsDashboard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [timeRange, setTimeRange] = useState<number>(7); // days
+    const [tablePage, setTablePage] = useState(1);
 
     useEffect(() => {
         if (!isLoaded) return;
@@ -79,6 +82,14 @@ export default function UserAnalyticsDashboard() {
             }
         })();
     }, [isLoaded, getToken, timeRange]);
+
+    // Reset table page when time range changes
+    useEffect(() => { setTablePage(1); }, [timeRange]);
+
+    const ITEMS_PER_PAGE = 10;
+    const holderItems = data?.top_coin_holders || [];
+    const holdersTotalPages = Math.ceil(holderItems.length / ITEMS_PER_PAGE);
+    const holdersPageItems = holderItems.slice((tablePage - 1) * ITEMS_PER_PAGE, tablePage * ITEMS_PER_PAGE);
 
     // Helpers
     const calcGrowth = (current: number, prev: number) => {
@@ -173,6 +184,7 @@ export default function UserAnalyticsDashboard() {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500 pb-10">
+            <AnalyticsNav />
             {/* Header */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
@@ -268,9 +280,9 @@ export default function UserAnalyticsDashboard() {
                                             <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{card.label}</p>
                                         </div>
                                         <div className="flex items-baseline gap-3">
-                                            <p className="text-3xl font-bold text-white drop-shadow-md">
-                                                {loading ? "..." : card.isPercent ? `${card.value.toFixed(1)}%` : formatNumber(card.value)}
-                                            </p>
+                                            <div className="text-3xl font-bold text-white drop-shadow-md">
+                                                {loading ? <div className="h-9 w-24 animate-pulse rounded bg-white/20 mt-1"></div> : card.isPercent ? `${card.value.toFixed(1)}%` : formatNumber(card.value)}
+                                            </div>
                                             {!loading && card.prev !== undefined && renderGrowthBadge(card.value, card.prev)}
                                         </div>
                                     </div>
@@ -364,12 +376,13 @@ export default function UserAnalyticsDashboard() {
                                                 <td colSpan={4} className="py-8 text-center text-gray-500">ไม่พบข้อมูล</td>
                                             </tr>
                                         ) : (
-                                            data?.top_coin_holders.map((user, index) => {
+                                            holdersPageItems.map((user, index) => {
+                                                const rank = (tablePage - 1) * ITEMS_PER_PAGE + index;
                                                 return (
                                                     <tr key={user.id} className="transition hover:bg-white/[0.02]">
                                                         <td className="px-4 py-3">
-                                                            <div className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold ${index === 0 ? 'bg-yellow-400/20 text-yellow-400' : index === 1 ? 'bg-gray-400/20 text-gray-300' : index === 2 ? 'bg-orange-600/20 text-orange-400' : 'bg-surface-200 text-gray-400'}`}>
-                                                                #{index + 1}
+                                                            <div className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold ${rank === 0 ? 'bg-yellow-400/20 text-yellow-400' : rank === 1 ? 'bg-gray-400/20 text-gray-300' : rank === 2 ? 'bg-orange-600/20 text-orange-400' : 'bg-surface-200 text-gray-400'}`}>
+                                                                #{rank + 1}
                                                             </div>
                                                         </td>
                                                         <td className="px-4 py-3">
@@ -393,6 +406,7 @@ export default function UserAnalyticsDashboard() {
                                     </tbody>
                                 </table>
                             </div>
+                            <TablePagination currentPage={tablePage} totalPages={holdersTotalPages} onPageChange={setTablePage} />
                         </div>
                     </div>
                 </>

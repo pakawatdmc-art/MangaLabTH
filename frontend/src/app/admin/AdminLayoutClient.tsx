@@ -37,14 +37,22 @@ interface Props {
     adminToken: string;
 }
 
+function isLinkActive(pathname: string, href: string): boolean {
+    if (href === "/admin") return pathname === "/admin";
+    return pathname === href || pathname.startsWith(href + "/");
+}
+
 export default function AdminLayoutClient({ children, isPrimaryAdmin, adminToken }: Props) {
     const pathname = usePathname();
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
-    const activeSection =
-        SIDEBAR_LINKS.find(({ href }) =>
-            href === "/admin" ? pathname === "/admin" : pathname.startsWith(href)
-        )?.label || "แผงควบคุม";
+    // Pick the most-specific matching link (longest href) to avoid
+    // parent prefixes like /admin/analytics also matching /admin/analytics/coins
+    const activeLink = SIDEBAR_LINKS
+        .filter(({ href }) => isLinkActive(pathname, href))
+        .sort((a, b) => b.href.length - a.href.length)[0];
+
+    const activeSection = activeLink?.label || "แผงควบคุม";
 
     useEffect(() => {
         const timeout = setTimeout(() => setSidebarOpen(false), 0);
@@ -108,10 +116,7 @@ export default function AdminLayoutClient({ children, isPrimaryAdmin, adminToken
                     {/* Nav */}
                     <nav className="flex-1 space-y-1 overflow-y-auto px-3 pb-3 pt-1">
                         {SIDEBAR_LINKS.map(({ href, label, icon: Icon }) => {
-                            const isActive =
-                                href === "/admin"
-                                    ? pathname === "/admin"
-                                    : pathname.startsWith(href);
+                            const isActive = activeLink?.href === href;
                             return (
                                 <Link
                                     key={href}

@@ -18,6 +18,8 @@ import {
     Crown,
 } from "lucide-react";
 import Link from "next/link";
+import { AnalyticsNav } from "../AnalyticsNav";
+import { TablePagination } from "@/components/TablePagination";
 
 // ApexCharts needs to be dynamically imported
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
@@ -49,6 +51,8 @@ export default function CoinAnalyticsDashboard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [timeRange, setTimeRange] = useState<number>(7);
+    const [chaptersPage, setChaptersPage] = useState(1);
+    const [spendersPage, setSpendersPage] = useState(1);
 
     useEffect(() => {
         if (!isLoaded) return;
@@ -66,6 +70,17 @@ export default function CoinAnalyticsDashboard() {
             }
         })();
     }, [isLoaded, getToken, timeRange]);
+
+    // Reset table pages when time range changes
+    useEffect(() => { setChaptersPage(1); setSpendersPage(1); }, [timeRange]);
+
+    const ITEMS_PER_PAGE = 10;
+    const chapterItems = data?.top_grossing_chapters || [];
+    const chaptersTotalPages = Math.ceil(chapterItems.length / ITEMS_PER_PAGE);
+    const chaptersPageItems = chapterItems.slice((chaptersPage - 1) * ITEMS_PER_PAGE, chaptersPage * ITEMS_PER_PAGE);
+    const spenderItems = data?.top_spenders || [];
+    const spendersTotalPages = Math.ceil(spenderItems.length / ITEMS_PER_PAGE);
+    const spendersPageItems = spenderItems.slice((spendersPage - 1) * ITEMS_PER_PAGE, spendersPage * ITEMS_PER_PAGE);
 
     const calcGrowth = (current: number, prev: number) => {
         if (prev === 0) return current > 0 ? 100 : 0;
@@ -128,6 +143,7 @@ export default function CoinAnalyticsDashboard() {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500 pb-10">
+            <AnalyticsNav />
             {/* Header */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
@@ -194,9 +210,9 @@ export default function CoinAnalyticsDashboard() {
                                             <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{card.label}</p>
                                         </div>
                                         <div className="flex items-baseline gap-3">
-                                            <p className="text-3xl font-bold text-white drop-shadow-md">
-                                                {loading ? "..." : (card.isCoin ? `${formatNumber(Math.round(card.value))} เหรียญ` : card.isPercent ? `${card.value.toFixed(1)}%` : formatNumber(card.value))}
-                                            </p>
+                                            <div className="text-3xl font-bold text-white drop-shadow-md">
+                                                {loading ? <div className="h-9 w-24 animate-pulse rounded bg-white/20 mt-1"></div> : (card.isCoin ? `${formatNumber(Math.round(card.value))} เหรียญ` : card.isPercent ? `${card.value.toFixed(1)}%` : formatNumber(card.value))}
+                                            </div>
                                             {!loading && card.prev !== undefined && renderGrowthBadge(card.value, card.prev)}
                                         </div>
                                     </div>
@@ -259,8 +275,69 @@ export default function CoinAnalyticsDashboard() {
                         </div>
                     </div>
 
-                    {/* Bottom Row: Top Spenders */}
+                    {/* Bottom Row: Top Grossing Chapters + Top Spenders */}
                     <div className="grid grid-cols-1 gap-6">
+                        {/* Top Grossing Chapters */}
+                        <div className="rounded-2xl border border-white/5 bg-[linear-gradient(135deg,#1b2130_0%,#131826_100%)] p-6 shadow-xl ring-1 ring-white/10 flex flex-col">
+                            <h2 className="mb-1 text-lg font-bold text-white flex items-center gap-2">
+                                <Crown className="h-5 w-5 text-gold" />
+                                Top Grossing Chapters (ตอนทำเงินเก่ง)
+                            </h2>
+                            <p className="mb-6 text-xs text-gray-400">จัดอันดับตอนที่ทำรายได้สูงสุดในช่วง {timeRange} วันที่ผ่านมา</p>
+
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-sm">
+                                    <thead className="bg-surface-200/50 text-xs uppercase text-gray-400">
+                                        <tr>
+                                            <th className="rounded-l-lg px-4 py-3 font-semibold">อันดับ</th>
+                                            <th className="px-4 py-3 font-semibold">มังงะ</th>
+                                            <th className="px-4 py-3 font-semibold text-center">ตอนที่</th>
+                                            <th className="rounded-r-lg px-4 py-3 font-semibold text-right text-gold">เหรียญที่ทำได้</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-white/5">
+                                        {loading ? (
+                                            <tr>
+                                                <td colSpan={4} className="py-8 text-center text-gray-500">
+                                                    <Loader2 className="mx-auto h-6 w-6 animate-spin" />
+                                                </td>
+                                            </tr>
+                                        ) : chapterItems.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={4} className="py-8 text-center text-gray-500">ไม่พบข้อมูล</td>
+                                            </tr>
+                                        ) : (
+                                            chaptersPageItems.map((ch, index) => {
+                                                const rank = (chaptersPage - 1) * ITEMS_PER_PAGE + index;
+                                                return (
+                                                    <tr key={ch.chapter_id} className="transition hover:bg-white/[0.02]">
+                                                        <td className="px-4 py-3">
+                                                            <div className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold ${rank === 0 ? 'bg-yellow-400/20 text-yellow-400' : rank === 1 ? 'bg-gray-400/20 text-gray-300' : rank === 2 ? 'bg-orange-600/20 text-orange-400' : 'bg-surface-200 text-gray-400'}`}>
+                                                                #{rank + 1}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-4 py-3">
+                                                            <span className="font-medium text-white line-clamp-1">{ch.manga_title}</span>
+                                                        </td>
+                                                        <td className="px-4 py-3 text-center">
+                                                            <span className="inline-flex items-center rounded-md bg-white/5 px-2 py-1 text-xs font-medium text-gray-300">
+                                                                Ch. {ch.chapter_number}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-4 py-3 text-right font-bold text-gold">
+                                                            {formatNumber(ch.coins_earned)} เหรียญ
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <TablePagination currentPage={chaptersPage} totalPages={chaptersTotalPages} onPageChange={setChaptersPage} />
+                        </div>
+
+                        {/* Top Spenders */}
                         <div className="rounded-2xl border border-white/5 bg-[linear-gradient(135deg,#1b2130_0%,#131826_100%)] p-6 shadow-xl ring-1 ring-white/10 flex flex-col">
                             <h2 className="mb-1 text-lg font-bold text-white flex items-center gap-2">
                                 <Crown className="h-5 w-5 text-gold" />
@@ -284,17 +361,18 @@ export default function CoinAnalyticsDashboard() {
                                                     <Loader2 className="mx-auto h-6 w-6 animate-spin" />
                                                 </td>
                                             </tr>
-                                        ) : data?.top_spenders.length === 0 ? (
+                                        ) : spenderItems.length === 0 ? (
                                             <tr>
                                                 <td colSpan={3} className="py-8 text-center text-gray-500">ไม่พบข้อมูลการเติมเหรียญในช่วงเวลานี้</td>
                                             </tr>
                                         ) : (
-                                            data?.top_spenders.map((user, index) => {
+                                            spendersPageItems.map((user, index) => {
+                                                const rank = (spendersPage - 1) * ITEMS_PER_PAGE + index;
                                                 return (
                                                     <tr key={user.user_id} className="transition hover:bg-white/[0.02]">
                                                         <td className="px-4 py-3">
-                                                            <div className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold ${index === 0 ? 'bg-yellow-400/20 text-yellow-400' : index === 1 ? 'bg-gray-400/20 text-gray-300' : index === 2 ? 'bg-orange-600/20 text-orange-400' : 'bg-surface-200 text-gray-400'}`}>
-                                                                #{index + 1}
+                                                            <div className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold ${rank === 0 ? 'bg-yellow-400/20 text-yellow-400' : rank === 1 ? 'bg-gray-400/20 text-gray-300' : rank === 2 ? 'bg-orange-600/20 text-orange-400' : 'bg-surface-200 text-gray-400'}`}>
+                                                                #{rank + 1}
                                                             </div>
                                                         </td>
                                                         <td className="px-4 py-3">
@@ -315,6 +393,7 @@ export default function CoinAnalyticsDashboard() {
                                     </tbody>
                                 </table>
                             </div>
+                            <TablePagination currentPage={spendersPage} totalPages={spendersTotalPages} onPageChange={setSpendersPage} />
                         </div>
                     </div>
                 </>

@@ -148,7 +148,7 @@ async def get_traffic_dashboard(
         .where(DailyMangaView.view_date <= today)
         .group_by(Manga.id)
         .order_by(func.sum(DailyMangaView.view_count).desc())
-        .limit(10)
+        .limit(50)
     )
     top_viewed_results = (await session.execute(top_viewed_stmt)).all()
     
@@ -278,7 +278,7 @@ async def get_coin_deepdive_analytics(
         .where(Transaction.created_at >= utc_start_dt)
         .group_by(Chapter.id, Manga.title, Manga.slug)
         .order_by(func.sum(func.abs(Transaction.amount)).desc())
-        .limit(10)
+        .limit(50)
     )
     top_chapters_results = (await session.execute(top_chapters_stmt)).all()
     top_grossing_chapters = [
@@ -307,7 +307,7 @@ async def get_coin_deepdive_analytics(
         .where(Transaction.created_at >= utc_start_dt)
         .group_by(User.id, User.display_name, User.username, User.email)
         .order_by(func.sum(Transaction.amount).desc())
-        .limit(10)
+        .limit(50)
     )
     top_spenders_results = (await session.execute(top_spenders_stmt)).all()
     
@@ -498,7 +498,7 @@ async def get_users_deepdive_analytics(
     top_holders_stmt = (
         select(User.id, User.display_name, User.username, User.email, User.coin_balance, User.created_at)
         .order_by(User.coin_balance.desc())
-        .limit(10)
+        .limit(50)
     )
     top_holders_results = (await session.execute(top_holders_stmt)).all()
     
@@ -653,7 +653,7 @@ async def get_chapters_deepdive_analytics(
         .where(Transaction.created_at >= utc_start_dt)
         .group_by(Chapter.id, Manga.id)
         .order_by(func.sum(func.abs(Transaction.amount)).desc())
-        .limit(10)
+        .limit(50)
     )
     top_grossing_results = (await session.execute(top_grossing_stmt)).all()
     
@@ -788,7 +788,7 @@ async def get_mangas_deepdive_analytics(
         .where(Transaction.created_at >= utc_start_dt)
         .group_by(Manga.id)
         .order_by(func.sum(func.abs(Transaction.amount)).desc())
-        .limit(10)
+        .limit(50)
     )
     top_franchises_results = (await session.execute(top_franchises_stmt)).all()
     
