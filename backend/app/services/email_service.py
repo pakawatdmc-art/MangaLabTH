@@ -4,9 +4,8 @@ Sends transactional emails (welcome, payment confirmation) as fire-and-forget
 background tasks. Failures are logged but never block the main request flow.
 
 Usage:
-    import asyncio
-    from app.services.email_service import send_welcome_email
-    asyncio.create_task(send_welcome_email("user@example.com", "ชื่อผู้ใช้"))
+    from app.services.email_service import send_welcome_email, fire_and_forget
+    fire_and_forget(send_welcome_email("user@example.com", "ชื่อผู้ใช้"))
 """
 
 import asyncio
@@ -22,12 +21,26 @@ from app.services.email_templates import (
 )
 
 logger = logging.getLogger(__name__)
-settings = get_settings()
+
+# ── Background task management ───────────────────
+# Keep references to fire-and-forget tasks so the GC doesn't destroy them
+_background_tasks: set[asyncio.Task] = set()
+
+
+def fire_and_forget(coro) -> None:
+    """Schedule a coroutine as a background task, safe from GC.
+
+    The task reference is stored in a module-level set and automatically
+    removed when the task completes (success or failure).
+    """
+    task = asyncio.create_task(coro)
+    _background_tasks.add(task)
+    task.add_done_callback(_background_tasks.discard)
 
 
 def _is_configured() -> bool:
     """Check if Brevo API key is set."""
-    return bool(settings.BREVO_API_KEY)
+    return bool(get_settings().BREVO_API_KEY)
 
 
 def _parse_email_from(email_from: str) -> dict:
@@ -39,8 +52,15 @@ def _parse_email_from(email_from: str) -> dict:
     return {"name": "MangaLabTH", "email": email_from.strip()}
 
 
+def _get_site_url() -> str:
+    """Get the site URL from settings."""
+    s = get_settings()
+    return s.FRONTEND_URL or s.SITE_URL or "https://mangalab-th.com"
+
+
 async def _send_brevo_email(payload: dict) -> None:
     """Send email via Brevo v3 API."""
+    settings = get_settings()
     url = "https://api.brevo.com/v3/smtp/email"
     headers = {
         "api-key": settings.BREVO_API_KEY,
@@ -53,7 +73,19 @@ async def _send_brevo_email(payload: dict) -> None:
             response = await client.post(url, json=payload, headers=headers)
             response.raise_for_status()
             result = response.json()
-            logger.info("Email sent successfully (Message ID: %s)", result.get("messageId", "?"))
+            logger.info(
+                "Email sent successfully to %s (Message ID: %s)",
+                payload.get("to", [{}])[0].get("email", "?"),
+                result.get("messageId", "?"),
+            )
+    except httpx.HTTPStatusError as e:
+        logger.error(
+            "Brevo API error %d for %s: %s",
+            e.response.status_code,
+            payload.get("to", [{}])[0].get("email", "?"),
+            e.response.text,
+        )
+        raise
     except Exception as e:
         logger.exception("Failed to send email via Brevo: %s", str(e))
         raise
@@ -70,8 +102,8 @@ async def send_welcome_email(to_email: str, display_name: str) -> None:
         return
 
     try:
-        site_url = settings.FRONTEND_URL or settings.SITE_URL or "https://mangalab-th.com"
-        html = welcome_email_html(display_name=display_name, site_url=site_url)
+        settings = get_settings()
+        html = welcome_email_html(display_name=display_name, site_url=_get_site_url())
 
         payload = {
             "sender": _parse_email_from(settings.EMAIL_FROM),
@@ -81,9 +113,9 @@ async def send_welcome_email(to_email: str, display_name: str) -> None:
         }
 
         await _send_brevo_email(payload)
+        logger.info("Welcome email sent to %s", to_email)
     except Exception:
-        # Error is already logged in _send_brevo_email
-        pass
+        logger.exception("Failed to send welcome email to %s", to_email)
 
 
 async def send_payment_confirmation_email(
@@ -106,7 +138,7 @@ async def send_payment_confirmation_email(
         return
 
     try:
-        site_url = settings.FRONTEND_URL or settings.SITE_URL or "https://mangalab-th.com"
+        settings = get_settings()
         html = payment_confirmation_email_html(
             display_name=display_name,
             package_name=package_name,
@@ -114,7 +146,7 @@ async def send_payment_confirmation_email(
             price_thb=price_thb,
             new_balance=new_balance,
             reference_no=reference_no,
-            site_url=site_url,
+            site_url=_get_site_url(),
         )
 
         payload = {
@@ -125,9 +157,9 @@ async def send_payment_confirmation_email(
         }
 
         await _send_brevo_email(payload)
+        logger.info("Payment confirmation email sent to %s", to_email)
     except Exception:
-        # Error is already logged in _send_brevo_email
-        pass
+        logger.exception("Failed to send payment confirmation email to %s", to_email)
 
 
 async def send_new_chapter_notification(
@@ -148,14 +180,14 @@ async def send_new_chapter_notification(
         return
 
     try:
-        site_url = settings.FRONTEND_URL or settings.SITE_URL or "https://mangalab-th.com"
+        settings = get_settings()
         html = new_chapter_notification_email_html(
             display_name=display_name,
             manga_title=manga_title,
             manga_slug=manga_slug,
             cover_url=cover_url,
             chapters=chapters,
-            site_url=site_url,
+            site_url=_get_site_url(),
         )
 
         chapter_count = len(chapters)
@@ -174,6 +206,6 @@ async def send_new_chapter_notification(
         }
 
         await _send_brevo_email(payload)
+        logger.info("Chapter notification email sent to %s for %s", to_email, manga_title)
     except Exception:
-        # Error is already logged in _send_brevo_email
-        pass
+        logger.exception("Failed to send chapter notification email to %s", to_email)
