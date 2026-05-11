@@ -123,11 +123,10 @@ async def _fulfill_payment(
             "new_balance": existing_check.balance_after if existing_check else 0,
         }
 
-    # Fire-and-forget: Send payment confirmation email
+    # Fire-and-forget: Send payment confirmation email (GC-safe)
     if user.email:
-        import asyncio
-        from app.services.email_service import send_payment_confirmation_email
-        asyncio.create_task(
+        from app.services.email_service import send_payment_confirmation_email, fire_and_forget
+        fire_and_forget(
             send_payment_confirmation_email(
                 to_email=user.email,
                 display_name=user.display_name or "สมาชิก",

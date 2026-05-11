@@ -34,7 +34,9 @@ def _base_layout(content: str, preview_text: str = "") -> str:
                     <tr>
                         <td style="padding:32px 20px 24px;text-align:center;">
                             <a href="https://mangalab-th.com" style="display:inline-block;text-decoration:none;">
-                                <img src="https://mangalab-th.com/logo.webp" alt="MangaLabTH" height="48" style="display:block;border:0;height:48px;width:auto;margin:0 auto;">
+                                <div style="width:48px;height:48px;border-radius:50%;overflow:hidden;display:inline-block;">
+                                    <img src="https://mangalab-th.com/logo.webp" alt="MangaLabTH" width="48" height="48" style="display:block;border:0;width:48px;height:48px;object-fit:cover;">
+                                </div>
                             </a>
                         </td>
                     </tr>
@@ -291,8 +293,8 @@ def new_chapter_notification_email_html(
     </div>
 
     <!-- Manga Card -->
-    <div style="background-color:#111111;border-radius:16px;padding:20px;margin-bottom:24px;border:1px solid #2a2a2a;text-align:center;">
-        {"<img src='" + cover_url + "' alt='" + manga_title + "' style='display:block;width:120px;height:auto;border-radius:12px;margin:0 auto 16px;border:2px solid #2a2a2a;' />" if cover_url else ""}
+    <div style="background-color:#111111;border-radius:16px;padding:24px 20px;margin-bottom:24px;border:1px solid #2a2a2a;text-align:center;">
+        {"<img src='" + cover_url + "' alt='" + manga_title + "' style='display:block;width:180px;height:auto;border-radius:12px;margin:0 auto 20px;border:2px solid #2a2a2a;box-shadow:0 8px 24px rgba(0,0,0,0.4);' />" if cover_url else ""}
         <p style="margin:0 0 4px;font-size:20px;font-weight:800;color:#ffffff;">{manga_title}</p>
         <p style="margin:0;font-size:13px;color:#fbbd23;font-weight:600;">
             อัปเดต {subject_hint}

@@ -216,9 +216,9 @@ async def create_chapter(
     background_tasks.add_task(
         notify_google_updated, [f"/manga/{manga.slug}", "/", chapter_url]
     )
-    # Schedule debounced email notification to readers
-    import asyncio
-    asyncio.create_task(schedule_chapter_notification(
+    # Schedule debounced email notification to readers (GC-safe)
+    from app.services.email_service import fire_and_forget
+    fire_and_forget(schedule_chapter_notification(
         manga_id=manga_id,
         manga_title=manga.title,
         manga_slug=manga.slug,
