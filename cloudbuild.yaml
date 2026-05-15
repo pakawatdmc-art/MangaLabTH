@@ -32,7 +32,7 @@ steps:
     args:
       - 'run'
       - 'deploy'
-      - '${_SERVICE_NAME}'
+      - 'mangalabth-v2'
       - '--image'
       - '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:${COMMIT_SHA}'
       - '--region'
