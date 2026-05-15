@@ -68,9 +68,9 @@ COPY backend/alembic.ini .
 WORKDIR /app/frontend
 
 # Copy standalone Next.js output from builder stage
-COPY --from=frontend-builder /build/.next/standalone/ ./.next/standalone/
-COPY --from=frontend-builder /build/.next/static/ ./.next/standalone/.next/static/
-COPY --from=frontend-builder /build/public/ ./.next/standalone/public/
+COPY --from=frontend-builder /build/.next/standalone/ ./
+COPY --from=frontend-builder /build/.next/static/ ./.next/static/
+COPY --from=frontend-builder /build/public/ ./public/
 
 # ── Supervisord Config ──────────────────────────
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
