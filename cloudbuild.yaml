@@ -61,7 +61,7 @@ substitutions:
   _AR_REPOSITORY: mangalabth
   _SERVICE_NAME: mangalabth-v2
   _DEPLOY_REGION: asia-southeast1
-  _CLERK_PK: ''
+  _CLERK_PK: 'pk_live_Y2xlcmsubWFuZ2FsYWItdGguY29tJA'
   _R2_PUBLIC_URL: 'https://cdn.mangalab-th.com'
   _SITE_URL: 'https://mangalab-th.com'
   _GA_ID: ''
