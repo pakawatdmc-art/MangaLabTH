@@ -1,0 +1,70 @@
+# ╔══════════════════════════════════════════════════════════════╗
+# ║  MangaLabTH — Cloud Build (Full-Stack)                      ║
+# ║  Builds unified Docker image → deploys to Cloud Run         ║
+# ╚══════════════════════════════════════════════════════════════╝
+
+steps:
+  # Step 1: Build the full-stack container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${_CLERK_PK}'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_R2_PUBLIC_URL=${_R2_PUBLIC_URL}'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_SITE_URL=${_SITE_URL}'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_GA_MEASUREMENT_ID=${_GA_ID}'
+      - '-t'
+      - '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:${COMMIT_SHA}'
+      - '-t'
+      - '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest'
+      - '.'
+
+  # Step 2: Push the container image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '--all-tags', '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}']
+
+  # Step 3: Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_SERVICE_NAME}'
+      - '--image'
+      - '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:${COMMIT_SHA}'
+      - '--region'
+      - '${_DEPLOY_REGION}'
+      - '--platform'
+      - 'managed'
+      - '--port'
+      - '3000'
+      - '--allow-unauthenticated'
+      - '--memory'
+      - '1Gi'
+      - '--cpu'
+      - '1'
+      - '--min-instances'
+      - '0'
+      - '--max-instances'
+      - '3'
+      - '--quiet'
+
+images:
+  - '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:${COMMIT_SHA}'
+  - '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest'
+
+substitutions:
+  _AR_HOSTNAME: asia-southeast1-docker.pkg.dev
+  _AR_REPOSITORY: mangalabth
+  _SERVICE_NAME: mangalabth-v2
+  _DEPLOY_REGION: asia-southeast1
+  _CLERK_PK: ''
+  _R2_PUBLIC_URL: 'https://cdn.mangalab-th.com'
+  _SITE_URL: 'https://mangalab-th.com'
+  _GA_ID: ''
+
+options:
+  logging: CLOUD_LOGGING_ONLY

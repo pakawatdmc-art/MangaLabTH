@@ -53,10 +53,10 @@ _trusted_hosts = ["*"] if not settings.is_production else [
 ]
 app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=_trusted_hosts)  # type: ignore
 
-# ── CORS (V8: restricted methods/headers) ────────
+# ── CORS (simplified: same-origin in production) ─
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"] if not settings.is_production else settings.cors_origin_list,
+    allow_origins=["*"] if not settings.is_production else [settings.FRONTEND_URL],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type",

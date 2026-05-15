@@ -1,0 +1,32 @@
+# === Git & IDE ===
+.git
+.gitignore
+.vscode
+*.md
+
+# === Frontend build artifacts & deps ===
+frontend/node_modules
+frontend/.next
+frontend/.env*
+
+# === Backend virtual env & cache ===
+backend/.venv
+backend/__pycache__
+backend/.env
+backend/.env.production
+**/__pycache__
+*.pyc
+
+# === Docker files (don't need inside container) ===
+backend/Dockerfile
+backend/Dockerfile.backend-only
+backend/cloudbuild.yaml
+docker-compose*.yml
+
+# === Test & verification scripts ===
+backend/test_*.py
+backend/verify_*.py
+
+# === Misc ===
+.DS_Store
+scripts/

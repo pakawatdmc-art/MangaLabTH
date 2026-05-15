@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     APP_ENV: str = "development"
     CORS_ORIGINS: str = "http://localhost:3000"
     FRONTEND_URL: str = "http://localhost:3000"
+    INTERNAL_FRONTEND_URL: str = "http://localhost:3000"  # Internal URL for same-container revalidation
     REVALIDATION_SECRET: str = "super-secret-mangalabth"
     SQL_ECHO: bool = False
 

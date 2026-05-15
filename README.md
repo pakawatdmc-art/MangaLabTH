@@ -26,38 +26,46 @@
 
 ```mermaid
 graph TD
-    Client[ผู้ใช้งาน / Browser] <-->|HTTPS / JWT| Frontend(Next.js App Router)
+    Client[ผู้ใช้งาน / Browser] <-->|HTTPS / JWT| CloudRun
     Client <-->|Image Delivery| Cloudflare(Cloudflare CDN & WAF)
     Cloudflare <--> R2[(Cloudflare R2 Storage)]
     
-    Frontend <-->|REST API| Backend(FastAPI)
-    Frontend <-->|Auth| Clerk(Clerk Authentication)
+    subgraph CloudRun[Google Cloud Run Container]
+        Frontend(Next.js :3000) <-->|localhost| Backend(FastAPI :8000)
+        Supervisor[Supervisord PID 1] --> Frontend
+        Supervisor --> Backend
+    end
     
+    Frontend <-->|Auth| Clerk(Clerk Authentication)
     Backend <-->|SQLAlchemy / SQLModel| Database[(PostgreSQL Database)]
     Backend <-->|Payment Webhooks| FFP(FeelFreePay Gateway)
     Backend <-->|SMTP / API| Brevo(Brevo Email Service)
     Backend <-->|Indexing| Google(Google Indexing API)
 ```
 
-### 1. 🖥️ Frontend (Vercel)
-- **Framework:** Next.js 16.2.4 (App Router)
+### 1. 🐳 Full-Stack Container (Google Cloud Run)
+Frontend และ Backend รันอยู่ใน **Docker Container เดียวกัน** โดย Supervisord จัดการ 2 processes:
+
+- **Next.js** (port 3000) — Frontend + SSR + ISR, standalone output mode
+- **FastAPI** (port 8000) — Backend API (internal, เรียกผ่าน localhost)
+
+### 2. 🖥️ Frontend — Next.js 16.2.4
 - **Styling:** Tailwind CSS v4 + Framer Motion (สำหรับ Micro-animations)
 - **State Management:** React Hooks, Server/Client Components Paradigm
-- **Performance:** รองรับ Server-Side Rendering (SSR) และ Incremental Static Regeneration (ISR) ทำให้ LCP (Largest Contentful Paint) < 1 วินาที
+- **Performance:** SSR + ISR, API เรียกผ่าน localhost (zero latency)
 - **Security:** Clerk Middleware ป้องกัน Route ที่ต้องใช้สิทธิ์ Admin
 
-### 2. ⚙️ Backend (Google Cloud Run)
-- **Framework:** FastAPI (Python 3.11+)
+### 3. ⚙️ Backend — FastAPI
 - **ORM:** SQLModel (ครอบ SQLAlchemy)
 - **Database:** PostgreSQL (Supabase)
-- **Concurrency:** รองรับ Asynchronous I/O เต็มรูปแบบ จัดการการล็อกฐานข้อมูลแบบ Row-level (`SELECT FOR UPDATE`) ป้องกัน Double-spending ในระบบเหรียญ
+- **Concurrency:** Asynchronous I/O + Row-level locking (`SELECT FOR UPDATE`) ป้องกัน Double-spending
 
-### 3. 🔌 External Services Integrations
-- 🛡️ **Cloudflare R2 & WAF:** จัดเก็บรูปภาพความเร็วสูง พร้อม Custom Rules บล็อก HTTP Referer ที่ไม่ถูกต้อง (Anti-Scraping)
-- 🔑 **Clerk Auth:** จัดการระบบ Login/Register แบบ Passwordless, Social Login และ RBAC (Role-Based Access Control)
-- 💳 **FeelFreePay Gateway:** ประมวลผลการรับชำระเงินผ่าน PromptPay QR และ TrueMoney Wallet พร้อมระบบ Webhook Verification แบบ Double-Check
-- 📧 **Brevo Email:** ระบบส่ง Email Marketing และ Notification แบบมี Debounce (หน่วงเวลา) เพื่อลดความซ้ำซ้อน
-- 🔍 **Google Indexing API:** ยิง Request แจ้ง Google ทันทีที่มีมังงะตอนใหม่ เพื่อการทำ SEO แบบ Real-time
+### 4. 🔌 External Services
+- 🛡️ **Cloudflare R2 & WAF:** จัดเก็บรูปภาพความเร็วสูง + Anti-Scraping
+- 🔑 **Clerk Auth:** Passwordless, Social Login, RBAC
+- 💳 **FeelFreePay Gateway:** PromptPay QR + TrueMoney Wallet + Double-Check Webhook
+- 📧 **Brevo Email:** Notification + Debounce ลดความซ้ำซ้อน
+- 🔍 **Google Indexing API:** SEO แบบ Real-time
 
 ---
 
@@ -86,6 +94,11 @@ graph TD
 
 ```text
 MangaLabTH/
+├── Dockerfile                # Multi-stage Full-Stack Docker image
+├── supervisord.conf          # Process manager (Next.js + FastAPI)
+├── cloudbuild.yaml           # Google Cloud Build CI/CD
+├── .dockerignore             # Docker build exclusions
+│
 ├── frontend/                 # Next.js Application
 │   ├── src/
 │   │   ├── app/              # App Router (Pages, Layouts, API Routes)
@@ -93,9 +106,9 @@ MangaLabTH/
 │   │   │   └── admin/        # Protected routes สำหรับผู้ดูแลระบบ
 │   │   ├── components/       # Reusable UI Components
 │   │   ├── lib/              # Utility functions, API clients, Types
-│   │   └── middleware.ts     # Clerk Authentication Middleware
+│   │   └── proxy.ts          # Clerk Authentication Middleware
 │   ├── public/               # Static assets
-│   └── tailwind.config.ts    # Tailwind V4 Configuration
+│   └── next.config.ts        # Next.js Config (standalone + rewrites)
 │
 ├── backend/                  # FastAPI Application
 │   ├── app/
@@ -157,11 +170,14 @@ npm run dev
 
 ## 🚀 การนำขึ้นระบบจริง (Deployment Architecture)
 
-- **Frontend:** แนะนำให้ Deploy บน [Vercel](https://vercel.com) ซึ่งรองรับ Next.js App Router อย่างเต็มรูปแบบ พร้อมกำหนด Environment Variables ให้ครบถ้วน
-- **Backend:** แนะนำให้ Deploy เป็น Docker Container บน **Google Cloud Run** หรือ **AWS App Runner** เพื่อรองรับการทำ Auto-scaling เมื่อมีผู้ใช้งานจำนวนมาก
-- **Database:** ใช้ **Supabase** (PostgreSQL) พร้อมเปิด Connection Pooling (PgBouncer) เพื่อรองรับ Connections มหาศาลจาก Serverless functions
+ระบบถูกรวมเป็น **Docker Container เดียว** บน Google Cloud Run:
 
-> 📌 **คำแนะนำเพิ่มเติม:** สำหรับคู่มือขั้นตอนการ Deploy แบบละเอียด รวมถึงการตั้งค่า CI/CD Pipeline กรุณาอ้างอิงเอกสารในทีมพัฒนา
+- **Full-Stack Container:** Next.js (port 3000) + FastAPI (port 8000) จัดการโดย Supervisord
+- **Database:** ใช้ **Supabase** (PostgreSQL) พร้อม Connection Pooling
+- **CI/CD:** Google Cloud Build → Artifact Registry → Cloud Run (auto-deploy)
+- **CDN:** Cloudflare R2 + Custom Domain สำหรับ image delivery
+
+> 📌 **คำแนะนำเพิ่มเติม:** ดูขั้นตอน Deploy แบบละเอียดใน [DEPLOY_GUIDE.md](./DEPLOY_GUIDE.md)
 
 ---
 

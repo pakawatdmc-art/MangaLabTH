@@ -13,7 +13,11 @@ import type {
   CoinPackage,
 } from "./types";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+// Server-side (SSR/ISR): call FastAPI directly via localhost (zero network latency)
+// Client-side (Browser): use relative path → Next.js rewrites proxy to FastAPI
+const API = typeof window === "undefined"
+  ? (process.env.INTERNAL_API_URL || "http://localhost:8000/api/v1")
+  : "/api/v1";
 
 async function fetcher<T>(
   path: string,
