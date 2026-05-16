@@ -1,9 +1,11 @@
 """Chapter & Page endpoints."""
 
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, status, Request
+from sqlalchemy import func
+from sqlalchemy.orm import selectinload
 from sqlmodel import select, col
 
 from app.services.analytics import record_manga_read_task, is_bot_request
@@ -37,6 +39,23 @@ def _maybe_auto_unlock(ch: Chapter, now_utc: datetime) -> bool:
     return False
 
 
+async def _fetch_page_counts(session: DBSession, chapter_ids: List[str]) -> Dict[str, int]:
+    """Return {chapter_id: page_count} via a single GROUP BY query.
+
+    Replaces `len(ch.pages)` which previously triggered selectin loading of every
+    Page row — the dominant source of Supabase egress.
+    """
+    if not chapter_ids:
+        return {}
+    stmt = (
+        select(Page.chapter_id, func.count(Page.id).label("page_count"))
+        .where(col(Page.chapter_id).in_(chapter_ids))
+        .group_by(Page.chapter_id)
+    )
+    rows = (await session.execute(stmt)).all()
+    return {row.chapter_id: row.page_count for row in rows}
+
+
 # ── Admin: list all chapters ─────────────────────
 
 
@@ -48,6 +67,8 @@ async def list_all_chapters(
     """Admin: list all chapters across all manga."""
     stmt = select(Chapter).order_by(col(Chapter.created_at).desc())
     results = (await session.execute(stmt)).scalars().all()
+    page_counts = await _fetch_page_counts(session, [c.id for c in results])
+
     items = []
     now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
     need_commit = False
@@ -56,7 +77,7 @@ async def list_all_chapters(
             session.add(ch)
             need_commit = True
         data = ChapterRead.model_validate(ch)
-        data.page_count = len(ch.pages) if ch.pages else 0
+        data.page_count = page_counts.get(ch.id, 0)
         if ch.unlocks_at is None and data.unlocks_at:
             data.is_free = True
         items.append(data)
@@ -92,6 +113,8 @@ async def list_chapters(
         )
         unlocked_ids = set((await session.execute(unlock_stmt)).scalars().all())
 
+    page_counts = await _fetch_page_counts(session, [c.id for c in results])
+
     now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
     items = []
     need_commit = False
@@ -100,7 +123,7 @@ async def list_chapters(
             session.add(ch)
             need_commit = True
         data = ChapterRead.model_validate(ch)
-        data.page_count = len(ch.pages) if ch.pages else 0
+        data.page_count = page_counts.get(ch.id, 0)
         if ch.id in unlocked_ids:
             data.is_unlocked = True
         if ch.unlocks_at is None and data.unlocks_at:
@@ -127,18 +150,25 @@ async def get_chapter(
     background_tasks: BackgroundTasks,
 ):
     """Get chapter detail with pages. Pages are ordered by number."""
-    chapter = await session.get(Chapter, chapter_id)
+    # The ONLY public endpoint that legitimately needs the Page rows.
+    stmt = (
+        select(Chapter)
+        .where(Chapter.id == chapter_id)
+        .options(selectinload(Chapter.pages))  # type: ignore[arg-type]
+    )
+    chapter = (await session.execute(stmt)).scalar_one_or_none()
     if not chapter:
         raise HTTPException(status_code=404, detail="Chapter not found")
 
     detail = ChapterDetail.model_validate(chapter)
     detail.page_count = len(chapter.pages)
-    
+
     now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
     if _maybe_auto_unlock(chapter, now_utc):
         session.add(chapter)
         await session.commit()
-        await session.refresh(chapter)
+        # Re-refresh only `pages` (and other fields stay in sync via expire_on_commit=False)
+        await session.refresh(chapter, attribute_names=["pages"])
         detail.is_free = True
 
         # Ping Google & Next.js cache to immediately index the newly freed chapter
@@ -210,7 +240,9 @@ async def create_chapter(
 
     await session.commit()
     await session.refresh(chapter)
+    # New chapter has no pages yet — skip COUNT.
     data = ChapterRead.model_validate(chapter)
+    data.page_count = 0
     chapter_url = f"/{manga.slug}/ตอนที่-{chapter.number}"
     background_tasks.add_task(revalidate_paths, ["/", f"/manga/{manga.slug}", chapter_url])
     background_tasks.add_task(
@@ -250,7 +282,9 @@ async def update_chapter(
     await session.commit()
     await session.refresh(chapter)
     data = ChapterRead.model_validate(chapter)
-    data.page_count = len(chapter.pages) if chapter.pages else 0
+    # Use COUNT subquery instead of touching chapter.pages (lazy="raise").
+    page_counts = await _fetch_page_counts(session, [chapter.id])
+    data.page_count = page_counts.get(chapter.id, 0)
     manga = await session.get(Manga, chapter.manga_id)
     
     paths_to_revalidate = ["/"]
@@ -270,7 +304,13 @@ async def delete_chapter(
     admin: AdminUser,
     background_tasks: BackgroundTasks,
 ):
-    chapter = await session.get(Chapter, chapter_id)
+    # Eager-load pages — needed for both R2 cleanup and cascade delete.
+    stmt = (
+        select(Chapter)
+        .where(Chapter.id == chapter_id)
+        .options(selectinload(Chapter.pages))  # type: ignore[arg-type]
+    )
+    chapter = (await session.execute(stmt)).scalar_one_or_none()
     if not chapter:
         raise HTTPException(status_code=404, detail="Chapter not found")
 
@@ -315,7 +355,13 @@ async def replace_pages(
     background_tasks: BackgroundTasks,
 ):
     """Replace all pages in a chapter (used for reordering/re-upload)."""
-    chapter = await session.get(Chapter, chapter_id)
+    # Need pages eagerly for both old-URL diffing and explicit deletes below.
+    stmt = (
+        select(Chapter)
+        .where(Chapter.id == chapter_id)
+        .options(selectinload(Chapter.pages))  # type: ignore[arg-type]
+    )
+    chapter = (await session.execute(stmt)).scalar_one_or_none()
     if not chapter:
         raise HTTPException(status_code=404, detail="Chapter not found")
 

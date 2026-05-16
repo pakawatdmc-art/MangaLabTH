@@ -15,9 +15,12 @@ engine = create_async_engine(
     echo=settings.SQL_ECHO,
     future=True,
     pool_pre_ping=True,
-    # Neon serverless: keep pool small, recycle aggressively
-    pool_size=5,
-    max_overflow=10,
+    # Supabase pooler (PgBouncer / Supavisor) on Cloud Run:
+    # - Cloud Run scales 0–3 instances, each gets its own pool.
+    # - Keep per-instance pool tiny so total connections stay well below Supabase limits.
+    # - pool_recycle=300s prevents stale connections after pooler-side disconnects.
+    pool_size=3,
+    max_overflow=5,
     pool_recycle=300,
 )
 

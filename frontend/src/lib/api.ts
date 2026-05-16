@@ -91,15 +91,16 @@ export async function getMangaList(params?: {
   const qs = sp.toString();
   return fetcher<PaginatedResponse<Manga>>(`/manga${qs ? `?${qs}` : ""}`, {
     token,
-    // V13: Enable ISR (Incremental Static Regeneration) caching for 60 seconds
-    next: { revalidate: 60, tags: ["manga-list"] }
+    // ISR cache for 5 minutes — was 60s but that re-hit Supabase too aggressively.
+    // Mutations (create/update/delete) call /api/revalidate so users see updates instantly.
+    next: { revalidate: 300, tags: ["manga-list"] }
   });
 }
 
 export async function getManga(id: string, token?: string) {
   return fetcher<MangaDetail>(
     `/manga/${id}`,
-    token ? { token, cache: "no-store", next: { revalidate: 0 } } : { next: { revalidate: 60, tags: [`manga-${id}`] } }
+    token ? { token, cache: "no-store", next: { revalidate: 0 } } : { next: { revalidate: 300, tags: [`manga-${id}`] } }
   );
 }
 
@@ -109,8 +110,23 @@ export async function getMangaBySlug(slug: string, token?: string, opts?: { noTr
     `/manga/slug/${slug}${qs}`,
     token
       ? { token, cache: "no-store", next: { revalidate: 0 } }
-      : { next: { revalidate: 60 } }
+      : { next: { revalidate: 300 } }
   );
+}
+
+// Slim payload used ONLY by sitemap.ts (no pages, no covers).
+// Cached for 6 hours to keep Supabase egress low.
+export interface SitemapMangaData {
+  slug: string;
+  last_chapter_updated_at: string | null;
+  created_at: string;
+  chapters: { number: number; published_at: string }[];
+}
+
+export async function getSitemapData() {
+  return fetcher<SitemapMangaData[]>("/manga/sitemap-data", {
+    next: { revalidate: 21600, tags: ["sitemap"] },
+  });
 }
 
 // ── Chapters ────────────────────────────────────

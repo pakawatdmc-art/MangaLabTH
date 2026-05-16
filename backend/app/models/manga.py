@@ -76,10 +76,13 @@ class Manga(SQLModel, table=True):
     )
 
     # ── Relationships ────────────────────────────
+    # NOTE: lazy="raise" forces every query that needs `chapters` to use explicit
+    # selectinload(Manga.chapters). Implicit access raises an error → prevents
+    # accidental N+1 queries and ballooning egress on Supabase.
     chapters: List["Chapter"] = Relationship(
         back_populates="manga",
         sa_relationship_kwargs={
-            "cascade": "all, delete-orphan", "lazy": "selectin"},
+            "cascade": "all, delete-orphan", "lazy": "raise"},
     )
 
 
@@ -121,11 +124,17 @@ class Chapter(SQLModel, table=True):
     )
 
     # ── Relationships ────────────────────────────
-    manga: Optional[Manga] = Relationship(back_populates="chapters")
+    manga: Optional[Manga] = Relationship(
+        back_populates="chapters",
+        sa_relationship_kwargs={"lazy": "raise"},
+    )
+    # NOTE: lazy="raise" — pages must be explicitly loaded with
+    # selectinload(Chapter.pages) only when actually needed (e.g. /chapters/{id}).
+    # Listing endpoints should use a COUNT subquery instead.
     pages: List["Page"] = Relationship(
         back_populates="chapter",
         sa_relationship_kwargs={
-            "cascade": "all, delete-orphan", "lazy": "selectin"},
+            "cascade": "all, delete-orphan", "lazy": "raise"},
     )
 
     __table_args__ = (

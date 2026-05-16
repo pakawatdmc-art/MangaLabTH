@@ -9,10 +9,11 @@ from cachetools import TTLCache  # type: ignore
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, status, Request
 from sqlalchemy import func
+from sqlalchemy.orm import selectinload
 from sqlmodel import col, select
 
 from app.api.deps import AdminUser, DBSession, OptionalUser
-from app.models.manga import Manga, MangaCategory, MangaStatus
+from app.models.manga import Chapter, Manga, MangaCategory, MangaStatus
 from app.models.analytics import DailyMangaView, DailyMangaRead
 from app.models.transaction import Transaction, TransactionType
 from app.services.storage import delete_object, delete_objects, r2_url_to_key, get_client_ip
@@ -93,12 +94,34 @@ async def list_manga(
     query = query.offset((page - 1) * per_page).limit(per_page)
     results = (await session.execute(query)).scalars().all()
 
+    # Aggregate chapter_count + latest_chapter_number in a single grouped query
+    # to avoid loading every Chapter row (and pages) per Manga — the previous
+    # selectin behaviour was the main cause of Supabase egress overflow.
     items = []
-    for m in results:
-        data = MangaRead.model_validate(m)
-        data.chapter_count = len(m.chapters) if m.chapters else 0
-        data.latest_chapter_number = max((c.number for c in m.chapters), default=None) if m.chapters else None
-        items.append(data)
+    if results:
+        manga_ids = [m.id for m in results]
+        agg_stmt = (
+            select(
+                Chapter.manga_id,
+                func.count(Chapter.id).label("chapter_count"),
+                func.max(Chapter.number).label("latest_chapter_number"),
+            )
+            .where(col(Chapter.manga_id).in_(manga_ids))
+            .group_by(Chapter.manga_id)
+        )
+        agg_rows = (await session.execute(agg_stmt)).all()
+        agg_map = {row.manga_id: row for row in agg_rows}
+
+        for m in results:
+            data = MangaRead.model_validate(m)
+            agg = agg_map.get(m.id)
+            if agg:
+                data.chapter_count = agg.chapter_count
+                data.latest_chapter_number = agg.latest_chapter_number
+            else:
+                data.chapter_count = 0
+                data.latest_chapter_number = None
+            items.append(data)
 
     return PaginatedResponse(
         items=items,
@@ -107,6 +130,53 @@ async def list_manga(
         per_page=per_page,
         pages=ceil(total / per_page) if per_page else 1,
     )
+
+
+@router.get("/sitemap-data")
+async def get_sitemap_data(session: DBSession):
+    """Slim payload for sitemap generation: only fields needed by /sitemap.xml.
+
+    Returns: list of {slug, last_chapter_updated_at, created_at, chapters: [{number, published_at}]}.
+    No pages, no covers, no descriptions \u2014 keeps payload tiny so the sitemap can be
+    revalidated infrequently without burning Supabase egress.
+    """
+    # 1) All visible mangas
+    manga_stmt = (
+        select(Manga.id, Manga.slug, Manga.last_chapter_updated_at, Manga.created_at)
+        .where(Manga.is_visible.is_(True))
+        .order_by(col(Manga.created_at).desc())
+    )
+    manga_rows = (await session.execute(manga_stmt)).all()
+
+    if not manga_rows:
+        return []
+
+    manga_ids = [row.id for row in manga_rows]
+
+    # 2) All chapters for those mangas (only fields needed for URL + lastmod)
+    ch_stmt = (
+        select(Chapter.manga_id, Chapter.number, Chapter.published_at)
+        .where(col(Chapter.manga_id).in_(manga_ids))
+        .order_by(col(Chapter.manga_id), col(Chapter.number))
+    )
+    ch_rows = (await session.execute(ch_stmt)).all()
+
+    chapters_by_manga: dict = {}
+    for row in ch_rows:
+        chapters_by_manga.setdefault(row.manga_id, []).append({
+            "number": row.number,
+            "published_at": row.published_at,
+        })
+
+    return [
+        {
+            "slug": row.slug,
+            "last_chapter_updated_at": row.last_chapter_updated_at,
+            "created_at": row.created_at,
+            "chapters": chapters_by_manga.get(row.id, []),
+        }
+        for row in manga_rows
+    ]
 
 
 @router.get("/ranking/{period}", response_model=List[MangaRead])
@@ -135,13 +205,7 @@ async def get_manga_ranking(
             query = query.where(Manga.is_visible.is_(True))
         query = query.order_by(col(Manga.total_reads).desc()).limit(limit)
         results = (await session.execute(query)).scalars().all()
-        data = []
-        for m in results:
-            d = MangaRead.model_validate(m)
-            d.chapter_count = len(m.chapters) if m.chapters else 0
-            d.latest_chapter_number = max((c.number for c in m.chapters), default=None) if m.chapters else None
-            data.append(d)
-
+        data = _attach_chapter_aggregates(await _fetch_chapter_aggregates(session, [m.id for m in results]), results)
         if data:
             _ranking_cache[cache_key] = data
         return data
@@ -182,15 +246,65 @@ async def get_manga_ranking(
     manga_dict = {m.id: m for m in mangas}
     sorted_mangas = [manga_dict[mid] for mid in manga_ids if mid in manga_dict]
 
-    data = []
-    for m in sorted_mangas:
-        d = MangaRead.model_validate(m)
-        d.chapter_count = len(m.chapters) if m.chapters else 0
-        d.latest_chapter_number = max((c.number for c in m.chapters), default=None) if m.chapters else None
-        data.append(d)
+    data = _attach_chapter_aggregates(
+        await _fetch_chapter_aggregates(session, [m.id for m in sorted_mangas]),
+        sorted_mangas,
+    )
     if data:
         _ranking_cache[cache_key] = data
     return data
+
+
+async def _fetch_chapter_aggregates(session: DBSession, manga_ids: list) -> dict:
+    """Return {manga_id: Row(chapter_count, latest_chapter_number)} for the given mangas."""
+    if not manga_ids:
+        return {}
+    stmt = (
+        select(
+            Chapter.manga_id,
+            func.count(Chapter.id).label("chapter_count"),
+            func.max(Chapter.number).label("latest_chapter_number"),
+        )
+        .where(col(Chapter.manga_id).in_(manga_ids))
+        .group_by(Chapter.manga_id)
+    )
+    rows = (await session.execute(stmt)).all()
+    return {row.manga_id: row for row in rows}
+
+
+def _attach_chapter_aggregates(agg_map: dict, mangas) -> list:
+    """Build MangaRead list with chapter_count/latest_chapter_number from aggregate map."""
+    out = []
+    for m in mangas:
+        d = MangaRead.model_validate(m)
+        agg = agg_map.get(m.id)
+        if agg:
+            d.chapter_count = agg.chapter_count
+            d.latest_chapter_number = agg.latest_chapter_number
+        else:
+            d.chapter_count = 0
+            d.latest_chapter_number = None
+        out.append(d)
+    return out
+
+
+async def _load_manga_with_chapters(session: DBSession, manga_id: str) -> Optional[Manga]:
+    """Load a manga eagerly with its chapters (NO pages) using explicit selectinload."""
+    stmt = (
+        select(Manga)
+        .where(Manga.id == manga_id)
+        .options(selectinload(Manga.chapters))  # type: ignore[arg-type]
+    )
+    return (await session.execute(stmt)).scalar_one_or_none()
+
+
+async def _load_manga_by_slug_with_chapters(session: DBSession, slug: str) -> Optional[Manga]:
+    stmt = (
+        select(Manga)
+        .where(Manga.slug == slug)
+        .options(selectinload(Manga.chapters))  # type: ignore[arg-type]
+    )
+    return (await session.execute(stmt)).scalar_one_or_none()
 
 
 async def _build_manga_detail(
@@ -202,7 +316,11 @@ async def _build_manga_detail(
     *,
     track: bool = True,
 ) -> MangaDetail:
-    """Shared helper: build MangaDetail with unlock status + optionally record view."""
+    """Shared helper: build MangaDetail with unlock status + optionally record view.
+
+    PRECONDITION: `manga.chapters` must already be loaded (use _load_manga_with_chapters).
+    Pages are intentionally NOT loaded — the detail endpoint never returns page data.
+    """
     # Visibility Check
     is_admin = user and user.role == "admin"
     if not manga.is_visible and not is_admin:
@@ -261,9 +379,7 @@ async def get_manga_by_slug(
     no_track: bool = Query(False, description="Skip view recording (used by chapter reader)"),
 ):
     """Public manga detail by slug."""
-    stmt = select(Manga).where(Manga.slug == slug)
-    result = await session.execute(stmt)
-    manga = result.scalar_one_or_none()
+    manga = await _load_manga_by_slug_with_chapters(session, slug)
     if not manga:
         raise HTTPException(status_code=404, detail="Manga not found")
 
@@ -280,7 +396,7 @@ async def get_manga(
     no_track: bool = Query(False, description="Skip view recording (used by chapter reader)"),
 ):
     """Public manga detail with chapters list."""
-    manga = await session.get(Manga, manga_id)
+    manga = await _load_manga_with_chapters(session, manga_id)
     if not manga:
         raise HTTPException(status_code=404, detail="Manga not found")
 
@@ -356,7 +472,15 @@ async def delete_manga(
     admin: AdminUser,
     background_tasks: BackgroundTasks,
 ):
-    manga = await session.get(Manga, manga_id)
+    # Eager-load chapters → pages because we need every page URL for R2 cleanup
+    # and the cascade delete to fire correctly. This is the only place where we
+    # intentionally pull the full nested graph.
+    stmt = (
+        select(Manga)
+        .where(Manga.id == manga_id)
+        .options(selectinload(Manga.chapters).selectinload(Chapter.pages))  # type: ignore[arg-type]
+    )
+    manga = (await session.execute(stmt)).scalar_one_or_none()
     if not manga:
         raise HTTPException(status_code=404, detail="Manga not found")
 

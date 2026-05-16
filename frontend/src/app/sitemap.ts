@@ -1,12 +1,12 @@
 import { MetadataRoute } from "next";
-import { getMangaList, getMangaBySlug } from "@/lib/api";
+import { getSitemapData } from "@/lib/api";
 import { CATEGORY_LABELS } from "@/lib/types";
 import { parseUTCDate } from "@/lib/utils";
 
-// Force dynamic rendering so the sitemap always reflects the latest data
-// instead of being cached at build time (when the API may be unreachable).
-export const dynamic = "force-dynamic";
-export const revalidate = 60; // ISR: regenerate at most every 60 seconds
+// Cache the sitemap aggressively — Google + Bing only need fresh data every few hours.
+// The previous 60-second + force-dynamic combo was the second largest source of
+// Supabase egress (a single bot crawl re-pulled every manga + every chapter).
+export const revalidate = 21600; // 6 hours
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl =
@@ -50,53 +50,32 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         })
     );
 
-    // Dynamic manga + chapter pages
+    // Dynamic manga + chapter pages — single slim API call, no N+1.
     let mangaPages: MetadataRoute.Sitemap = [];
-    let chapterPages: MetadataRoute.Sitemap = [];
+    const chapterPages: MetadataRoute.Sitemap = [];
     try {
-        // Fetch all manga (paginated)
-        const allItems = [];
-        let currentPage = 1;
-        let totalPages = 1;
-        do {
-            const res = await getMangaList({ page: currentPage, per_page: 100 });
-            allItems.push(...res.items);
-            totalPages = res.pages;
-            currentPage++;
-        } while (currentPage <= totalPages);
+        const data = await getSitemapData();
 
-        mangaPages = allItems.map((manga) => ({
-            url: `${baseUrl}/manga/${encodeURIComponent(manga.slug)}`,
-            lastModified: parseUTCDate(manga.last_chapter_updated_at || manga.created_at),
+        mangaPages = data.map((m) => ({
+            url: `${baseUrl}/manga/${encodeURIComponent(m.slug)}`,
+            lastModified: parseUTCDate(m.last_chapter_updated_at || m.created_at),
             changeFrequency: "weekly" as const,
             priority: 0.8,
         }));
 
-        // Fetch chapter details in parallel batches for chapter URLs
-        const BATCH_SIZE = 10;
-        for (let i = 0; i < allItems.length; i += BATCH_SIZE) {
-            const batch = allItems.slice(i, i + BATCH_SIZE);
-            const results = await Promise.allSettled(
-                batch.map((m) => getMangaBySlug(m.slug))
-            );
-
-            for (const result of results) {
-                if (result.status === "fulfilled") {
-                    const manga = result.value;
-                    for (const ch of manga.chapters || []) {
-                        chapterPages.push({
-                            url: `${baseUrl}/${encodeURIComponent(manga.slug)}/${encodeURIComponent(`ตอนที่-${ch.number}`)}`,
-                            lastModified: parseUTCDate(ch.published_at),
-                            changeFrequency: "monthly" as const,
-                            priority: 0.6,
-                        });
-                    }
-                }
+        for (const m of data) {
+            for (const ch of m.chapters) {
+                chapterPages.push({
+                    url: `${baseUrl}/${encodeURIComponent(m.slug)}/${encodeURIComponent(`ตอนที่-${ch.number}`)}`,
+                    lastModified: parseUTCDate(ch.published_at),
+                    changeFrequency: "monthly" as const,
+                    priority: 0.6,
+                });
             }
         }
     } catch (err) {
         // API unavailable — return only static pages
-        console.error("[sitemap] Failed to fetch manga list:", err);
+        console.error("[sitemap] Failed to fetch sitemap data:", err);
     }
 
     return [...staticPages, ...categoryPages, ...mangaPages, ...chapterPages];
