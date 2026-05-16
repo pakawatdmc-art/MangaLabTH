@@ -55,11 +55,18 @@ async def seed_coin_packages(session: AsyncSession):
 
 
 async def init_db() -> None:
-    """Create all tables. Use Alembic for production migrations."""
+    """Create all tables (DEV ONLY). Use Alembic for production migrations."""
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
 
     # Seed data
+    await run_seeders()
+
+
+async def run_seeders() -> None:
+    """Run idempotent seeders. Safe to call in production lifespan
+    because each seeder checks for existing rows before inserting.
+    """
     async with async_session_factory() as session:
         await seed_coin_packages(session)
 

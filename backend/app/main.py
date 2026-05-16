@@ -11,7 +11,7 @@ from slowapi.util import get_remote_address
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from app.config import get_settings
-from app.database import init_db
+from app.database import init_db, run_seeders
 from app.api.v1 import router as v1_router
 from app.services.http_client import close_http_client
 
@@ -23,9 +23,26 @@ limiter = Limiter(key_func=get_remote_address, default_limits=["120/minute"])
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Run startup tasks (create tables + seed data in dev)."""
+    """Run startup tasks.
+
+    - Dev: create_all + seed (init_db handles both).
+    - Production: only run idempotent seeders. Schema is owned by Alembic
+      migrations, but seeders must still run because Alembic doesn't seed
+      data (and `init_db` is intentionally skipped in production).
+    """
     if not settings.is_production:
         await init_db()
+    else:
+        # Seeders are idempotent (check existing rows before insert).
+        # Without this, a freshly-deployed prod with empty DB has no
+        # coin_packages → users cannot purchase coins.
+        try:
+            await run_seeders()
+        except Exception as exc:  # pragma: no cover — never block app start
+            import logging
+            logging.getLogger(__name__).warning(
+                "run_seeders failed at startup: %s", exc
+            )
     yield
     # Shutdown: close shared HTTP client
     await close_http_client()
