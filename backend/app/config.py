@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     FFP_PUBLIC_KEY: str = ""
     FFP_SECRET_KEY: str = ""
     FFP_BASE_URL: str = "https://api-test.feelfreepay.com"
+    # Shared secret used by external cron (Cloud Scheduler) to call
+    # POST /api/v1/payments/reconcile-pending. Generate with `openssl rand -hex 32`.
+    RECONCILE_SECRET: str = ""
 
     # ── Email Service (Brevo) ──────────────────────────────────
     RESEND_API_KEY: str = "" # Deprecated, use Brevo

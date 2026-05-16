@@ -136,7 +136,10 @@ function CoinsPageInner() {
     setIsRefreshing(true);
     let cancelled = false;
     let attempts = 0;
-    const MAX = 20; // up to 60 seconds
+    // Poll for up to ~5 minutes. The backend reconcile cron is the safety net
+    // beyond that: even if the user closes this tab, the sweeper will credit
+    // the coins within ~10 minutes once FFP confirms settlement.
+    const MAX = 100; // 100 × 3s ≈ 5 minutes
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
     const run = async () => {
@@ -248,10 +251,20 @@ function CoinsPageInner() {
               ) : (
                 <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
               )}
-              <div>
+              <div className="min-w-0">
                 <p className="font-semibold">กำลังตรวจสอบรายการ...</p>
                 <p className="text-sm opacity-80">
-                  {isRefreshing ? "กำลังอัปเดตยอดเหรียญ..." : "รอการยืนยันจากระบบชำระเงิน"}
+                  {isRefreshing
+                    ? "กรุณาอย่าปิดหน้านี้จนกว่าจะเสร็จสิ้น (สูงสุด ~5 นาที)"
+                    : "รอการยืนยันจากระบบชำระเงิน"}
+                </p>
+                {activeReferenceNo && (
+                  <p className="mt-1 text-[11px] font-mono opacity-70 break-all">
+                    Ref: {activeReferenceNo}
+                  </p>
+                )}
+                <p className="mt-1 text-[11px] opacity-70">
+                  ถ้าเหรียญยังไม่เข้าหลังจาก 10 นาที — ติดต่อ support พร้อมแจ้งเลข Ref ด้านบน
                 </p>
               </div>
             </div>

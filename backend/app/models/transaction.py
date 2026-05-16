@@ -106,6 +106,45 @@ class Transaction(SQLModel, table=True):
     )
 
 
+class WebhookLog(SQLModel, table=True):
+    """Audit log for every FeelFreePay webhook hit.
+
+    Used to:
+    - Diagnose missing payments ("เงินไม่เข้า") by replaying raw payload.
+    - Detect spoof attempts (recorded even when rejected).
+    - Spot FFP retries that fail repeatedly.
+
+    Append-only. Never edited after insert.
+    """
+
+    __tablename__ = "webhook_logs"
+
+    id: str = Field(
+        default_factory=lambda: uuid4().hex,
+        primary_key=True,
+        max_length=64,
+    )
+    # Webhook source. Currently only "feelfreepay".
+    source: str = Field(default="feelfreepay", max_length=32, index=True)
+    reference_no: Optional[str] = Field(
+        default=None, max_length=64, index=True,
+        description="FFP referenceNo from payload (for joining with transactions)",
+    )
+    # Raw JSON payload as text (in case shape evolves).
+    raw_payload: str = Field(default="", max_length=8192)
+    # Verification outcome: "fulfilled" | "ignored" | "rejected" | "error" | "pending_recheck"
+    outcome: str = Field(default="", max_length=32, index=True)
+    reason: str = Field(default="", max_length=256)
+    http_status: int = Field(default=200)
+    client_ip: str = Field(default="", max_length=64)
+
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(
+            timezone.utc).replace(tzinfo=None),
+        index=True,
+    )
+
+
 class CoinPackage(SQLModel, table=True):
     """Predefined coin packages available for purchase."""
 
