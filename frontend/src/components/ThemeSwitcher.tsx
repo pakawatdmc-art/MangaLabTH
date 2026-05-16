@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTheme, type ThemeType } from "./ThemeProvider";
-import { Palette, Check, Loader2 } from "lucide-react";
+import { Palette, Check, Loader2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const THEMES: { id: ThemeType; icon: string; label: string }[] = [
@@ -26,6 +26,14 @@ interface Props {
 export function ThemeSwitcher({ token, isPrimaryAdmin }: Props) {
     const { theme, setTheme, isLoading } = useTheme();
     const [saving, setSaving] = useState(false);
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+    // Auto-clear error after 4s so it doesn't linger forever.
+    useEffect(() => {
+        if (!errorMsg) return;
+        const id = setTimeout(() => setErrorMsg(null), 4000);
+        return () => clearTimeout(id);
+    }, [errorMsg]);
 
     if (!isPrimaryAdmin) return null;
 
@@ -36,6 +44,7 @@ export function ThemeSwitcher({ token, isPrimaryAdmin }: Props) {
         const previousTheme = theme;
         setTheme(t);
         setSaving(true);
+        setErrorMsg(null);
 
         try {
             const res = await fetch(`${API}/settings/theme`, {
@@ -48,12 +57,16 @@ export function ThemeSwitcher({ token, isPrimaryAdmin }: Props) {
             });
 
             if (!res.ok) {
-                // API ล้มเหลว → Rollback กลับธีมเดิม
                 setTheme(previousTheme);
+                if (res.status === 401 || res.status === 403) {
+                    setErrorMsg("เซสชันหมดอายุ กรุณารีเฟรชหน้าใหม่");
+                } else {
+                    setErrorMsg(`บันทึกธีมไม่สำเร็จ (${res.status})`);
+                }
             }
         } catch {
-            // Network error → Rollback กลับธีมเดิม
             setTheme(previousTheme);
+            setErrorMsg("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้");
         } finally {
             setSaving(false);
         }
@@ -66,6 +79,12 @@ export function ThemeSwitcher({ token, isPrimaryAdmin }: Props) {
                 ธีมเทศกาล
                 {(saving || isLoading) && <Loader2 className="ml-auto h-3 w-3 animate-spin text-gold" />}
             </p>
+            {errorMsg && (
+                <p className="mb-2 flex items-center gap-1 rounded-md border border-red-500/30 bg-red-500/10 px-2 py-1 text-[10px] text-red-300">
+                    <AlertCircle className="h-3 w-3 flex-shrink-0" />
+                    <span>{errorMsg}</span>
+                </p>
+            )}
             <div className="flex flex-wrap gap-1.5">
                 {THEMES.map((t) => (
                     <button

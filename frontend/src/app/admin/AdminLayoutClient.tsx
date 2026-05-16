@@ -3,33 +3,64 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+    BookCopy,
     BookOpen,
     Coins,
-    Plus,
     Home,
     Layers,
     LayoutDashboard,
+    Library,
     Menu,
+    Plus,
     Sparkles,
+    UserCog,
     Users,
+    Wallet,
     X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 
-const SIDEBAR_LINKS = [
-    { href: "/admin", label: "แดชบอร์ด", icon: LayoutDashboard },
-    { href: "/admin/analytics", label: "ยอดเข้าชม", icon: Sparkles },
-    { href: "/admin/analytics/coins", label: "ยอดเติมเหรียญ", icon: Coins },
-    { href: "/admin/analytics/users", label: "สถิติผู้ใช้งาน", icon: Users },
-    { href: "/admin/analytics/chapters", label: "สถิติตอน", icon: Layers },
-    { href: "/admin/analytics/mangas", label: "สถิติมังงะ", icon: BookOpen },
-    { href: "/admin/manga", label: "จัดการมังงะ", icon: BookOpen },
-    { href: "/admin/chapters", label: "จัดการตอน", icon: Layers },
-    { href: "/admin/users", label: "จัดการบัญชีผู้ใช้", icon: Users },
-    { href: "/admin/transactions", label: "จัดการธุรกรรม", icon: Coins },
-];
+type SidebarLink = {
+    readonly href: string;
+    readonly label: string;
+    readonly icon: React.ComponentType<{ className?: string }>;
+};
+
+type SidebarSection = {
+    readonly title?: string;
+    readonly items: readonly SidebarLink[];
+};
+
+const SIDEBAR_SECTIONS: readonly SidebarSection[] = [
+    {
+        items: [
+            { href: "/admin", label: "แดชบอร์ด", icon: LayoutDashboard },
+        ],
+    },
+    {
+        title: "วิเคราะห์ข้อมูล",
+        items: [
+            { href: "/admin/analytics", label: "ยอดเข้าชม", icon: Sparkles },
+            { href: "/admin/analytics/coins", label: "ยอดเติมเหรียญ", icon: Coins },
+            { href: "/admin/analytics/users", label: "สถิติผู้ใช้งาน", icon: Users },
+            { href: "/admin/analytics/chapters", label: "สถิติตอน", icon: Layers },
+            { href: "/admin/analytics/mangas", label: "สถิติมังงะ", icon: BookOpen },
+        ],
+    },
+    {
+        title: "จัดการเนื้อหา",
+        items: [
+            { href: "/admin/manga", label: "จัดการมังงะ", icon: Library },
+            { href: "/admin/chapters", label: "จัดการตอน", icon: BookCopy },
+            { href: "/admin/users", label: "จัดการบัญชีผู้ใช้", icon: UserCog },
+            { href: "/admin/transactions", label: "จัดการธุรกรรม", icon: Wallet },
+        ],
+    },
+] as const;
+
+const ALL_LINKS: readonly SidebarLink[] = SIDEBAR_SECTIONS.flatMap((s) => s.items);
 
 interface Props {
     children: React.ReactNode;
@@ -48,15 +79,18 @@ export default function AdminLayoutClient({ children, isPrimaryAdmin, adminToken
 
     // Pick the most-specific matching link (longest href) to avoid
     // parent prefixes like /admin/analytics also matching /admin/analytics/coins
-    const activeLink = SIDEBAR_LINKS
-        .filter(({ href }) => isLinkActive(pathname, href))
-        .sort((a, b) => b.href.length - a.href.length)[0];
+    const activeLink = useMemo(
+        () =>
+            ALL_LINKS
+                .filter(({ href }) => isLinkActive(pathname, href))
+                .sort((a, b) => b.href.length - a.href.length)[0],
+        [pathname],
+    );
 
-    const activeSection = activeLink?.label || "แผงควบคุม";
+    const activeSection = activeLink?.label || "แดชบอร์ด";
 
     useEffect(() => {
-        const timeout = setTimeout(() => setSidebarOpen(false), 0);
-        return () => clearTimeout(timeout);
+        setSidebarOpen(false);
     }, [pathname]);
 
     return (
@@ -114,34 +148,43 @@ export default function AdminLayoutClient({ children, isPrimaryAdmin, adminToken
                     </div>
 
                     {/* Nav */}
-                    <nav className="flex-1 space-y-1 overflow-y-auto px-3 pb-3 pt-1">
-                        {SIDEBAR_LINKS.map(({ href, label, icon: Icon }) => {
-                            const isActive = activeLink?.href === href;
-                            return (
-                                <Link
-                                    key={href}
-                                    href={href}
-                                    onClick={() => setSidebarOpen(false)}
-                                    className={cn(
-                                        "group flex items-center justify-between rounded-xl border px-3 py-2.5 text-sm transition",
-                                        isActive
-                                            ? "border-gold/40 bg-gold/20 text-gold shadow-[0_0_0_1px_rgba(212,168,67,0.3)]"
-                                            : "border-transparent text-gray-400 hover:border-white/10 hover:bg-white/[0.05] hover:text-white"
-                                    )}
-                                >
-                                    <span className="flex items-center gap-2.5">
-                                        <Icon className="h-4 w-4" />
-                                        {label}
-                                    </span>
-                                    <span
-                                        className={cn(
-                                            "h-1.5 w-1.5 rounded-full transition",
-                                            isActive ? "bg-gold" : "bg-transparent group-hover:bg-white/40"
-                                        )}
-                                    />
-                                </Link>
-                            );
-                        })}
+                    <nav className="flex-1 space-y-4 overflow-y-auto px-3 pb-3 pt-1">
+                        {SIDEBAR_SECTIONS.map((section, sectionIdx) => (
+                            <div key={section.title ?? `section-${sectionIdx}`} className="space-y-1">
+                                {section.title && (
+                                    <p className="px-3 pt-1 pb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+                                        {section.title}
+                                    </p>
+                                )}
+                                {section.items.map(({ href, label, icon: Icon }) => {
+                                    const isActive = activeLink?.href === href;
+                                    return (
+                                        <Link
+                                            key={href}
+                                            href={href}
+                                            onClick={() => setSidebarOpen(false)}
+                                            className={cn(
+                                                "group flex items-center justify-between rounded-xl border px-3 py-2.5 text-sm transition",
+                                                isActive
+                                                    ? "border-gold/40 bg-gold/20 text-gold shadow-[0_0_0_1px_rgba(212,168,67,0.3)]"
+                                                    : "border-transparent text-gray-400 hover:border-white/10 hover:bg-white/[0.05] hover:text-white"
+                                            )}
+                                        >
+                                            <span className="flex items-center gap-2.5">
+                                                <Icon className="h-4 w-4" />
+                                                {label}
+                                            </span>
+                                            <span
+                                                className={cn(
+                                                    "h-1.5 w-1.5 rounded-full transition",
+                                                    isActive ? "bg-gold" : "bg-transparent group-hover:bg-white/40"
+                                                )}
+                                            />
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        ))}
                     </nav>
 
                     {isPrimaryAdmin && adminToken && (
@@ -150,7 +193,7 @@ export default function AdminLayoutClient({ children, isPrimaryAdmin, adminToken
 
                     <div className="space-y-2 border-t border-white/10 p-3">
                         <Link
-                            href="/admin/manga"
+                            href="/admin/manga?create=1"
                             className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-gold px-3 py-2 text-xs font-semibold text-black transition hover:bg-gold-light"
                         >
                             <Plus className="h-3.5 w-3.5" />
@@ -182,11 +225,6 @@ export default function AdminLayoutClient({ children, isPrimaryAdmin, adminToken
                                     <p className="truncate text-xs text-gray-500">Admin workspace · MangaLabTH</p>
                                 </div>
                             </div>
-
-                            <div className="hidden items-center gap-2 sm:flex">
-                                {/* ปุ่มจัดการตอนเดิมถูกนำออกตามความต้องการของผู้ใช้ */}
-                            </div>
-
                         </div>
                     </header>
 

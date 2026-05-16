@@ -2,6 +2,7 @@
 
 import { cn, slugify } from "@/lib/utils";
 import { useEffect, useState, useCallback } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import Image from "next/image";
 import { Eye, EyeOff, Edit2, BookOpen, Loader2, Plus, Trash2 } from "lucide-react";
@@ -12,6 +13,9 @@ import { uploadCoverImage } from "@/lib/api";
 
 export default function AdminMangaPage() {
   const { getToken } = useAuth();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const [mangas, setMangas] = useState<Manga[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -22,6 +26,18 @@ export default function AdminMangaPage() {
   // New state for file upload
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>("");
+
+  // Open form automatically when sidebar "เพิ่มเรื่องใหม่" button is clicked.
+  // Strip the query param so a refresh doesn't keep re-opening the form.
+  useEffect(() => {
+    if (searchParams.get("create") === "1") {
+      setShowForm(true);
+      router.replace(pathname, { scroll: false });
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }
+  }, [searchParams, router, pathname]);
 
   const fetchMangas = useCallback(async () => {
     try {
