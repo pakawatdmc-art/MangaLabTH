@@ -84,40 +84,46 @@ export default function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-surface-300/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 w-full bg-ink-900/85 backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
         {/* Logo */}
-        <Link href="/" className="group flex items-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]">
-          <Image 
-            src="/logo.webp" 
-            alt="MangaLabTH Logo" 
-            width={36} 
-            height={36} 
-            className="h-7 w-7 sm:h-8 sm:w-8 rounded-full object-cover drop-shadow-[0_0_10px_rgba(212,168,67,0.3)] group-hover:drop-shadow-[0_0_15px_rgba(212,168,67,0.6)]" 
+        <Link href="/" className="group flex items-center gap-2 transition-transform duration-200 ease-out hover:scale-[1.02] active:scale-[0.98]">
+          <Image
+            src="/logo.webp"
+            alt="MangaLabTH Logo"
+            width={36}
+            height={36}
+            className="h-7 w-7 sm:h-8 sm:w-8 rounded-full object-cover transition-all duration-200 group-hover:ring-1 group-hover:ring-gold/40"
             priority
           />
-          <span className="text-[17px] sm:text-lg font-bold tracking-tight text-white drop-shadow-sm">
+          <span className="text-[16px] sm:text-[17px] font-semibold tracking-tight text-ink-100">
             MangaLab<span className="text-gold">TH</span>
           </span>
         </Link>
 
         {/* Center nav */}
         <nav className="hidden items-center gap-1 md:flex">
-          {NAV_LINKS.map(({ href, label, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition",
-                pathname === href
-                  ? "bg-gold/15 text-gold"
-                  : "text-gray-400 hover:bg-white/5 hover:text-white"
-              )}
-            >
-              <Icon className="h-4 w-4" />
-              {label}
-            </Link>
-          ))}
+          {NAV_LINKS.map(({ href, label, icon: Icon }) => {
+            const isActive = pathname === href;
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={cn(
+                  "relative flex items-center gap-1.5 rounded-sm px-3 py-1.5 text-sm transition-colors duration-200",
+                  isActive
+                    ? "text-ink-100"
+                    : "text-ink-300 hover:text-ink-100"
+                )}
+              >
+                <Icon className="h-4 w-4" />
+                {label}
+                {isActive && (
+                  <span className="pointer-events-none absolute inset-x-3 -bottom-[15px] h-px bg-gold" />
+                )}
+              </Link>
+            );
+          })}
         </nav>
 
         {/* Right side */}
@@ -125,19 +131,20 @@ export default function Navbar() {
           <SignedIn>
             <Link
               href="/coins"
-              className="hidden items-center gap-1.5 rounded-lg bg-gold/10 px-3 py-1.5 text-xs font-medium text-gold ring-1 ring-gold/20 transition hover:bg-gold/20 md:flex"
+              className="hidden items-center gap-1.5 rounded-sm bg-ink-800/70 px-3 py-1.5 text-xs font-medium text-ink-300 transition-colors duration-200 hover:bg-ink-800 hover:text-ink-100 md:flex"
             >
-              <Coins className="h-3.5 w-3.5" />
-              {user ? formatNumber(user.coin_balance) : "..."} เหรียญ
+              <Coins className="h-3.5 w-3.5 text-gold" />
+              <span className="text-gold">{user ? formatNumber(user.coin_balance) : "..."}</span>
+              <span>เหรียญ</span>
             </Link>
             {isAdmin && (
               <Link
                 href="/admin"
                 className={cn(
-                  "hidden items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition md:inline-flex",
+                  "hidden items-center gap-1.5 rounded-sm px-3 py-1.5 text-xs font-semibold transition-colors duration-200 md:inline-flex",
                   pathname.startsWith("/admin")
-                    ? "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/30"
-                    : "bg-white/5 text-gray-200 ring-1 ring-white/10 hover:bg-white/10 hover:text-white"
+                    ? "bg-gold/10 text-gold"
+                    : "bg-ink-800/70 text-ink-300 hover:bg-ink-800 hover:text-ink-100"
                 )}
               >
                 <Shield className="h-3.5 w-3.5" />
@@ -150,13 +157,13 @@ export default function Navbar() {
               afterSignOutUrl="/"
               appearance={{
                 elements: {
-                  avatarBox: "h-8 w-8 ring-2 ring-gold/25",
+                  avatarBox: "h-8 w-8 hover:ring-1 hover:ring-gold/40 transition",
                   userButtonPopoverCard:
-                    "border border-white/10 bg-surface-100/95 text-white shadow-2xl backdrop-blur-xl",
+                    "bg-ink-900/95 text-ink-100 shadow-2xl backdrop-blur-xl",
                   userButtonPopoverActionButton:
-                    "text-gray-300 hover:bg-white/5 hover:text-white",
+                    "text-ink-300 hover:bg-ink-800 hover:text-ink-100",
                   userButtonPopoverActionButtonText: "text-sm",
-                  userButtonPopoverActionButtonIcon: "text-gray-400",
+                  userButtonPopoverActionButtonIcon: "text-ink-400",
                   userButtonPopoverFooter: "hidden",
                 },
               }}
@@ -165,7 +172,7 @@ export default function Navbar() {
           <SignedOut>
             <Link
               href="/sign-in"
-              className="hidden rounded-lg bg-gold px-4 py-1.5 text-sm font-semibold text-black transition hover:bg-gold-light md:inline-flex"
+              className="hidden rounded-sm bg-gold px-4 py-1.5 text-sm font-semibold text-ink-950 transition-colors duration-200 hover:bg-gold-light md:inline-flex"
             >
               เข้าสู่ระบบ
             </Link>
@@ -173,7 +180,7 @@ export default function Navbar() {
           <button
             type="button"
             onClick={() => setMobileMenuOpen((prev) => !prev)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-surface-200/60 text-gray-200 transition hover:border-gold/30 hover:text-white md:hidden"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-sm bg-ink-800/70 text-ink-200 transition-colors duration-200 hover:bg-ink-800 hover:text-ink-100 md:hidden"
             aria-label={mobileMenuOpen ? "ปิดเมนู" : "เปิดเมนู"}
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-nav-menu"
@@ -186,7 +193,7 @@ export default function Navbar() {
       {mobileMenuOpen && (
         <div
           id="mobile-nav-menu"
-          className="border-t border-white/10 bg-surface-200/95 px-4 py-3 shadow-2xl backdrop-blur-xl md:hidden"
+          className="bg-ink-900/95 px-4 py-3 shadow-2xl backdrop-blur-xl md:hidden"
         >
           <nav className="space-y-1">
             {NAV_LINKS.map(({ href, label, icon: Icon }) => (
@@ -195,10 +202,10 @@ export default function Navbar() {
                 href={href}
                 onClick={() => setMobileMenuOpen(false)}
                 className={cn(
-                  "flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition",
+                  "flex items-center gap-2 rounded-sm px-3 py-2.5 text-sm font-medium transition-colors duration-200",
                   pathname === href
-                    ? "bg-gold/15 text-gold"
-                    : "text-gray-200 hover:bg-white/5 hover:text-white"
+                    ? "bg-ink-800 text-gold"
+                    : "text-ink-200 hover:bg-ink-800 hover:text-ink-100"
                 )}
               >
                 <Icon className="h-4 w-4" />
@@ -211,17 +218,17 @@ export default function Navbar() {
                 href="/coins"
                 onClick={() => setMobileMenuOpen(false)}
                 className={cn(
-                  "flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition",
+                  "flex items-center justify-between rounded-sm px-3 py-2.5 text-sm font-medium transition-colors duration-200",
                   pathname === "/coins"
-                    ? "bg-gold/15 text-gold"
-                    : "text-gray-200 hover:bg-white/5 hover:text-white"
+                    ? "bg-ink-800 text-gold"
+                    : "text-ink-200 hover:bg-ink-800 hover:text-ink-100"
                 )}
               >
                 <span className="flex items-center gap-2">
                   <Coins className="h-4 w-4" />
                   เหรียญ
                 </span>
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-gold">
                   {user ? `${formatNumber(user.coin_balance)} เหรียญ` : "..."}
                 </span>
               </Link>
@@ -229,7 +236,7 @@ export default function Navbar() {
               <Link
                 href="/account"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-200 transition hover:bg-white/5 hover:text-white"
+                className="flex items-center gap-2 rounded-sm px-3 py-2.5 text-sm font-medium text-ink-200 transition-colors duration-200 hover:bg-ink-800 hover:text-ink-100"
               >
                 <User className="h-4 w-4" />
                 บัญชีผู้ใช้
@@ -239,7 +246,7 @@ export default function Navbar() {
                 <Link
                   href="/admin"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-200 transition hover:bg-white/5 hover:text-white"
+                  className="flex items-center gap-2 rounded-sm px-3 py-2.5 text-sm font-medium text-ink-200 transition-colors duration-200 hover:bg-ink-800 hover:text-ink-100"
                 >
                   <Shield className="h-4 w-4" />
                   แอดมิน
@@ -251,7 +258,7 @@ export default function Navbar() {
               <Link
                 href="/sign-in"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 rounded-xl bg-gold px-3 py-2.5 text-sm font-semibold text-black transition hover:bg-gold-light"
+                className="flex items-center gap-2 rounded-sm bg-gold px-3 py-2.5 text-sm font-semibold text-ink-950 transition-colors duration-200 hover:bg-gold-light"
               >
                 <LogIn className="h-4 w-4" />
                 เข้าสู่ระบบ

@@ -94,8 +94,8 @@ export default function AdminLayoutClient({ children, isPrimaryAdmin, adminToken
     }, [pathname]);
 
     return (
-        <div className="relative min-h-screen overflow-hidden bg-surface-300">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(212,168,67,0.16),transparent_42%),radial-gradient(circle_at_bottom_left,rgba(59,130,246,0.14),transparent_45%)]" />
+        <div className="relative min-h-screen overflow-hidden bg-ink-900">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(212,168,67,0.06),transparent_50%)]" />
 
             {/* Mobile overlay */}
             {sidebarOpen && (
@@ -109,39 +109,39 @@ export default function AdminLayoutClient({ children, isPrimaryAdmin, adminToken
                 {/* Sidebar */}
                 <aside
                     className={cn(
-                        "fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-white/10 bg-gradient-to-b from-[#151725]/95 via-[#11131c]/95 to-[#0b0d14]/95 backdrop-blur-xl transition-transform lg:static lg:translate-x-0",
+                        "fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-ink-950/95 backdrop-blur-xl transition-transform duration-300 ease-out lg:static lg:translate-x-0",
                         sidebarOpen ? "translate-x-0" : "-translate-x-full"
                     )}
                 >
                     {/* Logo */}
-                    <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
+                    <div className="flex items-center justify-between px-4 py-4">
                         <Link href="/admin" className="flex items-center gap-2">
                             <BookOpen className="h-5 w-5 text-gold" />
                             <div>
-                                <span className="text-sm font-bold text-white">
+                                <span className="text-sm font-semibold tracking-tight text-ink-100">
                                     MangaLab<span className="text-gold">TH</span>
                                 </span>
-                                <p className="text-[10px] text-gray-500">Control Center</p>
+                                <p className="text-[10px] uppercase tracking-[0.18em] text-ink-500">Control Center</p>
                             </div>
-                            <span className="ml-1 rounded bg-gold/20 px-1.5 py-0.5 text-[10px] font-medium text-gold">
+                            <span className="ml-1 rounded-xs bg-gold/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-gold">
                                 Admin
                             </span>
                         </Link>
                         <button
                             onClick={() => setSidebarOpen(false)}
-                            className="rounded-lg p-1 text-gray-400 hover:text-white lg:hidden"
+                            className="rounded-sm p-1 text-ink-400 hover:text-ink-100 lg:hidden"
                         >
                             <X className="h-5 w-5" />
                         </button>
                     </div>
 
                     <div className="px-3 pb-2 pt-3">
-                        <div className="rounded-xl border border-gold/25 bg-gold/10 px-3 py-2.5">
-                            <p className="flex items-center gap-1.5 text-xs font-semibold text-gold">
+                        <div className="rounded-md bg-ink-900 px-3 py-2.5">
+                            <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-gold">
                                 <Sparkles className="h-3.5 w-3.5" />
                                 โหมดผู้ดูแลระบบ
                             </p>
-                            <p className="mt-1 text-xs leading-relaxed text-gray-400">
+                            <p className="mt-1.5 text-xs leading-relaxed text-ink-400">
                                 จัดการมังงะ ตอน รูปภาพ และผู้ใช้งานได้ในหน้าเดียว
                             </p>
                         </div>
@@ -150,9 +150,9 @@ export default function AdminLayoutClient({ children, isPrimaryAdmin, adminToken
                     {/* Nav */}
                     <nav className="flex-1 space-y-4 overflow-y-auto px-3 pb-3 pt-1">
                         {SIDEBAR_SECTIONS.map((section, sectionIdx) => (
-                            <div key={section.title ?? `section-${sectionIdx}`} className="space-y-1">
+                            <div key={section.title ?? `section-${sectionIdx}`} className="space-y-0.5">
                                 {section.title && (
-                                    <p className="px-3 pt-1 pb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+                                    <p className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-ink-500">
                                         {section.title}
                                     </p>
                                 )}
@@ -164,22 +164,17 @@ export default function AdminLayoutClient({ children, isPrimaryAdmin, adminToken
                                             href={href}
                                             onClick={() => setSidebarOpen(false)}
                                             className={cn(
-                                                "group flex items-center justify-between rounded-xl border px-3 py-2.5 text-sm transition",
+                                                "group relative flex items-center gap-2.5 rounded-sm px-3 py-2 text-sm transition-colors duration-200",
                                                 isActive
-                                                    ? "border-gold/40 bg-gold/20 text-gold shadow-[0_0_0_1px_rgba(212,168,67,0.3)]"
-                                                    : "border-transparent text-gray-400 hover:border-white/10 hover:bg-white/[0.05] hover:text-white"
+                                                    ? "bg-ink-800 text-ink-100"
+                                                    : "text-ink-400 hover:bg-ink-800/60 hover:text-ink-100"
                                             )}
                                         >
-                                            <span className="flex items-center gap-2.5">
-                                                <Icon className="h-4 w-4" />
-                                                {label}
-                                            </span>
-                                            <span
-                                                className={cn(
-                                                    "h-1.5 w-1.5 rounded-full transition",
-                                                    isActive ? "bg-gold" : "bg-transparent group-hover:bg-white/40"
-                                                )}
-                                            />
+                                            {isActive && (
+                                                <span className="absolute left-0 top-1/2 h-5 w-[2px] -translate-y-1/2 rounded-full bg-gold" />
+                                            )}
+                                            <Icon className={cn("h-4 w-4 transition-colors", isActive ? "text-gold" : "text-ink-400 group-hover:text-ink-200")} />
+                                            <span className="flex-1">{label}</span>
                                         </Link>
                                     );
                                 })}
@@ -190,18 +185,17 @@ export default function AdminLayoutClient({ children, isPrimaryAdmin, adminToken
                     {isPrimaryAdmin && adminToken && (
                         <ThemeSwitcher token={adminToken} isPrimaryAdmin={isPrimaryAdmin} />
                     )}
-
-                    <div className="space-y-2 border-t border-white/10 p-3">
+                    <div className="space-y-2 p-3">
                         <Link
                             href="/admin/manga?create=1"
-                            className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-gold px-3 py-2 text-xs font-semibold text-black transition hover:bg-gold-light"
+                            className="inline-flex w-full items-center justify-center gap-1.5 rounded-sm bg-gold px-3 py-2 text-xs font-semibold text-ink-950 transition-colors duration-200 hover:bg-gold-light"
                         >
                             <Plus className="h-3.5 w-3.5" />
                             เพิ่มเรื่องใหม่
                         </Link>
                         <Link
                             href="/"
-                            className="flex items-center justify-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs text-gray-400 transition hover:border-white/20 hover:text-white"
+                            className="flex items-center justify-center gap-1.5 rounded-sm bg-ink-900/60 px-3 py-2 text-xs text-ink-300 transition-colors duration-200 hover:bg-ink-900 hover:text-ink-100"
                         >
                             <Home className="h-3.5 w-3.5" />
                             กลับหน้าอ่าน
@@ -211,18 +205,18 @@ export default function AdminLayoutClient({ children, isPrimaryAdmin, adminToken
 
                 {/* Main */}
                 <div className="flex min-w-0 flex-1 flex-col">
-                    <header className="sticky top-0 z-30 border-b border-white/10 bg-surface-300/75 backdrop-blur-xl">
+                    <header className="sticky top-0 z-30 bg-ink-900/85 backdrop-blur-xl">
                         <div className="flex h-16 items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
                             <div className="flex min-w-0 items-center gap-3">
                                 <button
                                     onClick={() => setSidebarOpen(true)}
-                                    className="rounded-lg border border-white/10 p-1.5 text-gray-300 hover:border-white/30 hover:text-white lg:hidden"
+                                    className="rounded-sm bg-ink-800/60 p-1.5 text-ink-300 transition-colors hover:bg-ink-800 hover:text-ink-100 lg:hidden"
                                 >
                                     <Menu className="h-5 w-5" />
                                 </button>
                                 <div className="min-w-0">
-                                    <p className="truncate text-sm font-semibold text-white">{activeSection}</p>
-                                    <p className="truncate text-xs text-gray-500">Admin workspace · MangaLabTH</p>
+                                    <p className="truncate text-sm font-semibold text-ink-100">{activeSection}</p>
+                                    <p className="truncate text-[11px] uppercase tracking-[0.18em] text-ink-500">Admin workspace · MangaLabTH</p>
                                 </div>
                             </div>
                         </div>

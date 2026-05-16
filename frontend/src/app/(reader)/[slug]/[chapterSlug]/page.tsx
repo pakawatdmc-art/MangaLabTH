@@ -140,8 +140,22 @@ export default async function ChapterReadPage({ params }: Props) {
     );
   }
 
+  // Preload the first page image at the document level so the browser
+  // can start downloading before React even hydrates.
+  const sortedPages = (chapter.pages || []).slice().sort((a, b) => a.number - b.number);
+  const firstPageUrl = sortedPages[0]?.image_url;
+
   return (
     <>
+      {firstPageUrl && (
+        <link
+          rel="preload"
+          as="image"
+          href={firstPageUrl}
+          // @ts-expect-error - fetchPriority is a valid HTML attr but not in React types yet
+          fetchpriority="high"
+        />
+      )}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Search, Loader2 } from "lucide-react";
@@ -15,17 +16,45 @@ export function SearchAutocomplete({ defaultValue = "" }: { defaultValue?: strin
   const [isLoading, setIsLoading] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const portalRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+  const [pos, setPos] = useState<{ top: number; left: number; width: number }>({ top: 0, left: 0, width: 0 });
 
-  // Handle clicking outside to close
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Handle clicking outside to close (covers both anchor and portal dropdown)
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const inAnchor = dropdownRef.current?.contains(target);
+      const inPortal = portalRef.current?.contains(target);
+      if (!inAnchor && !inPortal) {
         setIsFocused(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Recompute dropdown position when shown / on scroll / resize
+  useLayoutEffect(() => {
+    if (!isFocused) return;
+    const update = () => {
+      const el = dropdownRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      setPos({ top: r.bottom + 8, left: r.left, width: r.width });
+    };
+    update();
+    window.addEventListener("scroll", update, true);
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update, true);
+      window.removeEventListener("resize", update);
+    };
+  }, [isFocused]);
 
   // Debounce logic
   useEffect(() => {
@@ -76,9 +105,10 @@ export function SearchAutocomplete({ defaultValue = "" }: { defaultValue?: strin
     <div className="relative mx-auto w-full max-w-xl" ref={dropdownRef}>
       <form
         onSubmit={handleSubmit}
-        className="flex items-center gap-2 rounded-3xl bg-surface-100/40 p-2 shadow-2xl ring-1 ring-white/10 backdrop-blur-xl transition focus-within:ring-white/20"
+        className="flex items-center gap-2 rounded-md bg-ink-800/70 p-1.5 backdrop-blur-xl transition-shadow focus-within:ring-1 focus-within:ring-gold/40"
       >
         <div className="flex-1 relative flex items-center">
+          <Search className="ml-3 h-4 w-4 shrink-0 text-ink-400" />
           <input
             type="text"
             name="q"
@@ -87,25 +117,30 @@ export function SearchAutocomplete({ defaultValue = "" }: { defaultValue?: strin
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setIsFocused(true)}
             autoComplete="off"
-            className="w-full bg-transparent px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none"
+            className="w-full bg-transparent px-3 py-2.5 text-sm text-ink-100 placeholder-ink-400 focus:outline-none focus-visible:shadow-none"
+            style={{ boxShadow: "none" }}
           />
           {isLoading && query.trim() === debouncedQuery && (
-            <Loader2 className="absolute right-4 h-4 w-4 animate-spin text-gray-400" />
+            <Loader2 className="absolute right-3 h-4 w-4 animate-spin text-ink-400" />
           )}
         </div>
         <button
           type="submit"
-          className="rounded-2xl bg-gold px-8 py-3 text-sm font-bold text-black shadow-lg shadow-gold/20 transition hover:bg-gold-light hover:shadow-gold/40"
+          className="rounded-sm bg-gold px-6 py-2.5 text-sm font-semibold text-ink-950 transition-colors duration-200 hover:bg-gold-light"
         >
           ค้นหา
         </button>
       </form>
 
-      {/* Autocomplete Dropdown */}
-      {showDropdown && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-white/10 bg-surface-200/95 shadow-2xl backdrop-blur-xl">
+      {/* Autocomplete Dropdown — rendered via portal to escape parent stacking contexts */}
+      {showDropdown && mounted && createPortal(
+        <div
+          ref={portalRef}
+          style={{ position: "fixed", top: pos.top, left: pos.left, width: pos.width, zIndex: 9999 }}
+          className="overflow-hidden rounded-md bg-ink-900/95 shadow-2xl backdrop-blur-xl"
+        >
           {isLoading && results.length === 0 ? (
-            <div className="flex items-center justify-center p-6 text-sm text-gray-400">
+            <div className="flex items-center justify-center p-6 text-sm text-ink-300">
               <Loader2 className="mr-2 h-4 w-4 animate-spin" /> กำลังค้นหา...
             </div>
           ) : results.length > 0 ? (
@@ -115,9 +150,9 @@ export function SearchAutocomplete({ defaultValue = "" }: { defaultValue?: strin
                   <button
                     type="button"
                     onClick={() => handleSelect(manga.slug)}
-                    className="flex w-full items-center gap-4 px-4 py-3 text-left transition hover:bg-white/5"
+                    className="flex w-full items-center gap-4 px-4 py-3 text-left transition-colors hover:bg-ink-800"
                   >
-                    <div className="relative h-14 w-10 shrink-0 overflow-hidden rounded-md bg-surface-300 ring-1 ring-white/10">
+                    <div className="relative h-14 w-10 shrink-0 overflow-hidden rounded-xs bg-ink-800">
                       {manga.cover_url ? (
                         <Image
                           src={manga.cover_url}
@@ -128,12 +163,12 @@ export function SearchAutocomplete({ defaultValue = "" }: { defaultValue?: strin
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center">
-                          <Search className="h-4 w-4 text-gray-500" />
+                          <Search className="h-4 w-4 text-ink-400" />
                         </div>
                       )}
                     </div>
                     <div className="flex min-w-0 flex-1 flex-col justify-center">
-                      <p className="truncate text-sm font-semibold text-white/90">
+                      <p className="truncate text-sm font-medium text-ink-100">
                         {manga.title}
                       </p>
                     </div>
@@ -144,7 +179,7 @@ export function SearchAutocomplete({ defaultValue = "" }: { defaultValue?: strin
                 <button
                   type="button"
                   onClick={(e) => handleSubmit(e as unknown as React.FormEvent)}
-                  className="flex w-full items-center justify-center border-t border-white/5 bg-black/20 p-3 text-xs font-medium text-gold hover:bg-white/5 transition"
+                  className="flex w-full items-center justify-center bg-ink-950/40 p-3 text-xs font-semibold text-gold hover:bg-ink-800 transition-colors"
                 >
                   ดูผลลัพธ์ทั้งหมดสำหรับ &quot;{query}&quot;
                 </button>
@@ -152,12 +187,13 @@ export function SearchAutocomplete({ defaultValue = "" }: { defaultValue?: strin
             </ul>
           ) : (
             <div className="flex flex-col items-center justify-center p-8 text-center">
-              <Search className="mb-2 h-8 w-8 text-gray-600" />
-              <p className="text-sm font-medium text-gray-400">ไม่พบมังงะที่คุณค้นหา</p>
-              <p className="mt-1 text-xs text-gray-500">ลองใช้คำค้นหาอื่นดูสิครับ</p>
+              <Search className="mb-2 h-7 w-7 text-ink-500" />
+              <p className="text-sm font-medium text-ink-200">ไม่พบมังงะที่คุณค้นหา</p>
+              <p className="mt-1 text-xs text-ink-400">ลองใช้คำค้นหาอื่นดูสิครับ</p>
             </div>
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -111,7 +111,7 @@ export default async function MangaDetailPage({ params }: Props) {
   };
 
   return (
-    <div className="min-h-screen bg-background text-white">
+    <div className="min-h-screen bg-ink-900 text-ink-100">
       <AnalyticsTracker 
         event="view_item" 
         data={{ slug: manga.slug, title: manga.title, category: manga.category }} 
@@ -130,17 +130,16 @@ export default async function MangaDetailPage({ params }: Props) {
           src={manga.cover_url || "/placeholder.png"}
           alt=""
           fill
-          className="object-cover blur-2xl brightness-[0.25]"
+          className="object-cover blur-2xl brightness-[0.18]"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-background/75 to-background" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_30%,rgba(212,175,55,0.18),transparent_32%)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-ink-900/40 via-ink-900/85 to-ink-900" />
       </div>
 
       <div className="mx-auto -mt-32 max-w-5xl px-4 sm:px-6 sm:-mt-40">
-        <FadeUp delay={0.2} className="flex flex-col gap-6 rounded-2xl border border-white/10 bg-surface-200/85 p-4 shadow-2xl shadow-black/40 backdrop-blur-md sm:flex-row sm:gap-8 sm:p-6">
+        <FadeUp delay={0.2} className="flex flex-col gap-6 rounded-lg bg-ink-800/60 p-4 backdrop-blur-md sm:flex-row sm:gap-8 sm:p-6">
           {/* Cover */}
-          <div className="relative mx-auto aspect-[2/3] w-44 flex-shrink-0 overflow-hidden rounded-xl ring-2 ring-gold/30 sm:mx-0 sm:w-52">
+          <div className="relative mx-auto aspect-[2/3] w-44 flex-shrink-0 overflow-hidden rounded-md sm:mx-0 sm:w-52">
             <Image
               src={manga.cover_url || "/placeholder.png"}
               alt={manga.title}
@@ -152,38 +151,41 @@ export default async function MangaDetailPage({ params }: Props) {
 
           {/* Info */}
           <div className="flex-1 pt-1 sm:pt-2">
-            <h1 className="mb-3 text-2xl font-extrabold tracking-tight text-white drop-shadow sm:text-4xl">
+            <span className="mb-2 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-ink-400">
+              <span className="h-1 w-1 rounded-full bg-gold" /> Series
+            </span>
+            <h1 className="mb-4 text-2xl font-bold tracking-tight text-ink-100 sm:text-4xl">
               {manga.title}
             </h1>
 
-            <div className="mb-4 flex flex-wrap items-center gap-2 text-xs">
-              <span className="inline-flex items-center gap-1 rounded-full bg-gold/15 px-2.5 py-1 text-gold ring-1 ring-gold/30">
+            <div className="mb-4 flex flex-wrap items-center gap-1.5 text-xs">
+              <span className="inline-flex items-center gap-1 rounded-xs bg-gold/10 px-2.5 py-1 font-semibold text-gold">
                 <Tag className="h-3 w-3" />
                 {CATEGORY_LABELS[manga.category]}
               </span>
               {manga.sub_category && manga.sub_category !== manga.category && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-gold/10 px-2.5 py-1 text-[10px] text-gold/80 ring-1 ring-gold/20">
+                <span className="inline-flex items-center gap-1 rounded-xs bg-ink-900 px-2.5 py-1 text-[10px] text-ink-300">
                   <Tag className="h-2.5 w-2.5" />
                   {CATEGORY_LABELS[manga.sub_category]}
                 </span>
               )}
-              <span className="inline-flex items-center gap-1 rounded-full bg-surface-100 px-2.5 py-1 text-gray-300 ring-1 ring-white/10">
+              <span className="inline-flex items-center gap-1 rounded-xs bg-ink-900 px-2.5 py-1 text-ink-300">
                 <Layers className="h-3 w-3" />
                 {STATUS_LABELS[manga.status]}
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-surface-100 px-2.5 py-1 text-gray-300 ring-1 ring-white/10">
+              <span className="inline-flex items-center gap-1 rounded-xs bg-ink-900 px-2.5 py-1 text-ink-300">
                 <BookOpen className="h-3 w-3" />
                 {manga.chapters.length} ตอน
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-surface-100 px-2.5 py-1 text-gray-300 ring-1 ring-white/10">
+              <span className="inline-flex items-center gap-1 rounded-xs bg-ink-900 px-2.5 py-1 text-ink-300">
                 <Eye className="h-3 w-3" />
                 {formatNumber(manga.total_views)} วิว
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-surface-100 px-2.5 py-1 text-gray-300 ring-1 ring-white/10">
+              <span className="inline-flex items-center gap-1 rounded-xs bg-ink-900 px-2.5 py-1 text-ink-300">
                 <BookOpen className="h-3 w-3" />
                 {formatNumber(manga.total_reads)} อ่าน
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-surface-100 px-2.5 py-1 text-gray-300 ring-1 ring-white/10">
+              <span className="inline-flex items-center gap-1 rounded-xs bg-ink-900 px-2.5 py-1 text-ink-300">
                 <Calendar className="h-3 w-3" />
                 {(() => {
                   const d = manga.last_chapter_updated_at || manga.created_at;
@@ -193,38 +195,38 @@ export default async function MangaDetailPage({ params }: Props) {
             </div>
 
             {manga.author && (
-              <p className="mb-1 text-sm text-gray-300">
-                ผู้แต่ง: <span className="text-white">{manga.author}</span>
+              <p className="mb-3 text-sm text-ink-400">
+                ผู้แต่ง <span className="text-ink-100 font-medium">{manga.author}</span>
                 {manga.artist && manga.artist !== manga.author && (
-                  <> · ผู้วาด: <span className="text-white">{manga.artist}</span></>
+                  <> · ผู้วาด <span className="text-ink-100 font-medium">{manga.artist}</span></>
                 )}
               </p>
             )}
 
-            <p className="mb-5 rounded-lg bg-black/20 px-3 py-2 text-sm leading-relaxed text-gray-200 ring-1 ring-white/10">
+            <p className="mb-5 rounded-md bg-ink-900/60 px-3.5 py-3 text-sm leading-relaxed text-ink-200">
               {manga.description || "ยังไม่มีคำอธิบายเรื่อง"}
             </p>
 
-            <div className="mb-5 rounded-xl border border-white/10 bg-surface-100/65 px-3.5 py-3 text-xs text-gray-300">
+            <div className="mb-5 rounded-md bg-ink-900/40 px-3.5 py-3 text-xs text-ink-300">
               <p>
-                อ่านฟรีได้ทันที <span className="font-semibold text-emerald-400">{freeChapterCount} ตอน</span>
+                อ่านฟรีได้ทันที <span className="font-semibold text-emerald-300">{freeChapterCount} ตอน</span>
                 {premiumChapterCount > 0 && (
                   <>
                     {" "}· ตอนติดเหรียญ <span className="font-semibold text-gold">{premiumChapterCount} ตอน</span>
                   </>
                 )}
               </p>
-              <p className="mt-1 text-[11px] text-gray-500">
+              <p className="mt-1 text-[11px] text-ink-500">
                 ผู้ชมทุกคนเข้าเว็บและอ่านตอนฟรีได้เลย โดยจะขอให้ล็อกอินเฉพาะตอนที่ติดเหรียญเท่านั้น
               </p>
             </div>
 
             {/* CTA buttons */}
-            <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:gap-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-2.5">
               {firstChapter && (
                 <Link
                   href={`/${manga.slug}/ตอนที่-${firstChapter.number}`}
-                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-gold px-5 text-sm font-semibold text-black transition hover:bg-gold-light sm:w-auto"
+                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-sm bg-gold px-5 text-sm font-semibold text-ink-950 transition-colors duration-200 hover:bg-gold-light sm:w-auto"
                 >
                   <BookOpen className="h-4 w-4" />
                   อ่านตอนแรก
@@ -233,7 +235,7 @@ export default async function MangaDetailPage({ params }: Props) {
               {latestChapter && latestChapter.id !== firstChapter?.id && (
                 <Link
                   href={`/${manga.slug}/ตอนที่-${latestChapter.number}`}
-                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-surface-50 px-5 text-sm font-medium text-white ring-1 ring-white/10 transition hover:bg-surface-100 sm:w-auto"
+                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-sm bg-ink-900/60 px-5 text-sm font-medium text-ink-100 transition-colors duration-200 hover:bg-ink-900 sm:w-auto"
                 >
                   อ่านตอนล่าสุด
                 </Link>

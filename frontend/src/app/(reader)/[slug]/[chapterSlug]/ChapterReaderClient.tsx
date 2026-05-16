@@ -178,7 +178,7 @@ export default function ChapterReaderClient({
   return (
     <div className="min-h-screen bg-black">
       {/* Progress bar */}
-      <div className="fixed left-0 right-0 top-0 z-50 h-0.5 bg-surface-300">
+      <div className="fixed left-0 right-0 top-0 z-50 h-[2px] bg-ink-900">
         <div
           className="h-full bg-gold transition-[width] duration-150"
           style={{ width: `${progress}%` }}
@@ -190,10 +190,10 @@ export default function ChapterReaderClient({
         className={`fixed left-0 right-0 top-0 z-40 transition-transform duration-300 ${showTopBar ? "translate-y-0" : "-translate-y-full"
           }`}
       >
-        <div className="mx-auto flex h-14 max-w-4xl items-center justify-between bg-surface-300/80 px-3 backdrop-blur-xl shadow-lg shadow-black/20 sm:rounded-b-2xl sm:px-5">
+        <div className="mx-auto flex h-14 max-w-4xl items-center justify-between bg-ink-950/85 px-3 backdrop-blur-xl sm:rounded-b-md sm:px-5">
           <Link
             href={`/manga/${manga.slug}`}
-            className="flex items-center gap-2 text-sm font-medium text-gray-300 transition hover:text-white"
+            className="flex items-center gap-2 text-sm font-medium text-ink-200 transition-colors hover:text-ink-100"
           >
             <BookOpen className="h-[18px] w-[18px] text-gold shrink-0" />
             <span className="max-w-[100px] truncate sm:max-w-[280px]">
@@ -208,22 +208,22 @@ export default function ChapterReaderClient({
                 e.stopPropagation();
                 setShowChapterMenu(!showChapterMenu);
               }}
-              className="flex items-center gap-1.5 rounded-lg border border-white/5 bg-surface-200/50 px-3 py-1.5 text-[11px] text-gray-200 shadow-inner transition hover:bg-surface-100 sm:px-4 sm:py-2 sm:text-xs"
+              className="flex items-center gap-1.5 rounded-sm bg-ink-800/70 px-3 py-1.5 text-[11px] text-ink-200 transition-colors duration-200 hover:bg-ink-800 sm:px-4 sm:py-2 sm:text-xs"
             >
               <Layers className="h-3.5 w-3.5 text-gold" />
               <span className="font-semibold">ตอนที่ {formatChapterNumber(chapter.number)}</span>
-              <span className="hidden text-gray-500 sm:inline">
+              <span className="hidden text-ink-500 sm:inline">
                 · {pages.length} หน้า
               </span>
-              <ChevronDown className="ml-1 h-3.5 w-3.5 opacity-70" />
+              <ChevronDown className="ml-1 h-3.5 w-3.5 text-ink-400" />
             </button>
 
             {showChapterMenu && (
               <div
-                className="absolute left-1/2 mt-2 max-h-[60vh] w-56 -translate-x-1/2 overflow-y-auto rounded-xl border border-white/10 bg-black/95 p-1.5 shadow-2xl backdrop-blur-2xl sm:w-64"
+                className="absolute left-1/2 mt-2 max-h-[60vh] w-56 -translate-x-1/2 overflow-y-auto rounded-md bg-ink-900/95 p-1 shadow-2xl backdrop-blur-2xl sm:w-64"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="mb-1 px-2 pb-1 pt-1.5 text-[10px] font-semibold tracking-wider text-gray-500">
+                <div className="mb-1 px-2 pb-1 pt-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-500">
                   เลือกตอนอ่าน
                 </div>
                 {allChapters.map((c) => {
@@ -233,20 +233,20 @@ export default function ChapterReaderClient({
                       key={c.id}
                       href={`/${manga.slug}/ตอนที่-${c.number}`}
                       onClick={() => setShowChapterMenu(false)}
-                      className={`flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm transition ${isCurrent
-                        ? "bg-gold/15 text-gold"
-                        : "text-gray-300 hover:bg-white/5 hover:text-white"
+                      className={`flex w-full items-center justify-between rounded-xs px-2.5 py-2 text-left text-sm transition-colors duration-150 ${isCurrent
+                        ? "bg-ink-800 text-gold"
+                        : "text-ink-300 hover:bg-ink-800 hover:text-ink-100"
                         }`}
                     >
                       <span className="truncate pr-2">
-                        <span className="mr-2 opacity-60">
+                        <span className="mr-2 text-ink-500">
                           ตอนที่ {formatChapterNumber(c.number)}
                         </span>
                         {c.title}
                       </span>
                       <div className="flex shrink-0 items-center gap-1.5">
                         {c.is_unlocked && (
-                          <span className="text-[10px] font-medium text-emerald-400">
+                          <span className="text-[10px] font-medium text-emerald-300">
                             ปลดล็อคแล้ว
                           </span>
                         )}
@@ -264,7 +264,7 @@ export default function ChapterReaderClient({
             {currentBalance !== undefined && (
               <Link
                 href="/coins"
-                className="flex items-center gap-1.5 rounded-full bg-surface-200/80 px-3 py-1.5 text-[11px] font-semibold text-gold ring-1 ring-gold/30 backdrop-blur-md transition hover:bg-gold/10 sm:text-xs"
+                className="flex items-center gap-1.5 rounded-xs bg-ink-800/70 px-3 py-1.5 text-[11px] font-semibold text-gold backdrop-blur-md transition-colors duration-200 hover:bg-gold/10 sm:text-xs"
                 title="เติมเหรียญ"
               >
                 <Coins className="h-3.5 w-3.5" />
@@ -274,7 +274,7 @@ export default function ChapterReaderClient({
 
             <Link
               href="/"
-              className="hidden items-center gap-1.5 text-gray-400 transition hover:text-white sm:flex"
+              className="hidden items-center gap-1.5 text-ink-300 transition-colors hover:text-ink-100 sm:flex"
               title="กลับหน้าแรก"
             >
               <Home className="h-4 w-4" />
@@ -285,26 +285,26 @@ export default function ChapterReaderClient({
               {prevChapterId ? (
                 <Link
                   href={`/${manga.slug}/ตอนที่-${allChapters.find(c => c.id === prevChapterId)?.number}`}
-                  className="rounded-lg p-1.5 text-gray-400 transition hover:bg-white/10 hover:text-white"
+                  className="rounded-xs p-1.5 text-ink-300 transition-colors hover:bg-ink-800 hover:text-ink-100"
                   title="ตอนก่อนหน้า (←)"
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </Link>
               ) : (
-                <span className="rounded-lg p-1.5 text-gray-700">
+                <span className="rounded-xs p-1.5 text-ink-600">
                   <ChevronLeft className="h-5 w-5" />
                 </span>
               )}
               {nextChapterId ? (
                 <Link
                   href={`/${manga.slug}/ตอนที่-${allChapters.find(c => c.id === nextChapterId)?.number}`}
-                  className="rounded-lg p-1.5 text-gray-400 transition hover:bg-white/10 hover:text-white"
+                  className="rounded-xs p-1.5 text-ink-300 transition-colors hover:bg-ink-800 hover:text-ink-100"
                   title="ตอนถัดไป (→)"
                 >
                   <ChevronRight className="h-5 w-5" />
                 </Link>
               ) : (
-                <span className="rounded-lg p-1.5 text-gray-700">
+                <span className="rounded-xs p-1.5 text-ink-600">
                   <ChevronRight className="h-5 w-5" />
                 </span>
               )}
@@ -327,21 +327,22 @@ export default function ChapterReaderClient({
               width={pg.width || 900}
               height={pg.height || 1350}
               eager={pg.number <= 5}
+              pageNumber={pg.number}
             />
           </div>
         ))}
       </main>
 
       {/* End navigation */}
-      <footer className="mx-auto max-w-3xl border-t border-white/5 px-4 py-10 pb-24 text-center md:pb-10">
-        <p className="mb-4 text-sm text-gray-500">
+      <footer className="mx-auto max-w-3xl px-4 py-10 pb-24 text-center md:pb-10">
+        <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.22em] text-ink-500">
           จบตอนที่ {formatChapterNumber(chapter.number)}
         </p>
         <div className="flex items-center justify-center gap-3">
           {prevChapterId && (
             <Link
               href={`/${manga.slug}/ตอนที่-${allChapters.find(c => c.id === prevChapterId)?.number}`}
-              className="inline-flex h-10 items-center gap-2 rounded-lg bg-surface-100 px-4 text-sm text-gray-300 ring-1 ring-white/10 transition hover:bg-surface-50"
+              className="inline-flex h-10 items-center gap-2 rounded-sm bg-ink-900/60 px-4 text-sm text-ink-200 transition-colors duration-200 hover:bg-ink-900"
             >
               <ChevronLeft className="h-4 w-4" />
               ตอนก่อนหน้า
@@ -350,7 +351,7 @@ export default function ChapterReaderClient({
           {nextChapterId && (
             <Link
               href={`/${manga.slug}/ตอนที่-${allChapters.find(c => c.id === nextChapterId)?.number}`}
-              className="inline-flex h-10 items-center gap-2 rounded-lg bg-gold px-5 text-sm font-semibold text-black transition hover:bg-gold-light"
+              className="inline-flex h-10 items-center gap-2 rounded-sm bg-gold px-5 text-sm font-semibold text-ink-950 transition-colors duration-200 hover:bg-gold-light"
             >
               ตอนถัดไป
               <ChevronRight className="h-4 w-4" />
@@ -359,18 +360,18 @@ export default function ChapterReaderClient({
         </div>
         <Link
           href={`/manga/${manga.slug}`}
-          className="mt-4 inline-block text-sm text-gray-500 transition hover:text-gold"
+          className="mt-4 inline-block text-sm text-ink-500 transition-colors hover:text-gold"
         >
           กลับไปหน้ารายละเอียดเรื่อง
         </Link>
       </footer>
 
       {/* Mobile dock */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/5 bg-surface-300/85 px-2 pb-[max(env(safe-area-inset-bottom),0.8rem)] pt-2 backdrop-blur-2xl shadow-[0_-8px_30px_rgba(0,0,0,0.5)] md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 bg-ink-950/95 px-2 pb-[max(env(safe-area-inset-bottom),0.8rem)] pt-2 backdrop-blur-2xl md:hidden">
         <div className="mx-auto grid max-w-[100%] grid-cols-5 gap-1">
           <Link
             href="/"
-            className="flex flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-gray-400 transition hover:bg-white/5 hover:text-white"
+            className="flex flex-col items-center justify-center gap-1 rounded-xs py-1.5 text-ink-300 transition-colors hover:bg-ink-800 hover:text-ink-100"
           >
             <Home className="h-5 w-5" />
             <span className="text-[10px] font-medium tracking-wide">หน้าแรก</span>
@@ -379,13 +380,13 @@ export default function ChapterReaderClient({
           {prevChapterId ? (
             <Link
               href={`/${manga.slug}/ตอนที่-${allChapters.find(c => c.id === prevChapterId)?.number}`}
-              className="flex flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-gray-300 transition hover:bg-white/5 hover:text-white"
+              className="flex flex-col items-center justify-center gap-1 rounded-xs py-1.5 text-ink-300 transition-colors hover:bg-ink-800 hover:text-ink-100"
             >
               <ChevronLeft className="h-5 w-5" />
               <span className="text-[10px] font-medium tracking-wide">ก่อนหน้า</span>
             </Link>
           ) : (
-            <span className="flex flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-gray-600">
+            <span className="flex flex-col items-center justify-center gap-1 rounded-xs py-1.5 text-ink-600">
               <ChevronLeft className="h-5 w-5" />
               <span className="text-[10px] font-medium tracking-wide">ก่อนหน้า</span>
             </span>
@@ -393,7 +394,7 @@ export default function ChapterReaderClient({
 
           <Link
             href={`/manga/${manga.slug}`}
-            className="flex flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-gray-300 transition hover:bg-white/5 hover:text-white"
+            className="flex flex-col items-center justify-center gap-1 rounded-xs py-1.5 text-ink-300 transition-colors hover:bg-ink-800 hover:text-ink-100"
           >
             <BookOpen className="h-5 w-5 text-gold" />
             <span className="text-[10px] font-medium tracking-wide">รายละเอียด</span>
@@ -402,13 +403,13 @@ export default function ChapterReaderClient({
           {nextChapterId ? (
             <Link
               href={`/${manga.slug}/ตอนที่-${allChapters.find(c => c.id === nextChapterId)?.number}`}
-              className="flex flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-gold transition hover:bg-white/5 hover:text-gold-light"
+              className="flex flex-col items-center justify-center gap-1 rounded-xs py-1.5 text-gold transition-colors hover:bg-gold/5 hover:text-gold-light"
             >
               <ChevronRight className="h-5 w-5" />
               <span className="text-[10px] font-semibold tracking-wide">ถัดไป</span>
             </Link>
           ) : (
-            <span className="flex flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-gold/50">
+            <span className="flex flex-col items-center justify-center gap-1 rounded-xs py-1.5 text-gold/40">
               <ChevronRight className="h-5 w-5" />
               <span className="text-[10px] font-medium tracking-wide">จบตอน</span>
             </span>
@@ -418,13 +419,13 @@ export default function ChapterReaderClient({
           {currentBalance !== undefined ? (
             <Link
               href="/coins"
-              className="flex flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-gold transition hover:bg-white/5 hover:text-gold-light"
+              className="flex flex-col items-center justify-center gap-1 rounded-xs py-1.5 text-gold transition-colors hover:bg-gold/5 hover:text-gold-light"
             >
-              <Coins className="h-[18px] w-[18px] drop-shadow-sm" />
+              <Coins className="h-[18px] w-[18px]" />
               <span className="text-[11px] font-semibold tracking-wide leading-none">{formatNumber(currentBalance)}</span>
             </Link>
           ) : (
-            <span className="flex flex-col items-center justify-center gap-1 rounded-xl text-transparent">
+            <span className="flex flex-col items-center justify-center gap-1 rounded-xs text-transparent">
               {/* Spacer */}
             </span>
           )}
@@ -435,7 +436,7 @@ export default function ChapterReaderClient({
       {showScrollTop && (
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-24 right-4 z-40 rounded-full bg-surface-100/80 p-2.5 text-gray-400 ring-1 ring-white/10 backdrop-blur transition hover:text-white md:bottom-6"
+          className="fixed bottom-24 right-4 z-40 rounded-full bg-ink-800/80 p-2.5 text-ink-300 backdrop-blur transition-colors hover:bg-ink-800 hover:text-ink-100 md:bottom-6"
         >
           <ArrowUp className="h-4 w-4" />
         </button>

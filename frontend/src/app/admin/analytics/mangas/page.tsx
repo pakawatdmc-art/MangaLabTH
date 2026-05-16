@@ -28,7 +28,7 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
     ssr: false,
     loading: () => (
         <div className="flex h-[300px] items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
+            <Loader2 className="h-8 w-8 animate-spin text-gold" />
         </div>
     ),
 });
@@ -108,11 +108,11 @@ export default function MangaAnalyticsDashboard() {
         const isNeutral = growth === 0;
 
         if (isNeutral) {
-            return <div className="text-[10px] font-medium text-gray-500">คงที่</div>;
+            return <div className="text-[10px] font-medium text-ink-500">คงที่</div>;
         }
 
         return (
-            <div className={`flex items-center gap-0.5 text-[11px] font-bold ${isUp ? "text-emerald-400" : "text-red-400"}`}>
+            <div className={`flex items-center gap-0.5 text-[11px] font-bold ${isUp ? "text-emerald-300" : "text-red-300"}`}>
                 {isUp ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
                 {Math.abs(growth).toFixed(1)}%
             </div>
@@ -179,14 +179,14 @@ export default function MangaAnalyticsDashboard() {
         theme: { mode: "dark" },
         xaxis: {
             categories: sortedCategories.map(c => c.category.toUpperCase()),
-            labels: { style: { colors: "#9CA3AF" } },
+            labels: { style: { colors: "#a0a0ad" } },
             axisBorder: { show: false },
             axisTicks: { show: false },
         },
         yaxis: {
             labels: { style: { colors: "#E5E7EB", fontWeight: 600 } }
         },
-        grid: { borderColor: "rgba(255,255,255,0.05)", strokeDashArray: 4 },
+        grid: { borderColor: "rgba(255,255,255,0.04)", strokeDashArray: 4 },
         tooltip: { theme: "dark" },
     };
 
@@ -198,21 +198,21 @@ export default function MangaAnalyticsDashboard() {
                 <div className="flex items-center gap-3">
                     <Link
                         href="/admin"
-                        className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-surface-100/50 text-gray-400 transition hover:bg-surface-200 hover:text-white"
+                        className="flex h-10 w-10 items-center justify-center rounded-xl bg-ink-800/40 text-ink-400 transition hover:bg-ink-900 hover:text-white"
                     >
                         <ArrowLeft className="h-5 w-5" />
                     </Link>
                     <div>
-                        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                            <LibraryBig className="h-6 w-6 text-blue-400" />
+                        <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-ink-100 sm:text-3xl">
+                            <LibraryBig className="h-6 w-6 text-ink-400" />
                             Manga Analytics Dashboard
                         </h1>
-                        <p className="text-sm text-gray-400">สถิติเชิงลึกสำหรับการบริหารคลังคอนเทนต์ (Portfolio Management)</p>
+                        <p className="text-sm text-ink-400">สถิติเชิงลึกสำหรับการบริหารคลังคอนเทนต์ (Portfolio Management)</p>
                     </div>
                 </div>
 
                 {/* Time range selector */}
-                <div className="inline-flex rounded-lg border border-white/10 bg-surface-100 p-1">
+                <div className="inline-flex rounded-sm bg-ink-800/40 p-1">
                     {[
                         { label: "1 วัน", value: 1 },
                         { label: "7 วัน", value: 7 },
@@ -223,8 +223,8 @@ export default function MangaAnalyticsDashboard() {
                             key={range.value}
                             onClick={() => setTimeRange(range.value)}
                             className={`rounded-md px-4 py-1.5 text-sm font-medium transition ${timeRange === range.value
-                                ? "bg-surface-300 text-white shadow-sm"
-                                : "text-gray-400 hover:text-white"
+                                ? "bg-gold text-ink-950"
+                                : "text-ink-400 hover:text-white"
                                 }`}
                         >
                             {range.label}
@@ -234,7 +234,7 @@ export default function MangaAnalyticsDashboard() {
             </div>
 
             {error ? (
-                <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                <div className="rounded-md bg-red-500/10 px-4 py-3 text-sm text-red-300">
                     {error}
                 </div>
             ) : (
@@ -247,47 +247,43 @@ export default function MangaAnalyticsDashboard() {
                                 value: data?.summary?.total_mangas || 0,
                                 prev: data?.previous_summary?.total_mangas || 0,
                                 icon: LibraryBig,
-                                color: "text-blue-400",
-                                bgColor: "bg-blue-400/10",
+                                color: "text-ink-300", bgColor: "bg-ink-900",
                             },
                             {
                                 label: `เปิดตัวใหม่ (${timeRange} วัน)`,
                                 value: data?.summary?.new_mangas || 0,
                                 prev: data?.previous_summary?.new_mangas || 0,
                                 icon: BookOpen,
-                                color: "text-emerald-400",
-                                bgColor: "bg-emerald-400/10",
+                                color: "text-ink-300", bgColor: "bg-ink-900",
                             },
                             {
                                 label: `ซีรีส์ที่กำลังตีพิมพ์ (Ongoing)`,
                                 value: data?.summary?.ongoing_mangas || 0,
                                 prev: data?.previous_summary?.ongoing_mangas || 0,
                                 icon: ActivitySquare,
-                                color: "text-purple-400",
-                                bgColor: "bg-purple-400/10",
+                                color: "text-ink-300", bgColor: "bg-ink-900",
                             },
                             {
                                 label: `อัตราการอ่านต่อ (Read-Through)`,
                                 value: `${(data?.summary?.read_through_rate || 0).toFixed(1)}%`,
                                 prev: null, // Read-through rate doesn't easily compare to exactly prev period simply
                                 icon: Eye,
-                                color: "text-pink-400",
-                                bgColor: "bg-pink-400/10",
+                                color: "text-ink-300", bgColor: "bg-ink-900",
                             },
                         ].map((card, i) => (
                             <div
                                 key={i}
-                                className="relative overflow-hidden rounded-2xl border border-white/5 bg-[linear-gradient(135deg,#1b2130_0%,#131826_100%)] p-6 shadow-xl ring-1 ring-white/10 transition-transform hover:scale-[1.02]"
+                                className="relative overflow-hidden rounded-md bg-ink-800/70 p-6 shadow-[0_1px_0_rgba(255,255,255,0.04)_inset] transition-colors hover:bg-ink-800"
                             >
-                                <div className="absolute right-0 top-0 -mr-6 -mt-6 rounded-full blur-3xl opacity-20 w-32 h-32" style={{ backgroundColor: "currentColor", color: card.color === "text-blue-400" ? "#60A5FA" : card.color === "text-emerald-400" ? "#10B981" : card.color === "text-purple-400" ? "#C084FC" : "#F472B6" }} />
+                                
 
                                 <div className="flex items-start justify-between">
                                     <div className="relative">
                                         <div className="mb-2 flex items-center gap-2">
-                                            <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{card.label}</p>
+                                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-300">{card.label}</p>
                                         </div>
                                         <div className="flex items-baseline gap-3">
-                                            <div className="text-3xl font-bold text-white drop-shadow-md">
+                                            <div className="text-3xl font-bold text-ink-100">
                                                 {loading ? <div className="h-9 w-24 animate-pulse rounded bg-white/20 mt-1"></div> : card.value}
                                             </div>
                                             {!loading && card.prev !== null && card.prev !== undefined && renderGrowthBadge(Number(card.value), Number(card.prev))}
@@ -304,14 +300,14 @@ export default function MangaAnalyticsDashboard() {
                     {/* Middle Row: Portfolio Health & Genre Revenue */}
                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                         {/* Status Distribution Chart */}
-                        <div className="rounded-2xl border border-white/5 bg-[linear-gradient(135deg,#1b2130_0%,#131826_100%)] p-6 shadow-xl ring-1 ring-white/10">
+                        <div className="rounded-lg bg-ink-800/70 p-6 shadow-[0_1px_0_rgba(255,255,255,0.04)_inset]">
                             <div className="mb-4 flex items-center justify-between">
                                 <div>
-                                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                                        <PieChart className="h-5 w-5 text-purple-400" />
+                                    <h2 className="flex items-center gap-2 text-base font-semibold tracking-tight text-ink-100">
+                                        <PieChart className="h-5 w-5 text-ink-400" />
                                         Portfolio Health
                                     </h2>
-                                    <p className="text-xs text-gray-400 mt-1">สัดส่วนสถานะการตีพิมพ์ของมังงะในคลังทั้งหมด</p>
+                                    <p className="text-xs text-ink-400 mt-1">สัดส่วนสถานะการตีพิมพ์ของมังงะในคลังทั้งหมด</p>
                                 </div>
                             </div>
                             <div className="h-[300px] w-full">
@@ -319,21 +315,21 @@ export default function MangaAnalyticsDashboard() {
                                     <ReactApexChart options={statusOptions} series={statusSeries} type="donut" height="100%" />
                                 ) : (
                                     <div className="flex h-full w-full flex-col items-center justify-center gap-3">
-                                        <Loader2 className="h-8 w-8 animate-spin text-purple-400" />
+                                        <Loader2 className="h-8 w-8 animate-spin text-gold" />
                                     </div>
                                 )}
                             </div>
                         </div>
 
                         {/* Revenue by Category Chart */}
-                        <div className="lg:col-span-2 rounded-2xl border border-white/5 bg-[linear-gradient(135deg,#1b2130_0%,#131826_100%)] p-6 shadow-xl ring-1 ring-white/10">
+                        <div className="lg:col-span-2 rounded-lg bg-ink-800/70 p-6 shadow-[0_1px_0_rgba(255,255,255,0.04)_inset]">
                             <div className="mb-4 flex items-center justify-between">
                                 <div>
-                                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                                    <h2 className="flex items-center gap-2 text-base font-semibold tracking-tight text-ink-100">
                                         <BarChart3 className="h-5 w-5 text-gold" />
                                         Revenue by Category (หมวดหมู่ที่ทำเงินสูงสุด)
                                     </h2>
-                                    <p className="text-xs text-gray-400 mt-1">รายได้รวมแยกตามหมวดหมู่ในช่วง {timeRange} วันที่ผ่านมา (ใช้สำหรับหาหมวดหมู่ที่คนยอมจ่ายเงินอ่าน)</p>
+                                    <p className="text-xs text-ink-400 mt-1">รายได้รวมแยกตามหมวดหมู่ในช่วง {timeRange} วันที่ผ่านมา (ใช้สำหรับหาหมวดหมู่ที่คนยอมจ่ายเงินอ่าน)</p>
                                 </div>
                             </div>
                             <div className="h-[300px] w-full">
@@ -341,7 +337,7 @@ export default function MangaAnalyticsDashboard() {
                                     data.revenue_by_category.length > 0 ? (
                                         <ReactApexChart options={categoryOptions} series={categorySeries} type="bar" height="100%" />
                                     ) : (
-                                        <div className="flex h-full items-center justify-center text-sm text-gray-500">
+                                        <div className="flex h-full items-center justify-center text-sm text-ink-500">
                                             ไม่พบข้อมูลรายได้ในช่วงเวลานี้
                                         </div>
                                     )
@@ -356,16 +352,16 @@ export default function MangaAnalyticsDashboard() {
 
                     {/* Bottom Row: Top Franchises */}
                     <div className="grid grid-cols-1 gap-6">
-                        <div className="rounded-2xl border border-white/5 bg-[linear-gradient(135deg,#1b2130_0%,#131826_100%)] p-6 shadow-xl ring-1 ring-white/10 flex flex-col">
-                            <h2 className="mb-1 text-lg font-bold text-white flex items-center gap-2">
-                                <Crown className="h-5 w-5 text-emerald-400" />
+                        <div className="rounded-lg bg-ink-800/70 p-6 shadow-[0_1px_0_rgba(255,255,255,0.04)_inset] flex flex-col">
+                            <h2 className="mb-1 flex items-center gap-2 text-base font-semibold tracking-tight text-ink-100">
+                                <Crown className="h-5 w-5 text-ink-400" />
                                 Franchise Leaderboard (มังงะเรือธง)
                             </h2>
-                            <p className="mb-6 text-xs text-gray-400">ซีรีส์ที่ทำรายได้รวม (รวมทุกตอน) สูงสุดในช่วง {timeRange} วันที่ผ่านมา (Hero Products)</p>
+                            <p className="mb-6 text-xs text-ink-400">ซีรีส์ที่ทำรายได้รวม (รวมทุกตอน) สูงสุดในช่วง {timeRange} วันที่ผ่านมา (Hero Products)</p>
 
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-sm">
-                                    <thead className="bg-surface-200/50 text-xs uppercase text-gray-400">
+                                    <thead className="bg-ink-900/40 text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-400">
                                         <tr>
                                             <th className="rounded-l-lg px-4 py-3 font-semibold">อันดับ</th>
                                             <th className="px-4 py-3 font-semibold">ชื่อเรื่อง (Franchise)</th>
@@ -374,36 +370,36 @@ export default function MangaAnalyticsDashboard() {
                                             <th className="rounded-r-lg px-4 py-3 font-semibold text-right text-gold">รายได้รวม (Total Revenue)</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-white/5">
+                                    <tbody className="divide-y divide-ink-800">
                                         {loading ? (
                                             <tr>
-                                                <td colSpan={5} className="py-8 text-center text-gray-500">
+                                                <td colSpan={5} className="py-8 text-center text-ink-500">
                                                     <Loader2 className="mx-auto h-6 w-6 animate-spin" />
                                                 </td>
                                             </tr>
                                         ) : data?.top_franchises.length === 0 ? (
                                             <tr>
-                                                <td colSpan={5} className="py-8 text-center text-gray-500">ไม่พบข้อมูลมังงะที่ทำรายได้ในช่วงเวลานี้</td>
+                                                <td colSpan={5} className="py-8 text-center text-ink-500">ไม่พบข้อมูลมังงะที่ทำรายได้ในช่วงเวลานี้</td>
                                             </tr>
                                         ) : (
                                             franchisePageItems.map((franchise, index) => {
                                                 const rank = (tablePage - 1) * ITEMS_PER_PAGE + index;
                                                 return (
-                                                    <tr key={franchise.id} className="transition hover:bg-white/[0.02]">
+                                                    <tr key={franchise.id} className="transition hover:bg-ink-900/40">
                                                         <td className="px-4 py-3">
-                                                            <div className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold ${rank === 0 ? 'bg-emerald-400/20 text-emerald-400' : rank === 1 ? 'bg-gray-400/20 text-gray-300' : rank === 2 ? 'bg-orange-600/20 text-orange-400' : 'bg-surface-200 text-gray-400'}`}>
+                                                            <div className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold ${rank === 0 ? 'bg-gold/15 text-gold' : 'bg-ink-900 text-ink-400'}`}>
                                                                 #{rank + 1}
                                                             </div>
                                                         </td>
                                                         <td className="px-4 py-3">
-                                                            <Link href={`/manga/${franchise.slug}`} target="_blank" className="font-medium text-white hover:text-emerald-400 transition line-clamp-1">
+                                                            <Link href={`/manga/${franchise.slug}`} target="_blank" className="font-medium text-white hover:text-gold transition-colors line-clamp-1">
                                                                 {franchise.title}
                                                             </Link>
                                                         </td>
-                                                        <td className="px-4 py-3 text-right text-gray-300">
+                                                        <td className="px-4 py-3 text-right text-ink-300">
                                                             {formatNumber(franchise.views)}
                                                         </td>
-                                                        <td className="px-4 py-3 text-right text-gray-300">
+                                                        <td className="px-4 py-3 text-right text-ink-300">
                                                             {formatNumber(franchise.reads)}
                                                         </td>
                                                         <td className="px-4 py-3 text-right font-bold text-gold flex items-center justify-end gap-1.5">

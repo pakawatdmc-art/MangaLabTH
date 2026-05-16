@@ -73,14 +73,14 @@ export function ThemeSwitcher({ token, isPrimaryAdmin }: Props) {
     };
 
     return (
-        <div className="border-t border-white/10 px-3 py-3">
-            <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+        <div className="px-3 py-3">
+            <p className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-ink-500">
                 <Palette className="h-3 w-3" />
                 ธีมเทศกาล
                 {(saving || isLoading) && <Loader2 className="ml-auto h-3 w-3 animate-spin text-gold" />}
             </p>
             {errorMsg && (
-                <p className="mb-2 flex items-center gap-1 rounded-md border border-red-500/30 bg-red-500/10 px-2 py-1 text-[10px] text-red-300">
+                <p className="mb-2 flex items-center gap-1 rounded-xs border border-red-500/30 bg-red-500/10 px-2 py-1 text-[10px] text-red-300">
                     <AlertCircle className="h-3 w-3 flex-shrink-0" />
                     <span>{errorMsg}</span>
                 </p>
@@ -92,10 +92,10 @@ export function ThemeSwitcher({ token, isPrimaryAdmin }: Props) {
                         onClick={() => handleSelect(t.id)}
                         disabled={saving || isLoading}
                         className={cn(
-                            "flex items-center gap-1 rounded-lg border px-2 py-1.5 text-[11px] transition",
+                            "flex items-center gap-1 rounded-xs px-2 py-1.5 text-[11px] transition-colors duration-200",
                             theme === t.id
-                                ? "border-gold/50 bg-gold/15 text-gold"
-                                : "border-white/10 text-gray-400 hover:border-white/20 hover:text-white",
+                                ? "bg-gold/10 text-gold"
+                                : "bg-ink-900/50 text-ink-400 hover:bg-ink-900 hover:text-ink-100",
                             (saving || isLoading) && "opacity-50 cursor-not-allowed"
                         )}
                     >

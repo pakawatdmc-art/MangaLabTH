@@ -12,7 +12,7 @@ export const StaggerContainer = ({ children, className }: { children: React.Reac
         show: {
           opacity: 1,
           transition: {
-            staggerChildren: 0.05,
+            staggerChildren: 0.04,
           },
         },
       }}
@@ -27,11 +27,11 @@ export const StaggerItem = ({ children, className }: { children: React.ReactNode
   return (
     <motion.div
       variants={{
-        hidden: { opacity: 0, y: 20 },
+        hidden: { opacity: 0, y: 14 },
         show: {
           opacity: 1,
           y: 0,
-          transition: { type: "spring", stiffness: 300, damping: 24 },
+          transition: { duration: 0.32, ease: [0.22, 1, 0.36, 1] },
         },
       }}
       className={className}
@@ -44,9 +44,9 @@ export const StaggerItem = ({ children, className }: { children: React.ReactNode
 export const FadeUp = ({ children, className, delay = 0 }: { children: React.ReactNode, className?: string, delay?: number }) => {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, type: "spring", stiffness: 300, damping: 24 }}
+      transition={{ delay, duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
       className={className}
     >
       {children}
@@ -57,9 +57,9 @@ export const FadeUp = ({ children, className, delay = 0 }: { children: React.Rea
 export const ScaleUp = ({ children, className, delay = 0 }: { children: React.ReactNode, className?: string, delay?: number }) => {
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
+      initial={{ opacity: 0, scale: 0.97 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay, type: "spring", stiffness: 300, damping: 24 }}
+      transition={{ delay, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       className={className}
     >
       {children}

@@ -3,24 +3,72 @@
 @theme inline {
   --color-background: #0c0c0f;
   --color-foreground: #eaeaea;
+
+  /* ── Brand: Gold (kept, used as accent only) ── */
   --color-gold: #d4a843;
   --color-gold-light: #e4c36a;
   --color-gold-dark: #a07c2e;
+
+  /* ── Legacy surface (kept for backward compatibility) ── */
   --color-surface-50: #1a1a22;
   --color-surface-100: #14141a;
   --color-surface-200: #0f0f14;
   --color-surface-300: #0a0a0f;
+
+  /* ── "Ink" neutral scale (warm dark, premium-low contrast) ── */
+  /* Tight stops between 950–700 so borders virtually disappear into surfaces. */
+  --color-ink-950: #08080b;
+  --color-ink-900: #0d0d12;
+  --color-ink-800: #131319;
+  --color-ink-700: #18181f;  /* subtle, almost invisible against ink-800 */
+  --color-ink-600: #20202a;
+  --color-ink-500: #34343f;
+  --color-ink-400: #6c6c7a;
+  --color-ink-300: #a0a0ad;
+  --color-ink-200: #c8c8d2;
+  --color-ink-100: #ececf1;
+
   --font-sans: var(--font-inter), var(--font-noto-thai), sans-serif;
+
+  /* ── Radius scale (premium-clean: subtler curves) ── */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+
+  /* ── Easing ── */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 body {
   background-color: var(--color-background);
   color: var(--color-foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Selection ── */
+::selection {
+  background-color: rgba(212, 168, 67, 0.28);
+  color: #fff;
+}
+
+/* ── Global focus-visible ring (premium accessibility) ── */
+*:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--color-ink-900),
+    0 0 0 3px rgba(212, 168, 67, 0.32);
+  border-radius: 4px;
+  transition: box-shadow 150ms var(--ease-out-soft);
 }
 
 /* Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -28,12 +76,16 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #333;
-  border-radius: 3px;
+  background: var(--color-ink-600);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: var(--color-ink-500);
+  background-clip: padding-box;
+  border: 2px solid transparent;
 }
 
 /* Hide scrollbar for chips */
@@ -188,4 +240,14 @@ body.not-apple-device button.cl-socialButtonsIconButton__apple {
   width: 1.5rem !important;
   /* Larger icon */
   height: 1.5rem !important;
+}
+
+/* ── Shimmer keyframe for image skeleton loaders ── */
+@keyframes shimmer {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
 }

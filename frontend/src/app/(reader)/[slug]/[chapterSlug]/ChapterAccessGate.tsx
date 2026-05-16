@@ -121,66 +121,66 @@ export default function ChapterAccessGate({
   const mustLoginFirst = requiresLogin || !isSignedIn;
 
   return (
-    <div className="relative min-h-[calc(100vh-3.5rem)] overflow-hidden bg-background px-4 py-8 sm:px-6 sm:py-12">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(212,168,67,0.16),transparent_60%)]" />
+    <div className="relative min-h-[calc(100vh-3.5rem)] overflow-hidden bg-ink-900 px-4 py-8 sm:px-6 sm:py-12">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(212,168,67,0.06),transparent_60%)]" />
 
       <div className="relative mx-auto w-full max-w-lg">
         <Link
           href={`/manga/${manga.slug}`}
-          className="mb-4 inline-flex items-center gap-1.5 text-sm text-gray-400 transition hover:text-white"
+          className="mb-4 inline-flex items-center gap-1.5 text-sm text-ink-300 transition-colors hover:text-ink-100"
         >
           <ArrowLeft className="h-4 w-4" />
           กลับไป {manga.title}
         </Link>
 
-        <section className="rounded-3xl border border-white/10 bg-surface-100/85 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:p-7">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-semibold text-gold">
-            <Sparkles className="h-3.5 w-3.5" />
+        <section className="rounded-lg bg-ink-800/60 p-5 backdrop-blur-xl sm:p-7">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-xs bg-gold/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-gold">
+            <Sparkles className="h-3 w-3" />
             Premium Chapter
           </div>
 
-          <h1 className="text-2xl font-bold leading-tight text-white">
+          <h1 className="text-2xl font-semibold leading-tight tracking-tight text-ink-100">
             ตอนที่ {formatChapterNumber(chapterNumber)}
           </h1>
-          <p className="mt-1 text-sm text-gray-300">{chapterTitle || "ตอนพิเศษ"}</p>
+          <p className="mt-1 text-sm text-ink-400">{chapterTitle || "ตอนพิเศษ"}</p>
 
-          <div className="mt-5 rounded-2xl border border-gold/25 bg-gold/10 p-4">
-            <p className="flex items-center gap-2 text-sm font-medium text-gold">
+          <div className="mt-5 rounded-md bg-gold/5 p-4">
+            <p className="flex items-center gap-2 text-sm font-semibold text-gold">
               <Lock className="h-4 w-4" />
               ตอนนี้ติดเหรียญ
             </p>
-            <p className="mt-1 text-sm text-gray-200">
+            <p className="mt-1 text-sm text-ink-200">
               ปลดล็อกเพื่ออ่านเต็มตอนในราคา
               <span className="ml-1 font-semibold text-gold">{coinPrice} เหรียญ</span>
             </p>
             {balance !== null && (
-              <p className="mt-2 flex items-center gap-1.5 text-sm text-gray-300">
+              <p className="mt-2 flex items-center gap-1.5 text-sm text-ink-300">
                 <Coins className="h-3.5 w-3.5 text-gold" />
-                เหรียญคงเหลือ:
-                <span className={`font-semibold ${balance >= coinPrice ? "text-green-400" : "text-red-400"}`}>
+                เหรียญคงเหลือ
+                <span className={`font-semibold ${balance >= coinPrice ? "text-emerald-300" : "text-red-300"}`}>
                   {balance} เหรียญ
                 </span>
                 {balance < coinPrice && (
-                  <span className="text-xs text-red-400">(ไม่เพียงพอ)</span>
+                  <span className="text-xs text-red-300">(ไม่เพียงพอ)</span>
                 )}
               </p>
             )}
-            
+
             {unlocksAt && parseUTCDate(unlocksAt) > new Date() && (
-              <div className="mt-3 flex flex-col gap-2 rounded-xl bg-black/20 p-3 outline outline-1 outline-white/5">
-                 <div className="flex items-center gap-2 text-sm text-gray-300">
-                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/5">
+              <div className="mt-3 flex flex-col gap-2 rounded-sm bg-ink-950/60 p-3">
+                 <div className="flex items-center gap-2 text-sm text-ink-300">
+                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-ink-800">
                      <Clock className="h-3 w-3" />
                    </div>
                    <div className="flex flex-col">
-                      <span className="text-xs text-gray-500">กำหนดการปลดล็อกฟรี:</span>
-                      <span className="font-semibold text-white/90">
+                      <span className="text-[10px] uppercase tracking-[0.18em] text-ink-500">กำหนดการปลดล็อกฟรี</span>
+                      <span className="font-semibold text-ink-100">
                          {parseUTCDate(unlocksAt).toLocaleDateString("th-TH", { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Bangkok' })} เวลา {parseUTCDate(unlocksAt).toLocaleTimeString("th-TH", { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' })} น.
                       </span>
                    </div>
                  </div>
                  {countdownText && (
-                   <div className="mt-1 flex items-center gap-1.5 px-8 text-xs text-gold/80">
+                   <div className="mt-1 flex items-center gap-1.5 px-8 text-xs text-gold">
                       <Sparkles className="h-3 w-3" />
                       {countdownText}
                    </div>
@@ -190,7 +190,7 @@ export default function ChapterAccessGate({
           </div>
 
           {error && (
-            <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+            <div className="mt-4 rounded-sm bg-red-500/10 px-3 py-2 text-sm text-red-300">
               {error}
             </div>
           )}
@@ -199,7 +199,7 @@ export default function ChapterAccessGate({
             {mustLoginFirst ? (
               <Link
                 href={signInHref}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-gold px-4 text-sm font-semibold text-black transition hover:bg-gold-light"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-sm bg-gold px-4 text-sm font-semibold text-ink-950 transition-colors duration-200 hover:bg-gold-light"
               >
                 <LogIn className="h-4 w-4" />
                 เข้าสู่ระบบเพื่ออ่านตอนนี้
@@ -209,12 +209,12 @@ export default function ChapterAccessGate({
                 type="button"
                 onClick={handleUnlock}
                 disabled={unlocking}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-gold px-4 text-sm font-semibold text-black transition hover:bg-gold-light disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-sm bg-gold px-4 text-sm font-semibold text-ink-950 transition-colors duration-200 hover:bg-gold-light disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {unlocking ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    กำลังปลดล็อก...
+                    กำลังปลดล็อก…
                   </>
                 ) : (
                   <>
@@ -227,14 +227,14 @@ export default function ChapterAccessGate({
 
             <Link
               href="/coins"
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-gold/30 bg-surface-200/80 px-4 text-sm font-medium text-gold transition hover:bg-surface-50"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-sm bg-ink-900/60 px-4 text-sm font-medium text-ink-100 transition-colors duration-200 hover:bg-ink-900"
             >
-              <Coins className="h-4 w-4" />
+              <Coins className="h-4 w-4 text-gold" />
               ไปหน้าเติมเหรียญ
             </Link>
           </div>
 
-          <p className="mt-4 text-xs leading-relaxed text-gray-500">
+          <p className="mt-4 text-xs leading-relaxed text-ink-500">
             เว็บไซต์เปิดให้อ่านได้ฟรีทุกคน และจะขอให้ล็อกอินเฉพาะตอนที่ติดเหรียญเท่านั้น
           </p>
         </section>
