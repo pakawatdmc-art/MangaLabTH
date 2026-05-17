@@ -280,6 +280,53 @@ export async function adminGetStats(token: string) {
   }>("/users/stats", { token });
 }
 
+export interface UserProfileData {
+  user: {
+    id: string;
+    clerk_id: string;
+    email: string;
+    username: string;
+    display_name: string;
+    avatar_url: string;
+    role: string;
+    coin_balance: number;
+    created_at: string;
+  };
+  summary: {
+    total_in: number;
+    total_out: number;
+    topup_count: number;
+    unlock_count: number;
+  };
+  top_manga: {
+    manga_id: string;
+    title: string;
+    cover_url: string;
+    chapters_unlocked: number;
+    coins_spent: number;
+  }[];
+  transactions: {
+    items: Transaction[];
+    total: number;
+    page: number;
+    per_page: number;
+    total_pages: number;
+  };
+}
+
+export async function getUserProfile(
+  userId: string,
+  token: string,
+  params?: { tx_page?: number; tx_per_page?: number; tx_type?: string }
+) {
+  const sp = new URLSearchParams();
+  if (params?.tx_page) sp.set("tx_page", String(params.tx_page));
+  if (params?.tx_per_page) sp.set("tx_per_page", String(params.tx_per_page));
+  if (params?.tx_type) sp.set("tx_type", params.tx_type);
+  const qs = sp.toString();
+  return fetcher<UserProfileData>(`/users/${userId}/profile${qs ? `?${qs}` : ""}`, { token });
+}
+
 export async function listAllTransactions(
   token: string,
   params?: { page?: number; per_page?: number; type?: string; q?: string }

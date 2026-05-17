@@ -5,7 +5,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import Image from "next/image";
-import { Eye, EyeOff, Edit2, BookOpen, Loader2, Plus, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Edit2, BookOpen, Loader2, Plus, Trash2, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { CATEGORY_LABELS, STATUS_LABELS } from "@/lib/types";
 import type { Manga, MangaCategory, MangaStatus } from "@/lib/types";
 import { getMangaList, createManga, updateManga, deleteManga } from "@/lib/api";
@@ -26,6 +26,26 @@ export default function AdminMangaPage() {
   // New state for file upload
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>("");
+
+  // Search, filter & pagination
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterCategory, setFilterCategory] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+
+  // Derived: filtered & paginated manga list
+  const filteredMangas = [...mangas].reverse().filter((m) => {
+    const matchSearch = !searchQuery || m.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchCategory = !filterCategory || m.category === filterCategory;
+    const matchStatus = !filterStatus || m.status === filterStatus;
+    return matchSearch && matchCategory && matchStatus;
+  });
+  const totalPages = Math.max(1, Math.ceil(filteredMangas.length / ITEMS_PER_PAGE));
+  const paginatedMangas = filteredMangas.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   // Open form automatically when sidebar "เพิ่มเรื่องใหม่" button is clicked.
   // Strip the query param so a refresh doesn't keep re-opening the form.
@@ -365,31 +385,87 @@ export default function AdminMangaPage() {
         </div>
       )}
 
+      {/* Search & Filter Bar */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+            placeholder="ค้นหาชื่อเรื่อง..."
+            className="h-10 w-full rounded-lg border border-gray-200 bg-white pl-9 pr-3 text-sm text-gray-900 shadow-sm focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-100"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <select
+            value={filterCategory}
+            onChange={(e) => {
+              setFilterCategory(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 shadow-sm focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-100"
+          >
+            <option value="">ทุกหมวดหมู่</option>
+            {(Object.entries(CATEGORY_LABELS) as [MangaCategory, string][]).map(
+              ([v, l]) => (
+                <option key={v} value={v}>{l}</option>
+              )
+            )}
+          </select>
+          <select
+            value={filterStatus}
+            onChange={(e) => {
+              setFilterStatus(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 shadow-sm focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-100"
+          >
+            <option value="">ทุกสถานะ</option>
+            {(Object.entries(STATUS_LABELS) as [MangaStatus, string][]).map(
+              ([v, l]) => (
+                <option key={v} value={v}>{l}</option>
+              )
+            )}
+          </select>
+          <span className="rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-600 whitespace-nowrap">
+            {filteredMangas.length} เรื่อง
+          </span>
+        </div>
+      </div>
+
       {/* Table */}
       <div className="overflow-x-auto rounded-xl bg-white border border-gray-200 shadow-sm">
         <table className="w-full min-w-[600px] text-sm">
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50 text-left text-xs text-gray-600 font-medium">
-              <th className="w-16 px-4 py-3 text-center whitespace-nowrap">ลำดับที่</th>
+              <th className="w-12 px-4 py-3 text-center whitespace-nowrap">#</th>
               <th className="px-4 py-3">ปก</th>
               <th className="px-4 py-3">ชื่อเรื่อง</th>
               <th className="px-4 py-3">หมวดหมู่</th>
               <th className="px-4 py-3">สถานะ</th>
-              <th className="px-4 py-3">ตอน</th>
+              <th className="px-4 py-3 text-center">ตอน</th>
               <th className="px-4 py-3 text-right">จัดการ</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {mangas.length === 0 ? (
+            {paginatedMangas.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-4 py-12 text-center text-gray-500">
-                  ยังไม่มีมังงะ — กดปุ่ม &quot;เพิ่มมังงะ&quot; เพื่อเริ่มต้น
+                  {searchQuery || filterCategory || filterStatus
+                    ? "ไม่พบมังงะที่ตรงกับตัวกรอง"
+                    : "ยังไม่มีมังงะ — กดปุ่ม \"เพิ่มมังงะ\" เพื่อเริ่มต้น"}
                 </td>
               </tr>
             ) : (
-              [...mangas].reverse().map((m, index) => (
+              paginatedMangas.map((m, index) => (
                 <tr key={m.id} className="hover:bg-gray-50/80 transition-colors">
-                  <td className="px-4 py-2 text-center font-medium text-gray-500">{index + 1}</td>
+                  <td className="px-4 py-2 text-center font-medium text-gray-400 text-xs">
+                    {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
+                  </td>
                   <td className="px-4 py-2">
                     <div className="h-12 w-8 overflow-hidden rounded bg-gray-100 border border-gray-200">
                       {m.cover_url && (
@@ -404,19 +480,21 @@ export default function AdminMangaPage() {
                       )}
                     </div>
                   </td>
-                  <td className="px-4 py-2 font-medium text-gray-900">{m.title}</td>
+                  <td className="px-4 py-2 font-medium text-gray-900 max-w-xs">
+                    <p className="truncate">{m.title}</p>
+                  </td>
                   <td className="px-4 py-2 text-gray-500">
                     <div className="flex flex-col">
-                      <span>{CATEGORY_LABELS[m.category]}</span>
+                      <span className="text-xs">{CATEGORY_LABELS[m.category]}</span>
                       <span className="text-xs text-gray-400">
                         {CATEGORY_LABELS[m.sub_category] || "-"}
                       </span>
                     </div>
                   </td>
-                  <td className="px-4 py-2 text-gray-500">
+                  <td className="px-4 py-2 text-gray-500 text-xs">
                     {STATUS_LABELS[m.status]}
                   </td>
-                  <td className="px-4 py-2 text-gray-500">{m.chapter_count ?? 0}</td>
+                  <td className="px-4 py-2 text-center text-gray-500">{m.chapter_count ?? 0}</td>
                   <td className="px-4 py-2 text-right">
                     <div className="flex justify-end gap-1">
                       <button
@@ -450,6 +528,51 @@ export default function AdminMangaPage() {
             )}
           </tbody>
         </table>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between border-t border-gray-100 px-4 py-3">
+            <p className="text-xs text-gray-500">
+              แสดง {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredMangas.length)} จาก {filteredMangas.length} เรื่อง
+            </p>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage <= 1}
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition hover:bg-gray-50 disabled:opacity-40"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                .map((p, idx, arr) => (
+                  <span key={p}>
+                    {idx > 0 && arr[idx - 1] !== p - 1 && (
+                      <span className="px-1 text-gray-300">…</span>
+                    )}
+                    <button
+                      onClick={() => setCurrentPage(p)}
+                      className={cn(
+                        "flex h-8 w-8 items-center justify-center rounded-lg text-xs font-medium transition",
+                        p === currentPage
+                          ? "bg-amber-100 text-amber-800 border border-amber-200"
+                          : "border border-gray-200 text-gray-600 hover:bg-gray-50"
+                      )}
+                    >
+                      {p}
+                    </button>
+                  </span>
+                ))}
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage >= totalPages}
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition hover:bg-gray-50 disabled:opacity-40"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

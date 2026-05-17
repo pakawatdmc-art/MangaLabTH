@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { ChevronDown, ChevronUp, Coins, Loader2, Search, Shield, Sparkles, Trash2, Users } from "lucide-react";
+import { ChevronDown, ChevronUp, Coins, Eye, Loader2, Search, Shield, Sparkles, Trash2, Users } from "lucide-react";
+import Link from "next/link";
 import type { User } from "@/lib/types";
 import { listUsers, adminGrantCoins, updateUser, deleteUser, getStats } from "@/lib/api";
 import { formatDateTime } from "@/lib/utils";
@@ -184,6 +185,13 @@ export default function AdminUsersPage() {
         </td>
         <td className="px-4 py-2 text-right">
           <div className="flex items-center justify-end gap-1.5">
+            <Link
+              href={`/admin/users/${u.id}`}
+              className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 transition hover:bg-blue-100"
+            >
+              <Eye className="h-3 w-3" />
+              โปรไฟล์
+            </Link>
             <button
               onClick={() => setGrantTarget(u)}
               className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 transition hover:bg-amber-100"

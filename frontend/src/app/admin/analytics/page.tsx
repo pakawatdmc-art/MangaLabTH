@@ -159,9 +159,10 @@ export default function TrafficDashboard() {
     const categoryOptions: ApexCharts.ApexOptions = {
         chart: { type: "donut", background: "transparent", animations: { enabled: true } },
         labels: (data?.views_by_category || []).map(c => c.category),
-        colors: ["#d4a843", "#5db8a8", "#c97b5e", "#7a8db5", "#b57aa8", "#8d9b6f"],
+        colors: ["#3B82F6", "#F59E0B", "#10B981", "#8B5CF6", "#EC4899", "#14B8A6", "#F43F5E", "#EAB308"],
         stroke: { show: true, colors: ["#ffffff"], width: 2 },
         theme: { mode: "light" },
+        dataLabels: { enabled: false },
         plotOptions: {
             pie: {
                 donut: {

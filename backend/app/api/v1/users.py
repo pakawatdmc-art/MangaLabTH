@@ -252,3 +252,159 @@ async def admin_stats(
         "total_coins_in_circulation": total_coins,
         "total_views": total_views,
     }
+
+
+# ── Admin: User Profile Deep-Dive ────────────────────────
+
+
+@router.get("/{user_id}/profile")
+async def admin_user_profile(
+    user_id: str,
+    session: DBSession,
+    admin: AdminUser,
+    tx_page: int = Query(1, ge=1),
+    tx_per_page: int = Query(20, ge=1, le=100),
+    tx_type: Optional[str] = Query(None),
+):
+    """Admin: get deep-dive profile for a single user.
+
+    Returns user info, KPI summary, top manga by unlocks, and
+    paginated transaction history.
+    """
+    from sqlalchemy import func as sa_func
+    from app.models.manga import Manga, Chapter
+    from app.models.transaction import Transaction, TransactionType
+
+    user = await session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # ── User Info ──
+    user_info = {
+        "id": user.id,
+        "clerk_id": user.clerk_id,
+        "email": user.email,
+        "username": user.username,
+        "display_name": user.display_name,
+        "avatar_url": user.avatar_url,
+        "role": user.role,
+        "coin_balance": user.coin_balance,
+        "created_at": user.created_at.isoformat() if user.created_at else None,
+    }
+
+    # ── KPI Summary ──
+    # Exclude pending transactions (amount=0 coin_purchase)
+    base_filter = (Transaction.user_id == user.id) & ~(
+        (Transaction.type == TransactionType.COIN_PURCHASE) & (Transaction.amount == 0)
+    )
+
+    total_in = (await session.execute(
+        select(sa_func.coalesce(sa_func.sum(Transaction.amount), 0))
+        .where(base_filter & (Transaction.amount > 0))
+    )).scalar_one()
+
+    total_out = (await session.execute(
+        select(sa_func.coalesce(sa_func.sum(sa_func.abs(Transaction.amount)), 0))
+        .where(base_filter & (Transaction.amount < 0))
+    )).scalar_one()
+
+    topup_count = (await session.execute(
+        select(sa_func.count())
+        .where(
+            Transaction.user_id == user.id,
+            Transaction.type == TransactionType.COIN_PURCHASE,
+            Transaction.amount > 0,
+        )
+    )).scalar_one()
+
+    unlock_count = (await session.execute(
+        select(sa_func.count())
+        .where(
+            Transaction.user_id == user.id,
+            Transaction.type == TransactionType.CHAPTER_UNLOCK,
+        )
+    )).scalar_one()
+
+    summary = {
+        "total_in": total_in,
+        "total_out": total_out,
+        "topup_count": topup_count,
+        "unlock_count": unlock_count,
+    }
+
+    # ── Top Manga by Chapter Unlocks ──
+    # GROUP BY manga, count chapters and sum coins spent
+    top_manga_stmt = (
+        select(
+            Manga.id,
+            Manga.title,
+            Manga.cover_url,
+            sa_func.count(Transaction.id).label("chapters_unlocked"),
+            sa_func.coalesce(sa_func.sum(sa_func.abs(Transaction.amount)), 0).label("coins_spent"),
+        )
+        .select_from(Transaction)
+        .join(Chapter, Transaction.chapter_id == Chapter.id)
+        .join(Manga, Chapter.manga_id == Manga.id)
+        .where(
+            Transaction.user_id == user.id,
+            Transaction.type == TransactionType.CHAPTER_UNLOCK,
+        )
+        .group_by(Manga.id, Manga.title, Manga.cover_url)
+        .order_by(sa_func.count(Transaction.id).desc())
+        .limit(10)
+    )
+    top_manga_rows = (await session.execute(top_manga_stmt)).all()
+    top_manga = [
+        {
+            "manga_id": row[0],
+            "title": row[1],
+            "cover_url": row[2],
+            "chapters_unlocked": row[3],
+            "coins_spent": row[4],
+        }
+        for row in top_manga_rows
+    ]
+
+    # ── Paginated Transaction History ──
+    tx_filter = base_filter
+    if tx_type:
+        tx_filter = tx_filter & (Transaction.type == tx_type)
+
+    tx_total = (await session.execute(
+        select(sa_func.count()).where(tx_filter)
+    )).scalar_one()
+
+    tx_offset = (tx_page - 1) * tx_per_page
+    tx_stmt = (
+        select(Transaction)
+        .where(tx_filter)
+        .order_by(col(Transaction.created_at).desc())
+        .offset(tx_offset)
+        .limit(tx_per_page)
+    )
+    transactions = (await session.execute(tx_stmt)).scalars().all()
+
+    tx_items = [
+        {
+            "id": tx.id,
+            "type": tx.type,
+            "amount": tx.amount,
+            "balance_after": tx.balance_after,
+            "note": tx.note,
+            "created_at": tx.created_at.isoformat() if tx.created_at else None,
+        }
+        for tx in transactions
+    ]
+
+    return {
+        "user": user_info,
+        "summary": summary,
+        "top_manga": top_manga,
+        "transactions": {
+            "items": tx_items,
+            "total": tx_total,
+            "page": tx_page,
+            "per_page": tx_per_page,
+            "total_pages": max(1, -(-tx_total // tx_per_page)),
+        },
+    }

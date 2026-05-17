@@ -141,7 +141,7 @@ export default function ChapterAnalyticsDashboard() {
             toolbar: { show: false },
             animations: { enabled: true }
         },
-        colors: ["#FBBF24", "#10B981"], // Yellow (Coins), Emerald (Unlocks)
+        colors: ["#F59E0B", "#3B82F6"], // Amber (Coins), Blue (Unlocks)
         fill: {
             type: "gradient",
             gradient: {
@@ -162,13 +162,13 @@ export default function ChapterAnalyticsDashboard() {
         },
         yaxis: [
             {
-                labels: { style: { colors: "#FBBF24" }, formatter: (value) => formatNumber(Math.floor(value)) },
-                title: { text: "Coins", style: { color: "#FBBF24" } }
+                labels: { style: { colors: "#F59E0B" }, formatter: (value) => formatNumber(Math.floor(value)) },
+                title: { text: "Coins", style: { color: "#F59E0B", fontWeight: 600 } }
             },
             {
                 opposite: true,
-                labels: { style: { colors: "#10B981" }, formatter: (value) => formatNumber(Math.floor(value)) },
-                title: { text: "Unlocks", style: { color: "#10B981" } }
+                labels: { style: { colors: "#3B82F6" }, formatter: (value) => formatNumber(Math.floor(value)) },
+                title: { text: "Unlocks", style: { color: "#3B82F6", fontWeight: 600 } }
             }
         ],
         grid: { borderColor: "rgba(0,0,0,0.05)", strokeDashArray: 4 },
@@ -184,9 +184,10 @@ export default function ChapterAnalyticsDashboard() {
     const mixOptions: ApexCharts.ApexOptions = {
         chart: { type: "donut", background: "transparent", animations: { enabled: true } },
         labels: ["ตอนฟรี (Free)", "ตอนเสียเงิน (Paid)"],
-        colors: ["#3B82F6", "#FBBF24"], // Blue, Yellow
+        colors: ["#14B8A6", "#8B5CF6"], // Teal, Purple
         stroke: { show: true, colors: ["#ffffff"], width: 2 },
         theme: { mode: "light" },
+        dataLabels: { enabled: false },
         plotOptions: {
             pie: {
                 donut: {

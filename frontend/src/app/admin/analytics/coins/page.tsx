@@ -111,7 +111,7 @@ export default function CoinAnalyticsDashboard() {
     ];
     const coinsOptions: ApexCharts.ApexOptions = {
         chart: { type: "area", height: 350, background: "transparent", toolbar: { show: false }, animations: { enabled: true } },
-        colors: ["#d4a843", "#5db8a8"],
+        colors: ["#3B82F6", "#F43F5E"], // Blue (Purchased), Rose (Burned)
         fill: { type: "gradient", gradient: { shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0.05, stops: [0, 90, 100] } },
         dataLabels: { enabled: false },
         stroke: { curve: "smooth", width: 2 },
@@ -131,7 +131,7 @@ export default function CoinAnalyticsDashboard() {
     const packageOptions: ApexCharts.ApexOptions = {
         chart: { type: "bar", background: "transparent", toolbar: { show: false }, animations: { enabled: true } },
         plotOptions: { bar: { borderRadius: 4, horizontal: true, distributed: true } },
-        colors: ["#d4a843", "#5db8a8", "#c97b5e", "#7a8db5", "#b57aa8", "#8d9b6f"],
+        colors: ["#3B82F6", "#F59E0B", "#10B981", "#8B5CF6", "#EC4899", "#14B8A6"],
         dataLabels: { enabled: true, formatter: (val) => formatNumber(Number(val)), style: { colors: ["#fff"] } },
         xaxis: { categories: (data?.package_popularity || []).map(p => `${p.name} (${p.price_thb}฿)`), labels: { style: { colors: "#6B7280" } } },
         yaxis: { labels: { style: { colors: "#4B5563", fontWeight: 600 } } },

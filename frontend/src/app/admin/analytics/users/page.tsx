@@ -133,7 +133,7 @@ export default function UserAnalyticsDashboard() {
             toolbar: { show: false },
             animations: { enabled: true }
         },
-        colors: ["#F97316"], // Orange
+        colors: ["#3B82F6"], // Bright Blue
         plotOptions: {
             bar: { borderRadius: 4, columnWidth: '60%' }
         },
@@ -157,9 +157,10 @@ export default function UserAnalyticsDashboard() {
     const wealthOptions: ApexCharts.ApexOptions = {
         chart: { type: "donut", background: "transparent", animations: { enabled: true } },
         labels: (data?.wealth_distribution || []).map(c => c.tier),
-        colors: ["#9CA3AF", "#60A5FA", "#FBBF24", "#F59E0B"], // Gray, Blue, Yellow, Orange
+        colors: ["#9CA3AF", "#10B981", "#F59E0B", "#F43F5E"], // Gray, Emerald, Amber, Rose
         stroke: { show: true, colors: ["#ffffff"], width: 2 },
         theme: { mode: "light" },
+        dataLabels: { enabled: false },
         plotOptions: {
             pie: {
                 donut: {
