@@ -131,23 +131,23 @@ export default function MangaAnalyticsDashboard() {
         chart: { type: "donut", background: "transparent", animations: { enabled: true } },
         labels: ["Ongoing (กำลังตีพิมพ์)", "Completed (จบแล้ว)", "Hiatus (ดอง)", "Dropped (เท)"],
         colors: ["#10B981", "#3B82F6", "#F59E0B", "#EF4444"], // Emerald, Blue, Amber, Red
-        stroke: { show: true, colors: ["#131826"], width: 2 },
-        theme: { mode: "dark" },
+        stroke: { show: true, colors: ["#ffffff"], width: 2 },
+        theme: { mode: "light" },
         plotOptions: {
             pie: {
                 donut: {
                     size: '70%',
                     labels: {
                         show: true,
-                        name: { show: true, color: "#9CA3AF" },
-                        value: { show: true, color: "#FFF", fontSize: "24px", fontWeight: 700, formatter: (val) => formatNumber(Number(val)) },
-                        total: { show: true, showAlways: true, label: "Total Series", color: "#9CA3AF", formatter: (w) => formatNumber(w.globals.seriesTotals.reduce((a: number, b: number) => a + b, 0)) }
+                        name: { show: true, color: "#6B7280" },
+                        value: { show: true, color: "#111827", fontSize: "24px", fontWeight: 700, formatter: (val) => formatNumber(Number(val)) },
+                        total: { show: true, showAlways: true, label: "Total Series", color: "#6B7280", formatter: (w) => formatNumber(w.globals.seriesTotals.reduce((a: number, b: number) => a + b, 0)) }
                     }
                 }
             }
         },
-        legend: { position: "bottom", labels: { colors: "#9CA3AF" } },
-        tooltip: { theme: "dark", y: { formatter: (val) => formatNumber(val) + " เรื่อง" } },
+        legend: { position: "bottom", labels: { colors: "#6B7280" } },
+        tooltip: { theme: "light", y: { formatter: (val) => formatNumber(val) + " เรื่อง" } },
     };
 
     // ── Chart 2: Revenue by Category (Bar) ──────────────────────────────────
@@ -160,7 +160,7 @@ export default function MangaAnalyticsDashboard() {
 
     const categoryOptions: ApexCharts.ApexOptions = {
         chart: { type: "bar", background: "transparent", toolbar: { show: false } },
-        colors: ["#FBBF24"],
+        colors: ["#F59E0B"],
         plotOptions: {
             bar: {
                 borderRadius: 4,
@@ -172,22 +172,22 @@ export default function MangaAnalyticsDashboard() {
         dataLabels: {
             enabled: true,
             textAnchor: 'start',
-            style: { colors: ['#fff'] },
+            style: { colors: ['#4B5563'] },
             formatter: (val) => formatNumber(Number(val)),
             offsetX: 10
         },
-        theme: { mode: "dark" },
+        theme: { mode: "light" },
         xaxis: {
             categories: sortedCategories.map(c => c.category.toUpperCase()),
-            labels: { style: { colors: "#a0a0ad" } },
+            labels: { style: { colors: "#6B7280" } },
             axisBorder: { show: false },
             axisTicks: { show: false },
         },
         yaxis: {
-            labels: { style: { colors: "#E5E7EB", fontWeight: 600 } }
+            labels: { style: { colors: "#4B5563", fontWeight: 600 } }
         },
-        grid: { borderColor: "rgba(255,255,255,0.04)", strokeDashArray: 4 },
-        tooltip: { theme: "dark" },
+        grid: { borderColor: "rgba(0,0,0,0.05)", strokeDashArray: 4 },
+        tooltip: { theme: "light" },
     };
 
     return (
@@ -198,21 +198,21 @@ export default function MangaAnalyticsDashboard() {
                 <div className="flex items-center gap-3">
                     <Link
                         href="/admin"
-                        className="flex h-10 w-10 items-center justify-center rounded-xl bg-ink-800/40 text-ink-400 transition hover:bg-ink-900 hover:text-white"
+                        className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-gray-200 text-gray-500 shadow-sm transition hover:bg-gray-50 hover:text-gray-900"
                     >
                         <ArrowLeft className="h-5 w-5" />
                     </Link>
                     <div>
-                        <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-ink-100 sm:text-3xl">
-                            <LibraryBig className="h-6 w-6 text-ink-400" />
+                        <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-gray-900 sm:text-3xl">
+                            <LibraryBig className="h-6 w-6 text-gray-400" />
                             Manga Analytics Dashboard
                         </h1>
-                        <p className="text-sm text-ink-400">สถิติเชิงลึกสำหรับการบริหารคลังคอนเทนต์ (Portfolio Management)</p>
+                        <p className="text-sm text-gray-500">สถิติเชิงลึกสำหรับการบริหารคลังคอนเทนต์ (Portfolio Management)</p>
                     </div>
                 </div>
 
                 {/* Time range selector */}
-                <div className="inline-flex rounded-sm bg-ink-800/40 p-1">
+                <div className="inline-flex rounded-lg bg-gray-100 p-1">
                     {[
                         { label: "1 วัน", value: 1 },
                         { label: "7 วัน", value: 7 },
@@ -222,9 +222,9 @@ export default function MangaAnalyticsDashboard() {
                         <button
                             key={range.value}
                             onClick={() => setTimeRange(range.value)}
-                            className={`rounded-md px-4 py-1.5 text-sm font-medium transition ${timeRange === range.value
-                                ? "bg-gold text-ink-950"
-                                : "text-ink-400 hover:text-white"
+                            className={`rounded-md px-4 py-1.5 text-sm font-medium transition-all ${timeRange === range.value
+                                ? "bg-white text-gray-900 shadow-sm"
+                                : "text-gray-500 hover:text-gray-900"
                                 }`}
                         >
                             {range.label}
@@ -247,44 +247,44 @@ export default function MangaAnalyticsDashboard() {
                                 value: data?.summary?.total_mangas || 0,
                                 prev: data?.previous_summary?.total_mangas || 0,
                                 icon: LibraryBig,
-                                color: "text-ink-300", bgColor: "bg-ink-900",
+                                color: "text-gray-600", bgColor: "bg-gray-50",
                             },
                             {
                                 label: `เปิดตัวใหม่ (${timeRange} วัน)`,
                                 value: data?.summary?.new_mangas || 0,
                                 prev: data?.previous_summary?.new_mangas || 0,
                                 icon: BookOpen,
-                                color: "text-ink-300", bgColor: "bg-ink-900",
+                                color: "text-gray-600", bgColor: "bg-gray-50",
                             },
                             {
                                 label: `ซีรีส์ที่กำลังตีพิมพ์ (Ongoing)`,
                                 value: data?.summary?.ongoing_mangas || 0,
                                 prev: data?.previous_summary?.ongoing_mangas || 0,
                                 icon: ActivitySquare,
-                                color: "text-ink-300", bgColor: "bg-ink-900",
+                                color: "text-gray-600", bgColor: "bg-gray-50",
                             },
                             {
                                 label: `อัตราการอ่านต่อ (Read-Through)`,
                                 value: `${(data?.summary?.read_through_rate || 0).toFixed(1)}%`,
                                 prev: null, // Read-through rate doesn't easily compare to exactly prev period simply
                                 icon: Eye,
-                                color: "text-ink-300", bgColor: "bg-ink-900",
+                                color: "text-gray-600", bgColor: "bg-gray-50",
                             },
                         ].map((card, i) => (
                             <div
                                 key={i}
-                                className="relative overflow-hidden rounded-md bg-ink-800/70 p-6 shadow-[0_1px_0_rgba(255,255,255,0.04)_inset] transition-colors hover:bg-ink-800"
+                                className="relative overflow-hidden rounded-xl bg-white border border-gray-200 p-6 shadow-sm transition-all hover:shadow-md hover:border-gray-300"
                             >
                                 
 
                                 <div className="flex items-start justify-between">
                                     <div className="relative">
                                         <div className="mb-2 flex items-center gap-2">
-                                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-300">{card.label}</p>
+                                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-500">{card.label}</p>
                                         </div>
                                         <div className="flex items-baseline gap-3">
-                                            <div className="text-3xl font-bold text-ink-100">
-                                                {loading ? <div className="h-9 w-24 animate-pulse rounded bg-white/20 mt-1"></div> : card.value}
+                                            <div className="text-3xl font-bold text-gray-900">
+                                                {loading ? <div className="h-9 w-24 animate-pulse rounded bg-gray-200 mt-1"></div> : card.value}
                                             </div>
                                             {!loading && card.prev !== null && card.prev !== undefined && renderGrowthBadge(Number(card.value), Number(card.prev))}
                                         </div>
@@ -300,14 +300,14 @@ export default function MangaAnalyticsDashboard() {
                     {/* Middle Row: Portfolio Health & Genre Revenue */}
                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                         {/* Status Distribution Chart */}
-                        <div className="rounded-lg bg-ink-800/70 p-6 shadow-[0_1px_0_rgba(255,255,255,0.04)_inset]">
+                        <div className="rounded-xl bg-white border border-gray-200 p-6 shadow-sm">
                             <div className="mb-4 flex items-center justify-between">
                                 <div>
-                                    <h2 className="flex items-center gap-2 text-base font-semibold tracking-tight text-ink-100">
-                                        <PieChart className="h-5 w-5 text-ink-400" />
+                                    <h2 className="flex items-center gap-2 text-base font-semibold tracking-tight text-gray-900">
+                                        <PieChart className="h-5 w-5 text-gray-400" />
                                         Portfolio Health
                                     </h2>
-                                    <p className="text-xs text-ink-400 mt-1">สัดส่วนสถานะการตีพิมพ์ของมังงะในคลังทั้งหมด</p>
+                                    <p className="text-xs text-gray-500 mt-1">สัดส่วนสถานะการตีพิมพ์ของมังงะในคลังทั้งหมด</p>
                                 </div>
                             </div>
                             <div className="h-[300px] w-full">
@@ -322,14 +322,14 @@ export default function MangaAnalyticsDashboard() {
                         </div>
 
                         {/* Revenue by Category Chart */}
-                        <div className="lg:col-span-2 rounded-lg bg-ink-800/70 p-6 shadow-[0_1px_0_rgba(255,255,255,0.04)_inset]">
+                        <div className="lg:col-span-2 rounded-xl bg-white border border-gray-200 p-6 shadow-sm">
                             <div className="mb-4 flex items-center justify-between">
                                 <div>
-                                    <h2 className="flex items-center gap-2 text-base font-semibold tracking-tight text-ink-100">
-                                        <BarChart3 className="h-5 w-5 text-gold" />
+                                    <h2 className="flex items-center gap-2 text-base font-semibold tracking-tight text-gray-900">
+                                        <BarChart3 className="h-5 w-5 text-gold-dark" />
                                         Revenue by Category (หมวดหมู่ที่ทำเงินสูงสุด)
                                     </h2>
-                                    <p className="text-xs text-ink-400 mt-1">รายได้รวมแยกตามหมวดหมู่ในช่วง {timeRange} วันที่ผ่านมา (ใช้สำหรับหาหมวดหมู่ที่คนยอมจ่ายเงินอ่าน)</p>
+                                    <p className="text-xs text-gray-500 mt-1">รายได้รวมแยกตามหมวดหมู่ในช่วง {timeRange} วันที่ผ่านมา (ใช้สำหรับหาหมวดหมู่ที่คนยอมจ่ายเงินอ่าน)</p>
                                 </div>
                             </div>
                             <div className="h-[300px] w-full">
@@ -352,57 +352,57 @@ export default function MangaAnalyticsDashboard() {
 
                     {/* Bottom Row: Top Franchises */}
                     <div className="grid grid-cols-1 gap-6">
-                        <div className="rounded-lg bg-ink-800/70 p-6 shadow-[0_1px_0_rgba(255,255,255,0.04)_inset] flex flex-col">
-                            <h2 className="mb-1 flex items-center gap-2 text-base font-semibold tracking-tight text-ink-100">
-                                <Crown className="h-5 w-5 text-ink-400" />
+                        <div className="rounded-xl bg-white border border-gray-200 p-6 shadow-sm flex flex-col">
+                            <h2 className="mb-1 flex items-center gap-2 text-base font-semibold tracking-tight text-gray-900">
+                                <Crown className="h-5 w-5 text-gray-400" />
                                 Franchise Leaderboard (มังงะเรือธง)
                             </h2>
-                            <p className="mb-6 text-xs text-ink-400">ซีรีส์ที่ทำรายได้รวม (รวมทุกตอน) สูงสุดในช่วง {timeRange} วันที่ผ่านมา (Hero Products)</p>
+                            <p className="mb-6 text-xs text-gray-500">ซีรีส์ที่ทำรายได้รวม (รวมทุกตอน) สูงสุดในช่วง {timeRange} วันที่ผ่านมา (Hero Products)</p>
 
-                            <div className="overflow-x-auto">
+                            <div className="overflow-x-auto rounded-lg border border-gray-100">
                                 <table className="w-full text-left text-sm">
-                                    <thead className="bg-ink-900/40 text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-400">
+                                    <thead className="bg-gray-50 border-b border-gray-100 text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-500">
                                         <tr>
-                                            <th className="rounded-l-lg px-4 py-3 font-semibold">อันดับ</th>
+                                            <th className="px-4 py-3 font-semibold">อันดับ</th>
                                             <th className="px-4 py-3 font-semibold">ชื่อเรื่อง (Franchise)</th>
                                             <th className="px-4 py-3 font-semibold text-right">ยอดเข้าชม (Views)</th>
                                             <th className="px-4 py-3 font-semibold text-right">ยอดอ่านจริง (Reads)</th>
-                                            <th className="rounded-r-lg px-4 py-3 font-semibold text-right text-gold">รายได้รวม (Total Revenue)</th>
+                                            <th className="px-4 py-3 font-semibold text-right text-gold-dark">รายได้รวม (Total Revenue)</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-ink-800">
+                                    <tbody className="divide-y divide-gray-100">
                                         {loading ? (
                                             <tr>
-                                                <td colSpan={5} className="py-8 text-center text-ink-500">
+                                                <td colSpan={5} className="py-8 text-center text-gray-400">
                                                     <Loader2 className="mx-auto h-6 w-6 animate-spin" />
                                                 </td>
                                             </tr>
                                         ) : data?.top_franchises.length === 0 ? (
                                             <tr>
-                                                <td colSpan={5} className="py-8 text-center text-ink-500">ไม่พบข้อมูลมังงะที่ทำรายได้ในช่วงเวลานี้</td>
+                                                <td colSpan={5} className="py-8 text-center text-gray-400">ไม่พบข้อมูลมังงะที่ทำรายได้ในช่วงเวลานี้</td>
                                             </tr>
                                         ) : (
                                             franchisePageItems.map((franchise, index) => {
                                                 const rank = (tablePage - 1) * ITEMS_PER_PAGE + index;
                                                 return (
-                                                    <tr key={franchise.id} className="transition hover:bg-ink-900/40">
+                                                    <tr key={franchise.id} className="transition-colors hover:bg-gray-50/80">
                                                         <td className="px-4 py-3">
-                                                            <div className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold ${rank === 0 ? 'bg-gold/15 text-gold' : 'bg-ink-900 text-ink-400'}`}>
+                                                            <div className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold ${rank === 0 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
                                                                 #{rank + 1}
                                                             </div>
                                                         </td>
                                                         <td className="px-4 py-3">
-                                                            <Link href={`/manga/${franchise.slug}`} target="_blank" className="font-medium text-white hover:text-gold transition-colors line-clamp-1">
+                                                            <Link href={`/manga/${franchise.slug}`} target="_blank" className="font-medium text-gray-900 hover:text-gold-dark transition-colors line-clamp-1">
                                                                 {franchise.title}
                                                             </Link>
                                                         </td>
-                                                        <td className="px-4 py-3 text-right text-ink-300">
+                                                        <td className="px-4 py-3 text-right text-gray-500">
                                                             {formatNumber(franchise.views)}
                                                         </td>
-                                                        <td className="px-4 py-3 text-right text-ink-300">
+                                                        <td className="px-4 py-3 text-right text-gray-500">
                                                             {formatNumber(franchise.reads)}
                                                         </td>
-                                                        <td className="px-4 py-3 text-right font-bold text-gold flex items-center justify-end gap-1.5">
+                                                        <td className="px-4 py-3 text-right font-bold text-gold-dark flex items-center justify-end gap-1.5">
                                                             {formatNumber(franchise.revenue)}
                                                         </td>
                                                     </tr>
@@ -412,7 +412,9 @@ export default function MangaAnalyticsDashboard() {
                                     </tbody>
                                 </table>
                             </div>
-                            <TablePagination currentPage={tablePage} totalPages={franchiseTotalPages} onPageChange={setTablePage} />
+                            <div className="mt-4">
+                                <TablePagination currentPage={tablePage} totalPages={franchiseTotalPages} onPageChange={setTablePage} />
+                            </div>
                         </div>
                     </div>
                 </>

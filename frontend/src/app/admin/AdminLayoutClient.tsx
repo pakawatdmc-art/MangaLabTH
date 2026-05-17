@@ -141,7 +141,7 @@ export default function AdminLayoutClient({ children, isPrimaryAdmin, adminToken
                                 <Sparkles className="h-3.5 w-3.5" />
                                 โหมดผู้ดูแลระบบ
                             </p>
-                            <p className="mt-1.5 text-xs leading-relaxed text-ink-400">
+                            <p className="mt-1.5 text-xs leading-relaxed text-ink-300">
                                 จัดการมังงะ ตอน รูปภาพ และผู้ใช้งานได้ในหน้าเดียว
                             </p>
                         </div>
@@ -152,7 +152,7 @@ export default function AdminLayoutClient({ children, isPrimaryAdmin, adminToken
                         {SIDEBAR_SECTIONS.map((section, sectionIdx) => (
                             <div key={section.title ?? `section-${sectionIdx}`} className="space-y-0.5">
                                 {section.title && (
-                                    <p className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-ink-500">
+                                    <p className="px-3 pt-2 pb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-400">
                                         {section.title}
                                     </p>
                                 )}
@@ -166,12 +166,12 @@ export default function AdminLayoutClient({ children, isPrimaryAdmin, adminToken
                                             className={cn(
                                                 "group relative flex items-center gap-2.5 rounded-sm px-3 py-2 text-sm transition-colors duration-200",
                                                 isActive
-                                                    ? "bg-ink-800 text-ink-100"
-                                                    : "text-ink-400 hover:bg-ink-800/60 hover:text-ink-100"
+                                                    ? "bg-ink-800/80 text-ink-100 border border-ink-700/50"
+                                                    : "text-ink-300 hover:bg-ink-800/60 hover:text-ink-100"
                                             )}
                                         >
                                             {isActive && (
-                                                <span className="absolute left-0 top-1/2 h-5 w-[2px] -translate-y-1/2 rounded-full bg-gold" />
+                                                <span className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-full bg-gold" />
                                             )}
                                             <Icon className={cn("h-4 w-4 transition-colors", isActive ? "text-gold" : "text-ink-400 group-hover:text-ink-200")} />
                                             <span className="flex-1">{label}</span>
@@ -203,20 +203,20 @@ export default function AdminLayoutClient({ children, isPrimaryAdmin, adminToken
                     </div>
                 </aside>
 
-                {/* Main */}
-                <div className="flex min-w-0 flex-1 flex-col">
-                    <header className="sticky top-0 z-30 bg-ink-900/85 backdrop-blur-xl">
+                {/* Main Content Area */}
+                <div className="flex min-w-0 flex-1 flex-col bg-gray-50">
+                    <header className="sticky top-0 z-30 border-b border-gray-200 bg-white/80 backdrop-blur-xl">
                         <div className="flex h-16 items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
                             <div className="flex min-w-0 items-center gap-3">
                                 <button
                                     onClick={() => setSidebarOpen(true)}
-                                    className="rounded-sm bg-ink-800/60 p-1.5 text-ink-300 transition-colors hover:bg-ink-800 hover:text-ink-100 lg:hidden"
+                                    className="rounded-md p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 lg:hidden"
                                 >
                                     <Menu className="h-5 w-5" />
                                 </button>
                                 <div className="min-w-0">
-                                    <p className="truncate text-sm font-semibold text-ink-100">{activeSection}</p>
-                                    <p className="truncate text-[11px] uppercase tracking-[0.18em] text-ink-500">Admin workspace · MangaLabTH</p>
+                                    <p className="truncate text-base font-semibold text-gray-900">{activeSection}</p>
+                                    <p className="truncate text-[11px] uppercase tracking-[0.18em] text-gray-500">Admin workspace · MangaLabTH</p>
                                 </div>
                             </div>
                         </div>

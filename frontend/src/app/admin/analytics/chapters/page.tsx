@@ -146,17 +146,17 @@ export default function ChapterAnalyticsDashboard() {
             type: "gradient",
             gradient: {
                 shadeIntensity: 1,
-                opacityFrom: 0.4,
+                opacityFrom: 0.3,
                 opacityTo: 0.05,
                 stops: [0, 90, 100]
             }
         },
         dataLabels: { enabled: false },
         stroke: { curve: "smooth", width: 2 },
-        theme: { mode: "dark" },
+        theme: { mode: "light" },
         xaxis: {
             type: "datetime",
-            labels: { style: { colors: "#a0a0ad" }, datetimeFormatter: { day: 'dd MMM' } },
+            labels: { style: { colors: "#6B7280" }, datetimeFormatter: { day: 'dd MMM' } },
             axisBorder: { show: false },
             axisTicks: { show: false },
         },
@@ -171,8 +171,8 @@ export default function ChapterAnalyticsDashboard() {
                 title: { text: "Unlocks", style: { color: "#10B981" } }
             }
         ],
-        grid: { borderColor: "rgba(255,255,255,0.04)", strokeDashArray: 4 },
-        tooltip: { theme: "dark", x: { format: "dd MMM yyyy" } },
+        grid: { borderColor: "rgba(0,0,0,0.05)", strokeDashArray: 4 },
+        tooltip: { theme: "light", x: { format: "dd MMM yyyy" } },
     };
 
     // ── Chart 2: Content Mix (Donut) ──────────────────────────────────
@@ -185,23 +185,23 @@ export default function ChapterAnalyticsDashboard() {
         chart: { type: "donut", background: "transparent", animations: { enabled: true } },
         labels: ["ตอนฟรี (Free)", "ตอนเสียเงิน (Paid)"],
         colors: ["#3B82F6", "#FBBF24"], // Blue, Yellow
-        stroke: { show: true, colors: ["#131826"], width: 2 },
-        theme: { mode: "dark" },
+        stroke: { show: true, colors: ["#ffffff"], width: 2 },
+        theme: { mode: "light" },
         plotOptions: {
             pie: {
                 donut: {
                     size: '70%',
                     labels: {
                         show: true,
-                        name: { show: true, color: "#9CA3AF" },
-                        value: { show: true, color: "#FFF", fontSize: "24px", fontWeight: 700, formatter: (val) => formatNumber(Number(val)) },
-                        total: { show: true, showAlways: true, label: "Total Chapters", color: "#9CA3AF", formatter: (w) => formatNumber(w.globals.seriesTotals.reduce((a: number, b: number) => a + b, 0)) }
+                        name: { show: true, color: "#6B7280" },
+                        value: { show: true, color: "#111827", fontSize: "24px", fontWeight: 700, formatter: (val) => formatNumber(Number(val)) },
+                        total: { show: true, showAlways: true, label: "Total Chapters", color: "#6B7280", formatter: (w) => formatNumber(w.globals.seriesTotals.reduce((a: number, b: number) => a + b, 0)) }
                     }
                 }
             }
         },
-        legend: { position: "bottom", labels: { colors: "#9CA3AF" } },
-        tooltip: { theme: "dark", y: { formatter: (val) => formatNumber(val) + " ตอน" } },
+        legend: { position: "bottom", labels: { colors: "#6B7280" } },
+        tooltip: { theme: "light", y: { formatter: (val) => formatNumber(val) + " ตอน" } },
     };
 
     return (
@@ -212,21 +212,21 @@ export default function ChapterAnalyticsDashboard() {
                 <div className="flex items-center gap-3">
                     <Link
                         href="/admin"
-                        className="flex h-10 w-10 items-center justify-center rounded-xl bg-ink-800/40 text-ink-400 transition hover:bg-ink-900 hover:text-white"
+                        className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-gray-200 text-gray-500 shadow-sm transition hover:bg-gray-50 hover:text-gray-900"
                     >
                         <ArrowLeft className="h-5 w-5" />
                     </Link>
                     <div>
-                        <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-ink-100 sm:text-3xl">
-                            <Layers className="h-6 w-6 text-ink-400" />
+                        <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-gray-900 sm:text-3xl">
+                            <Layers className="h-6 w-6 text-gray-400" />
                             Chapter Analytics Dashboard
                         </h1>
-                        <p className="text-sm text-ink-400">สถิติเชิงลึกสำหรับวิเคราะห์ประสิทธิภาพการทำเงินของคอนเทนต์</p>
+                        <p className="text-sm text-gray-500">สถิติเชิงลึกสำหรับวิเคราะห์ประสิทธิภาพการทำเงินของคอนเทนต์</p>
                     </div>
                 </div>
 
                 {/* Time range selector */}
-                <div className="inline-flex rounded-sm bg-ink-800/40 p-1">
+                <div className="inline-flex rounded-lg bg-gray-100 p-1">
                     {[
                         { label: "1 วัน", value: 1 },
                         { label: "7 วัน", value: 7 },
@@ -236,9 +236,9 @@ export default function ChapterAnalyticsDashboard() {
                         <button
                             key={range.value}
                             onClick={() => setTimeRange(range.value)}
-                            className={`rounded-md px-4 py-1.5 text-sm font-medium transition ${timeRange === range.value
-                                ? "bg-gold text-ink-950"
-                                : "text-ink-400 hover:text-white"
+                            className={`rounded-md px-4 py-1.5 text-sm font-medium transition-all ${timeRange === range.value
+                                ? "bg-white text-gray-900 shadow-sm"
+                                : "text-gray-500 hover:text-gray-900"
                                 }`}
                         >
                             {range.label}
@@ -261,44 +261,44 @@ export default function ChapterAnalyticsDashboard() {
                                 value: data?.summary?.total_chapters || 0,
                                 prev: data?.previous_summary?.total_chapters || 0,
                                 icon: Layers,
-                                color: "text-ink-300", bgColor: "bg-ink-900",
+                                color: "text-gray-600", bgColor: "bg-gray-50",
                             },
                             {
                                 label: `ตอนที่อัปเดตใหม่ (${timeRange} วัน)`,
                                 value: data?.summary?.new_chapters || 0,
                                 prev: data?.previous_summary?.new_chapters || 0,
                                 icon: BookOpen,
-                                color: "text-ink-300", bgColor: "bg-ink-900",
+                                color: "text-gray-600", bgColor: "bg-gray-50",
                             },
                             {
                                 label: `จำนวนครั้งที่ปลดล็อก (Unlocks)`,
                                 value: data?.summary?.total_unlocks || 0,
                                 prev: data?.previous_summary?.total_unlocks || 0,
                                 icon: Key,
-                                color: "text-ink-300", bgColor: "bg-ink-900",
+                                color: "text-gray-600", bgColor: "bg-gray-50",
                             },
                             {
                                 label: `เหรียญที่ถูกใช้ (Coins Burned)`,
                                 value: data?.summary?.coins_burned || 0,
                                 prev: data?.previous_summary?.coins_burned || 0,
                                 icon: Flame,
-                                color: "text-ink-300", bgColor: "bg-ink-900",
+                                color: "text-gray-600", bgColor: "bg-gray-50",
                             },
                         ].map((card, i) => (
                             <div
                                 key={i}
-                                className="relative overflow-hidden rounded-md bg-ink-800/70 p-6 shadow-[0_1px_0_rgba(255,255,255,0.04)_inset] transition-colors hover:bg-ink-800"
+                                className="relative overflow-hidden rounded-xl bg-white border border-gray-200 p-6 shadow-sm transition-all hover:shadow-md hover:border-gray-300"
                             >
                                 
 
                                 <div className="flex items-start justify-between">
                                     <div className="relative">
                                         <div className="mb-2 flex items-center gap-2">
-                                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-300">{card.label}</p>
+                                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-500">{card.label}</p>
                                         </div>
                                         <div className="flex items-baseline gap-3">
-                                            <div className="text-3xl font-bold text-ink-100">
-                                                {loading ? <div className="h-9 w-24 animate-pulse rounded bg-white/20 mt-1"></div> : formatNumber(card.value)}
+                                            <div className="text-3xl font-bold text-gray-900">
+                                                {loading ? <div className="h-9 w-24 animate-pulse rounded bg-gray-200 mt-1"></div> : formatNumber(card.value)}
                                             </div>
                                             {!loading && card.prev !== undefined && renderGrowthBadge(card.value, card.prev)}
                                         </div>
@@ -314,14 +314,14 @@ export default function ChapterAnalyticsDashboard() {
                     {/* Middle Row: Trend & Demographics */}
                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                         {/* Unlock Trend Chart */}
-                        <div className="lg:col-span-2 rounded-lg bg-ink-800/70 p-6 shadow-[0_1px_0_rgba(255,255,255,0.04)_inset]">
+                        <div className="lg:col-span-2 rounded-xl bg-white border border-gray-200 p-6 shadow-sm">
                             <div className="mb-4 flex items-center justify-between">
                                 <div>
-                                    <h2 className="flex items-center gap-2 text-base font-semibold tracking-tight text-ink-100">
-                                        <BarChart3 className="h-5 w-5 text-ink-400" />
+                                    <h2 className="flex items-center gap-2 text-base font-semibold tracking-tight text-gray-900">
+                                        <BarChart3 className="h-5 w-5 text-gray-400" />
                                         Unlock Velocity (เทรนด์การปลดล็อก)
                                     </h2>
-                                    <p className="text-xs text-ink-400 mt-1">จำนวนเหรียญที่ถูกใช้และจำนวนครั้งที่ปลดล็อกในช่วง {timeRange} วันที่ผ่านมา</p>
+                                    <p className="text-xs text-gray-500 mt-1">จำนวนเหรียญที่ถูกใช้และจำนวนครั้งที่ปลดล็อกในช่วง {timeRange} วันที่ผ่านมา</p>
                                 </div>
                             </div>
                             <div className="h-[300px] w-full">
@@ -336,14 +336,14 @@ export default function ChapterAnalyticsDashboard() {
                         </div>
 
                         {/* Content Mix Chart */}
-                        <div className="rounded-lg bg-ink-800/70 p-6 shadow-[0_1px_0_rgba(255,255,255,0.04)_inset]">
+                        <div className="rounded-xl bg-white border border-gray-200 p-6 shadow-sm">
                             <div className="mb-4 flex items-center justify-between">
                                 <div>
-                                    <h2 className="flex items-center gap-2 text-base font-semibold tracking-tight text-ink-100">
-                                        <PieChart className="h-5 w-5 text-ink-400" />
+                                    <h2 className="flex items-center gap-2 text-base font-semibold tracking-tight text-gray-900">
+                                        <PieChart className="h-5 w-5 text-gray-400" />
                                         Content Mix (สัดส่วนตอนฟรี/จ่ายเงิน)
                                     </h2>
-                                    <p className="text-xs text-ink-400 mt-1">สัดส่วนของตอนที่อ่านฟรีและตอนที่ต้องใช้เหรียญปลดล็อก (ทั้งหมด)</p>
+                                    <p className="text-xs text-gray-500 mt-1">สัดส่วนของตอนที่อ่านฟรีและตอนที่ต้องใช้เหรียญปลดล็อก (ทั้งหมด)</p>
                                 </div>
                             </div>
                             <div className="h-[300px] w-full">
@@ -360,57 +360,57 @@ export default function ChapterAnalyticsDashboard() {
 
                     {/* Bottom Row: Top Earning Chapters */}
                     <div className="grid grid-cols-1 gap-6">
-                        <div className="rounded-lg bg-ink-800/70 p-6 shadow-[0_1px_0_rgba(255,255,255,0.04)_inset] flex flex-col">
-                            <h2 className="mb-1 flex items-center gap-2 text-base font-semibold tracking-tight text-ink-100">
-                                <Coins className="h-5 w-5 text-gold" />
+                        <div className="rounded-xl bg-white border border-gray-200 p-6 shadow-sm flex flex-col">
+                            <h2 className="mb-1 flex items-center gap-2 text-base font-semibold tracking-tight text-gray-900">
+                                <Coins className="h-5 w-5 text-gold-dark" />
                                 Top Earning Chapters (สินค้าขายดี)
                             </h2>
-                            <p className="mb-6 text-xs text-ink-400">อันดับตอนที่ทำรายได้สูงสุด (เผาเหรียญผู้ใช้ได้เยอะที่สุด) ในช่วง {timeRange} วันที่ผ่านมา</p>
+                            <p className="mb-6 text-xs text-gray-500">อันดับตอนที่ทำรายได้สูงสุด (เผาเหรียญผู้ใช้ได้เยอะที่สุด) ในช่วง {timeRange} วันที่ผ่านมา</p>
 
-                            <div className="overflow-x-auto">
+                            <div className="overflow-x-auto rounded-lg border border-gray-100">
                                 <table className="w-full text-left text-sm">
-                                    <thead className="bg-ink-900/40 text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-400">
+                                    <thead className="bg-gray-50 border-b border-gray-100 text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-500">
                                         <tr>
-                                            <th className="rounded-l-lg px-4 py-3 font-semibold">อันดับ</th>
+                                            <th className="px-4 py-3 font-semibold">อันดับ</th>
                                             <th className="px-4 py-3 font-semibold">มังงะ</th>
                                             <th className="px-4 py-3 font-semibold text-center">ตอนที่ (Chapter)</th>
                                             <th className="px-4 py-3 font-semibold text-right">จำนวนครั้งที่ปลดล็อก</th>
-                                            <th className="rounded-r-lg px-4 py-3 font-semibold text-right text-gold">เหรียญที่ทำได้ (Revenue)</th>
+                                            <th className="px-4 py-3 font-semibold text-right text-gold-dark">เหรียญที่ทำได้ (Revenue)</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-ink-800">
+                                    <tbody className="divide-y divide-gray-100">
                                         {loading ? (
                                             <tr>
-                                                <td colSpan={5} className="py-8 text-center text-ink-500">
+                                                <td colSpan={5} className="py-8 text-center text-gray-400">
                                                     <Loader2 className="mx-auto h-6 w-6 animate-spin" />
                                                 </td>
                                             </tr>
                                         ) : data?.top_chapters.length === 0 ? (
                                             <tr>
-                                                <td colSpan={5} className="py-8 text-center text-ink-500">ไม่พบข้อมูลการปลดล็อกตอนในช่วงเวลานี้</td>
+                                                <td colSpan={5} className="py-8 text-center text-gray-400">ไม่พบข้อมูลการปลดล็อกตอนในช่วงเวลานี้</td>
                                             </tr>
                                         ) : (
                                             chaptersPageItems.map((chapter, index) => {
                                                 const rank = (tablePage - 1) * ITEMS_PER_PAGE + index;
                                                 return (
-                                                    <tr key={index} className="transition hover:bg-ink-900/40">
+                                                    <tr key={index} className="transition-colors hover:bg-gray-50/80">
                                                         <td className="px-4 py-3">
-                                                            <div className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold ${rank === 0 ? 'bg-gold/15 text-gold' : 'bg-ink-900 text-ink-400'}`}>
+                                                            <div className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold ${rank === 0 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
                                                                 #{rank + 1}
                                                             </div>
                                                         </td>
                                                         <td className="px-4 py-3">
-                                                            <Link href={`/manga/${chapter.manga_slug}`} target="_blank" className="font-medium text-white hover:text-gold transition-colors line-clamp-1">{chapter.manga_title}</Link>
+                                                            <Link href={`/manga/${chapter.manga_slug}`} target="_blank" className="font-medium text-gray-900 hover:text-gold-dark transition-colors line-clamp-1">{chapter.manga_title}</Link>
                                                         </td>
                                                         <td className="px-4 py-3 text-center">
-                                                            <span className="inline-flex items-center rounded-md bg-white/5 px-2 py-1 text-xs font-medium text-ink-300">
+                                                            <span className="inline-flex items-center rounded-md bg-gray-100 border border-gray-200 px-2 py-1 text-xs font-medium text-gray-600">
                                                                 Ch. {chapter.chapter_number}
                                                             </span>
                                                         </td>
-                                                        <td className="px-4 py-3 text-right text-ink-300">
+                                                        <td className="px-4 py-3 text-right text-gray-500">
                                                             {formatNumber(chapter.unlocks)} ครั้ง
                                                         </td>
-                                                        <td className="px-4 py-3 text-right font-bold text-gold">
+                                                        <td className="px-4 py-3 text-right font-bold text-gold-dark">
                                                             {formatNumber(chapter.coins_earned)} เหรียญ
                                                         </td>
                                                     </tr>
@@ -420,7 +420,9 @@ export default function ChapterAnalyticsDashboard() {
                                     </tbody>
                                 </table>
                             </div>
-                            <TablePagination currentPage={tablePage} totalPages={chaptersTotalPages} onPageChange={setTablePage} />
+                            <div className="mt-4">
+                                <TablePagination currentPage={tablePage} totalPages={chaptersTotalPages} onPageChange={setTablePage} />
+                            </div>
                         </div>
                     </div>
                 </>

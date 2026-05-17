@@ -169,22 +169,21 @@ export default function AdminMangaPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-gold" />
+        <Loader2 className="h-8 w-8 animate-spin text-gold-dark" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-5">
-      <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(135deg,#1a1f31_0%,#131929_50%,#111826_100%)] p-5 sm:p-6">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(212,168,67,0.18),transparent_42%),radial-gradient(circle_at_bottom_left,rgba(59,130,246,0.14),transparent_45%)]" />
+    <div className="space-y-5 pb-10">
+      <section className="relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 sm:p-6 shadow-sm">
         <div className="relative flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-white">
-              <BookOpen className="mr-2 inline-block h-6 w-6 text-gold" />
+            <h1 className="text-2xl font-bold text-gray-900">
+              <BookOpen className="mr-2 inline-block h-6 w-6 text-gold-dark" />
               จัดการมังงะ
             </h1>
-            <p className="mt-1 text-sm text-gray-300">
+            <p className="mt-1 text-sm text-gray-500">
               เพิ่ม ลบ และดูรายการมังงะทั้งหมดในระบบ — {mangas.length} เรื่อง
             </p>
           </div>
@@ -193,7 +192,7 @@ export default function AdminMangaPage() {
               setError("");
               setShowForm(!showForm);
             }}
-            className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black transition hover:bg-gold-light"
+            className="inline-flex items-center gap-2 rounded-lg bg-gold-dark px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-600"
           >
             <Plus className="h-4 w-4" />
             {showForm ? "ปิดฟอร์ม" : "เพิ่มมังงะ"}
@@ -202,54 +201,54 @@ export default function AdminMangaPage() {
       </section>
 
       {error && (
-        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
           {error}
         </div>
       )}
 
       {/* Create/Edit form */}
       {showForm && (
-        <div className="mb-6 rounded-xl bg-surface-100 p-5 ring-1 ring-white/10">
-          <h3 className="mb-4 text-sm font-semibold text-white">
+        <div className="mb-6 rounded-xl bg-white p-5 border border-gray-200 shadow-sm">
+          <h3 className="mb-4 text-sm font-semibold text-gray-900">
             {editingManga ? `แก้ไขมังงะ: ${editingManga.title}` : "เพิ่มมังงะใหม่"}
           </h3>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-xs text-gray-400">ชื่อเรื่อง *</label>
+              <label className="mb-1 block text-xs font-medium text-gray-700">ชื่อเรื่อง *</label>
               <input
                 type="text"
                 name="title"
                 required
                 defaultValue={editingManga?.title || ""}
-                className="h-10 w-full rounded-lg border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:outline-none"
+                className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-gold-dark focus:ring-1 focus:ring-gold-dark focus:outline-none"
                 placeholder="ชื่อมังงะ"
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-xs text-gray-400">ผู้แต่ง</label>
+              <label className="mb-1 block text-xs font-medium text-gray-700">ผู้แต่ง</label>
               <input
                 type="text"
                 name="author"
                 defaultValue={editingManga?.author || ""}
-                className="h-10 w-full rounded-lg border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:outline-none"
+                className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-gold-dark focus:ring-1 focus:ring-gold-dark focus:outline-none"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs text-gray-400">ผู้วาด</label>
+              <label className="mb-1 block text-xs font-medium text-gray-700">ผู้วาด</label>
               <input
                 type="text"
                 name="artist"
                 defaultValue={editingManga?.artist || ""}
-                className="h-10 w-full rounded-lg border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:outline-none"
+                className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-gold-dark focus:ring-1 focus:ring-gold-dark focus:outline-none"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs text-gray-400">หมวดหมู่</label>
+              <label className="mb-1 block text-xs font-medium text-gray-700">หมวดหมู่</label>
               <select
                 name="category"
                 defaultValue={editingManga?.category || "action"}
-                className="h-10 w-full rounded-lg border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:outline-none"
+                className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-gold-dark focus:ring-1 focus:ring-gold-dark focus:outline-none"
               >
                 {(Object.entries(CATEGORY_LABELS) as [MangaCategory, string][]).map(
                   ([v, l]) => (
@@ -259,11 +258,11 @@ export default function AdminMangaPage() {
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs text-gray-400">หมวดหมู่ย่อย</label>
+              <label className="mb-1 block text-xs font-medium text-gray-700">หมวดหมู่ย่อย</label>
               <select
                 name="sub_category"
                 defaultValue={editingManga?.sub_category || "action"}
-                className="h-10 w-full rounded-lg border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:outline-none"
+                className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-gold-dark focus:ring-1 focus:ring-gold-dark focus:outline-none"
               >
                 {(Object.entries(CATEGORY_LABELS) as [MangaCategory, string][]).map(
                   ([v, l]) => (
@@ -273,11 +272,11 @@ export default function AdminMangaPage() {
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs text-gray-400">สถานะ</label>
+              <label className="mb-1 block text-xs font-medium text-gray-700">สถานะ</label>
               <select
                 name="status"
                 defaultValue={editingManga?.status || "ongoing"}
-                className="h-10 w-full rounded-lg border border-white/10 bg-surface-200 px-3 text-sm text-white focus:border-gold/60 focus:outline-none"
+                className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-gold-dark focus:ring-1 focus:ring-gold-dark focus:outline-none"
               >
                 {(Object.entries(STATUS_LABELS) as [MangaStatus, string][]).map(
                   ([v, l]) => (
@@ -287,11 +286,11 @@ export default function AdminMangaPage() {
               </select>
             </div>
             <div className="sm:col-span-2">
-              <label className="mb-1 block text-xs text-gray-400">เรื่องย่อ</label>
+              <label className="mb-1 block text-xs font-medium text-gray-700">เรื่องย่อ</label>
               <textarea
                 name="description"
                 defaultValue={editingManga?.description || ""}
-                className="w-full rounded-lg border border-white/10 bg-surface-200 px-3 py-2 text-sm text-white focus:border-gold/60 focus:outline-none"
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-gold-dark focus:ring-1 focus:ring-gold-dark focus:outline-none"
               />
             </div>
             <div className="sm:col-span-2 flex items-center gap-2">
@@ -300,16 +299,16 @@ export default function AdminMangaPage() {
                 name="is_visible"
                 id="is_visible"
                 defaultChecked={editingManga ? editingManga.is_visible : true}
-                className="h-4 w-4 accent-gold"
+                className="h-4 w-4 rounded border-gray-300 text-gold-dark focus:ring-gold-dark"
               />
-              <label htmlFor="is_visible" className="text-sm text-gray-300">แสดงให้ผู้อ่านเห็น (เปิดการใช้งานสาธารณะ)</label>
+              <label htmlFor="is_visible" className="text-sm text-gray-600">แสดงให้ผู้อ่านเห็น (เปิดการใช้งานสาธารณะ)</label>
             </div>
             <div className="sm:col-span-2">
-              <label className="mb-1 block text-xs text-gray-400">รูปภาพปก (R2)</label>
+              <label className="mb-1 block text-xs font-medium text-gray-700">รูปภาพปก (R2)</label>
               <div className="flex gap-4 items-start">
                 <div className="flex-1">
                   {previewUrl ? (
-                    <div className="relative aspect-[2/3] w-32 rounded overflow-hidden border border-white/10 mb-2">
+                    <div className="relative aspect-[2/3] w-32 rounded overflow-hidden border border-gray-200 mb-2">
                       <Image
                         src={previewUrl}
                         alt="Preview"
@@ -327,7 +326,7 @@ export default function AdminMangaPage() {
                           setSelectedFile(null);
                           setPreviewUrl("");
                         }}
-                        className="absolute top-1 right-1 bg-black/50 p-1 rounded-full hover:bg-red-500/80 transition"
+                        className="absolute top-1 right-1 bg-white p-1 rounded-full text-red-500 shadow-sm hover:bg-red-50 transition"
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>
@@ -337,7 +336,7 @@ export default function AdminMangaPage() {
                     type="file"
                     accept="image/*"
                     onChange={handleFileSelect}
-                    className="w-full bg-white/5 border border-white/10 rounded px-3 py-2 text-sm focus:outline-none focus:border-gold file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-gold file:text-black hover:file:bg-gold/80"
+                    className="w-full bg-white border border-gray-200 rounded px-3 py-2 text-sm text-gray-600 focus:outline-none focus:border-gold-dark focus:ring-1 focus:ring-gold-dark file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
                   />
                   <p className="text-[10px] text-gray-500 mt-1">
                     รองรับ JPG, PNG, WebP (จะถูกอัปโหลดไปยัง Cloudflare R2 อัตโนมัติ)
@@ -350,14 +349,14 @@ export default function AdminMangaPage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black transition hover:bg-gold-light disabled:opacity-50"
+                className="rounded-lg bg-gold-dark px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-600 disabled:opacity-50"
               >
                 {saving ? "กำลังบันทึก..." : "บันทึก"}
               </button>
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="rounded-lg bg-surface-200 px-4 py-2 text-sm text-gray-300 transition hover:bg-surface-50"
+                className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 hover:text-gray-900"
               >
                 ยกเลิก
               </button>
@@ -367,10 +366,10 @@ export default function AdminMangaPage() {
       )}
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-xl bg-surface-100 ring-1 ring-white/5">
+      <div className="overflow-x-auto rounded-xl bg-white border border-gray-200 shadow-sm">
         <table className="w-full min-w-[600px] text-sm">
           <thead>
-            <tr className="border-b border-white/5 text-left text-xs text-gray-500">
+            <tr className="border-b border-gray-200 bg-gray-50 text-left text-xs text-gray-600 font-medium">
               <th className="w-16 px-4 py-3 text-center whitespace-nowrap">ลำดับที่</th>
               <th className="px-4 py-3">ปก</th>
               <th className="px-4 py-3">ชื่อเรื่อง</th>
@@ -380,19 +379,19 @@ export default function AdminMangaPage() {
               <th className="px-4 py-3 text-right">จัดการ</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-gray-100">
             {mangas.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-12 text-center text-gray-600">
+                <td colSpan={7} className="px-4 py-12 text-center text-gray-500">
                   ยังไม่มีมังงะ — กดปุ่ม &quot;เพิ่มมังงะ&quot; เพื่อเริ่มต้น
                 </td>
               </tr>
             ) : (
               [...mangas].reverse().map((m, index) => (
-                <tr key={m.id} className="border-b border-white/5 hover:bg-white/[0.02]">
+                <tr key={m.id} className="hover:bg-gray-50/80 transition-colors">
                   <td className="px-4 py-2 text-center font-medium text-gray-500">{index + 1}</td>
                   <td className="px-4 py-2">
-                    <div className="h-12 w-8 overflow-hidden rounded bg-surface-200">
+                    <div className="h-12 w-8 overflow-hidden rounded bg-gray-100 border border-gray-200">
                       {m.cover_url && (
                         <Image
                           src={m.cover_url}
@@ -405,19 +404,19 @@ export default function AdminMangaPage() {
                       )}
                     </div>
                   </td>
-                  <td className="px-4 py-2 font-medium text-white">{m.title}</td>
-                  <td className="px-4 py-2 text-gray-400">
+                  <td className="px-4 py-2 font-medium text-gray-900">{m.title}</td>
+                  <td className="px-4 py-2 text-gray-500">
                     <div className="flex flex-col">
                       <span>{CATEGORY_LABELS[m.category]}</span>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-gray-400">
                         {CATEGORY_LABELS[m.sub_category] || "-"}
                       </span>
                     </div>
                   </td>
-                  <td className="px-4 py-2 text-gray-400">
+                  <td className="px-4 py-2 text-gray-500">
                     {STATUS_LABELS[m.status]}
                   </td>
-                  <td className="px-4 py-2 text-gray-400">{m.chapter_count ?? 0}</td>
+                  <td className="px-4 py-2 text-gray-500">{m.chapter_count ?? 0}</td>
                   <td className="px-4 py-2 text-right">
                     <div className="flex justify-end gap-1">
                       <button
@@ -425,7 +424,7 @@ export default function AdminMangaPage() {
                         title={m.is_visible ? "ซ่อน" : "แสดง"}
                         className={cn(
                           "rounded p-1.5 transition",
-                          m.is_visible ? "text-gold hover:bg-gold/10" : "text-gray-500 hover:bg-white/5"
+                          m.is_visible ? "text-gold-dark hover:bg-amber-50" : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
                         )}
                       >
                         {m.is_visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
@@ -433,14 +432,14 @@ export default function AdminMangaPage() {
                       <button
                         onClick={() => handleEdit(m)}
                         title="แก้ไข"
-                        className="rounded p-1.5 text-gray-400 transition hover:bg-white/5 hover:text-white"
+                        className="rounded p-1.5 text-gray-400 transition hover:bg-gray-50 hover:text-gray-600"
                       >
                         <Edit2 className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(m)}
                         title="ลบ"
-                        className="rounded p-1.5 text-gray-500 transition hover:bg-red-500/10 hover:text-red-400"
+                        className="rounded p-1.5 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>

@@ -392,16 +392,25 @@ async def feelfreepay_webhook(request: Request, session: DBSession):
         raise HTTPException(status_code=502, detail="Status verification temporarily unavailable")
 
     # Check Status API returns "00" for success, "S" for Settle, "G" for Granted (TrueWallet)
-    SETTLED_STATUSES = {"S", "G"}
+    # For QR PromptPay: only "S" (Settled) means the bank transfer completed.
+    # For TrueWallet: "G" (Granted) means money was deducted from wallet → safe.
     verify_result_code = status_data.get("resultCode")
     verify_status = status_data.get("txn.status") or status_data.get("status")
+
+    # Detect payment method from the pending transaction we pre-created at checkout
+    is_truewallet = False
+    if already and already.note:
+        is_truewallet = "truewallet" in already.note.lower()
+    
+    SETTLED_STATUSES = {"S", "G"} if is_truewallet else {"S"}
 
     if verify_result_code != "00" or verify_status not in SETTLED_STATUSES:
         # Race condition: webhook says success but check_status hasn't caught up yet.
         # Respond 5xx so FFP retries shortly. Reconcile cron is the safety net.
         logger.warning(
-            "Webhook arrived before settlement visible for %s (result: %s, status: %s) — requesting FFP retry",
+            "Webhook arrived before settlement visible for %s (result: %s, status: %s, method: %s) — requesting FFP retry",
             reference_no, verify_result_code, verify_status,
+            "truewallet" if is_truewallet else "qr",
         )
         await _log_webhook(
             session, reference_no=reference_no, raw_payload=raw_body,
@@ -465,7 +474,14 @@ async def confirm_checkout_payment(
     """Confirm checkout result from frontend polling.
     
     If webhook is delayed or failed, frontend calls this to trigger a manual check_status.
-    Handles both QR and TrueWallet: accepts 'G' (Granted) for TrueWallet since it means paid.
+    
+    IMPORTANT — accepted FFP statuses differ by payment method:
+      • TrueWallet: accept both 'S' (Settled) and 'G' (Granted).
+        'G' means money was deducted from the customer's wallet.
+      • QR PromptPay: accept ONLY 'S' (Settled).
+        'G' for QR only means the payment request was *created*, NOT that the
+        customer has paid.  Accepting 'G' here was the root cause of coins
+        being credited instantly before actual payment.
     """
     if not reference_no:
         raise HTTPException(status_code=400, detail="Missing reference_no")
@@ -480,6 +496,11 @@ async def confirm_checkout_payment(
     # Already fulfilled? Return immediately without calling FFP
     if existing_tx and existing_tx.balance_after > 0:
         return {"status": "success", "new_balance": existing_tx.balance_after, "coins": existing_tx.amount}
+    
+    # Determine payment method from the pending transaction note
+    is_truewallet = False
+    if existing_tx and existing_tx.note:
+        is_truewallet = "truewallet" in existing_tx.note.lower()
         
     try:
         status_data = await check_payment_status(reference_no)
@@ -490,12 +511,20 @@ async def confirm_checkout_payment(
     verify_result_code = status_data.get("resultCode")
     verify_status = status_data.get("txn.status") or status_data.get("status")
 
-    # Accept both "S" (Settled) and "G" (Granted) for all payment methods.
-    # "G" means the customer has already paid — the money is confirmed by FFP
-    # but hasn't fully settled into the merchant account yet.
-    # Previously only QR accepted "S" (rejecting "G"), which caused coins
-    # not to be credited for larger amounts that take longer to settle.
-    accepted_statuses = {"S", "G"}
+    logger.info(
+        "Confirm poll for %s: resultCode=%s, txn.status=%s, method=%s",
+        reference_no, verify_result_code, verify_status,
+        "truewallet" if is_truewallet else "qr",
+    )
+
+    # Determine accepted statuses based on payment method:
+    # - TrueWallet: "G" (Granted) means customer's wallet was charged → safe to fulfill
+    # - QR PromptPay: "G" only means the QR was generated → NOT paid yet
+    #   Must wait for "S" (Settled) which means actual bank transfer completed
+    if is_truewallet:
+        accepted_statuses = {"S", "G"}
+    else:
+        accepted_statuses = {"S"}
     
     if verify_result_code != "00" or verify_status not in accepted_statuses:
         return {"status": "pending", "reason": "payment_not_settled"}
@@ -556,7 +585,11 @@ async def _reconcile_one(session: DBSession, tx: Transaction) -> dict[str, Any]:
     verify_result_code = status_data.get("resultCode")
     verify_status = status_data.get("txn.status") or status_data.get("status")
 
-    if verify_result_code != "00" or verify_status not in {"S", "G"}:
+    # Payment-method-aware status check (same logic as webhook/confirm)
+    is_truewallet = bool(tx.note and "truewallet" in tx.note.lower())
+    accepted_statuses = {"S", "G"} if is_truewallet else {"S"}
+
+    if verify_result_code != "00" or verify_status not in accepted_statuses:
         return {
             "reference_no": reference_no,
             "status": "still_pending",
