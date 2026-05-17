@@ -138,18 +138,18 @@ export default function UserAnalyticsDashboard() {
             bar: { borderRadius: 4, columnWidth: '60%' }
         },
         dataLabels: { enabled: false },
-        theme: { mode: "light" },
+        theme: { mode: "dark" },
         xaxis: {
             type: "datetime",
-            labels: { style: { colors: "#6B7280" }, datetimeFormatter: { day: 'dd MMM' } },
+            labels: { style: { colors: "#9ca3af" }, datetimeFormatter: { day: 'dd MMM' } },
             axisBorder: { show: false },
             axisTicks: { show: false },
         },
         yaxis: {
-            labels: { style: { colors: "#6B7280" }, formatter: (value) => formatNumber(Math.floor(value)) },
+            labels: { style: { colors: "#9ca3af" }, formatter: (value) => formatNumber(Math.floor(value)) },
         },
-        grid: { borderColor: "rgba(0,0,0,0.05)", strokeDashArray: 4 },
-        tooltip: { theme: "light", x: { format: "dd MMM yyyy" } },
+        grid: { borderColor: "rgba(255,255,255,0.05)", strokeDashArray: 4 },
+        tooltip: { theme: "dark", x: { format: "dd MMM yyyy" } },
     };
 
     // ── Chart 2: Wealth Distribution (Donut) ──────────────────────────────────
@@ -158,8 +158,8 @@ export default function UserAnalyticsDashboard() {
         chart: { type: "donut", background: "transparent", animations: { enabled: true } },
         labels: (data?.wealth_distribution || []).map(c => c.tier),
         colors: ["#9CA3AF", "#10B981", "#F59E0B", "#F43F5E"], // Gray, Emerald, Amber, Rose
-        stroke: { show: true, colors: ["#ffffff"], width: 2 },
-        theme: { mode: "light" },
+        stroke: { show: true, colors: ["#0a0a0a"], width: 2 }, // match ink-950/ink-900 roughly
+        theme: { mode: "dark" },
         dataLabels: { enabled: false },
         plotOptions: {
             pie: {
@@ -167,15 +167,15 @@ export default function UserAnalyticsDashboard() {
                     size: '70%',
                     labels: {
                         show: true,
-                        name: { show: true, color: "#6B7280" },
-                        value: { show: true, color: "#111827", fontSize: "24px", fontWeight: 700, formatter: (val) => formatNumber(Number(val)) },
-                        total: { show: true, showAlways: true, label: "Total Users", color: "#6B7280", formatter: (w) => formatNumber(w.globals.seriesTotals.reduce((a: number, b: number) => a + b, 0)) }
+                        name: { show: true, color: "#9ca3af" },
+                        value: { show: true, color: "#f8fafc", fontSize: "24px", fontWeight: 700, formatter: (val) => formatNumber(Number(val)) },
+                        total: { show: true, showAlways: true, label: "Total Users", color: "#9ca3af", formatter: (w) => formatNumber(w.globals.seriesTotals.reduce((a: number, b: number) => a + b, 0)) }
                     }
                 }
             }
         },
-        legend: { position: "bottom", labels: { colors: "#6B7280" } },
-        tooltip: { theme: "light", y: { formatter: (val) => formatNumber(val) + " คน" } },
+        legend: { position: "bottom", labels: { colors: "#9ca3af" } },
+        tooltip: { theme: "dark", y: { formatter: (val) => formatNumber(val) + " คน" } },
     };
 
     // Calculate Paid Ratio
@@ -191,21 +191,21 @@ export default function UserAnalyticsDashboard() {
                 <div className="flex items-center gap-3">
                     <Link
                         href="/admin"
-                        className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-gray-200 text-gray-500 shadow-sm transition hover:bg-gray-50 hover:text-gray-900"
+                        className="flex h-10 w-10 items-center justify-center rounded-xl bg-ink-800 border border-ink-700 text-ink-300 shadow-sm transition hover:bg-ink-700 hover:text-ink-50"
                     >
                         <ArrowLeft className="h-5 w-5" />
                     </Link>
                     <div>
-                        <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-gray-900 sm:text-3xl">
-                            <Users className="h-6 w-6 text-gray-400" />
+                        <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-ink-50 sm:text-3xl">
+                            <Users className="h-6 w-6 text-ink-400" />
                             User Analytics Dashboard
                         </h1>
-                        <p className="text-sm text-gray-500">สถิติเชิงลึกสำหรับวิเคราะห์การเติบโตของฐานผู้ใช้งานและสายเปย์</p>
+                        <p className="text-sm text-ink-400">สถิติเชิงลึกสำหรับวิเคราะห์การเติบโตของฐานผู้ใช้งานและสายเปย์</p>
                     </div>
                 </div>
 
                 {/* Time range selector */}
-                <div className="inline-flex rounded-lg bg-gray-100 p-1">
+                <div className="inline-flex rounded-lg bg-ink-800 p-1 border border-ink-700/50">
                     {[
                         { label: "1 วัน", value: 1 },
                         { label: "7 วัน", value: 7 },
@@ -216,8 +216,8 @@ export default function UserAnalyticsDashboard() {
                             key={range.value}
                             onClick={() => setTimeRange(range.value)}
                             className={`rounded-md px-4 py-1.5 text-sm font-medium transition-all ${timeRange === range.value
-                                ? "bg-white text-gray-900 shadow-sm"
-                                : "text-gray-500 hover:text-gray-900"
+                                ? "bg-ink-800 text-ink-50 shadow-sm"
+                                : "text-ink-400 hover:text-ink-50"
                                 }`}
                         >
                             {range.label}
@@ -240,14 +240,14 @@ export default function UserAnalyticsDashboard() {
                                 value: data?.summary?.total_users || 0,
                                 prev: data?.previous_summary?.total_users || 0,
                                 icon: Users,
-                                color: "text-gray-600", bgColor: "bg-gray-50",
+                                color: "text-ink-400", bgColor: "bg-ink-950",
                             },
                             {
                                 label: `สมัครใหม่ใน ${timeRange} วัน`,
                                 value: data?.summary?.new_users || 0,
                                 prev: data?.previous_summary?.new_users || 0,
                                 icon: UserPlus,
-                                color: "text-gray-600", bgColor: "bg-gray-50",
+                                color: "text-ink-400", bgColor: "bg-ink-950",
                             },
                             {
                                 label: `สัดส่วนคนจ่ายเงิน (Paid Ratio)`,
@@ -255,30 +255,30 @@ export default function UserAnalyticsDashboard() {
                                 prev: undefined,
                                 isPercent: true,
                                 icon: TrendingUp,
-                                color: "text-gray-600", bgColor: "bg-gray-50",
+                                color: "text-ink-400", bgColor: "bg-ink-950",
                             },
                             {
                                 label: `Active Spenders (${timeRange} วัน)`,
                                 value: data?.summary?.active_spenders || 0,
                                 prev: data?.previous_summary?.active_spenders || 0,
                                 icon: Wallet,
-                                color: "text-gray-600", bgColor: "bg-gray-50",
+                                color: "text-ink-400", bgColor: "bg-ink-950",
                             },
                         ].map((card, i) => (
                             <div
                                 key={i}
-                                className="relative overflow-hidden rounded-xl bg-white border border-gray-200 p-6 shadow-sm transition-all hover:shadow-md hover:border-gray-300"
+                                className="relative overflow-hidden rounded-xl bg-ink-800 border border-ink-700/50 p-6 shadow-lg shadow-black/20 ring-1 ring-white/5 transition-all hover:shadow-md hover:border-ink-700"
                             >
                                 
 
                                 <div className="flex items-start justify-between">
                                     <div className="relative">
                                         <div className="mb-2 flex items-center gap-2">
-                                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-500">{card.label}</p>
+                                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-500">{card.label}</p>
                                         </div>
                                         <div className="flex items-baseline gap-3">
-                                            <div className="text-3xl font-bold text-gray-900">
-                                                {loading ? <div className="h-9 w-24 animate-pulse rounded bg-gray-200 mt-1"></div> : card.isPercent ? `${card.value.toFixed(1)}%` : formatNumber(card.value)}
+                                            <div className="text-3xl font-bold text-ink-50">
+                                                {loading ? <div className="h-9 w-24 animate-pulse rounded bg-ink-800 mt-1"></div> : card.isPercent ? `${card.value.toFixed(1)}%` : formatNumber(card.value)}
                                             </div>
                                             {!loading && card.prev !== undefined && renderGrowthBadge(card.value, card.prev)}
                                         </div>
@@ -294,14 +294,14 @@ export default function UserAnalyticsDashboard() {
                     {/* Middle Row: Trend & Demographics */}
                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                         {/* Registration Trend Chart */}
-                        <div className="lg:col-span-2 rounded-xl bg-white border border-gray-200 p-6 shadow-sm">
+                        <div className="lg:col-span-2 rounded-xl bg-ink-800 border border-ink-700/50 p-6 shadow-lg shadow-black/20 ring-1 ring-white/5">
                             <div className="mb-4 flex items-center justify-between">
                                 <div>
-                                    <h2 className="flex items-center gap-2 text-base font-semibold tracking-tight text-gray-900">
-                                        <BarChart3 className="h-5 w-5 text-gray-400" />
+                                    <h2 className="flex items-center gap-2 text-base font-semibold tracking-tight text-ink-50">
+                                        <BarChart3 className="h-5 w-5 text-ink-400" />
                                         ความเร็วในการหาสมาชิกใหม่ (Registration Velocity)
                                     </h2>
-                                    <p className="text-xs text-gray-500 mt-1">จำนวนผู้สมัครใหม่รายวันในช่วง {timeRange} วันที่ผ่านมา</p>
+                                    <p className="text-xs text-ink-400 mt-1">จำนวนผู้สมัครใหม่รายวันในช่วง {timeRange} วันที่ผ่านมา</p>
                                 </div>
                             </div>
                             <div className="h-[300px] w-full">
@@ -316,14 +316,14 @@ export default function UserAnalyticsDashboard() {
                         </div>
 
                         {/* Wealth Distribution Chart */}
-                        <div className="rounded-xl bg-white border border-gray-200 p-6 shadow-sm">
+                        <div className="rounded-xl bg-ink-800 border border-ink-700/50 p-6 shadow-lg shadow-black/20 ring-1 ring-white/5">
                             <div className="mb-4 flex items-center justify-between">
                                 <div>
-                                    <h2 className="flex items-center gap-2 text-base font-semibold tracking-tight text-gray-900">
+                                    <h2 className="flex items-center gap-2 text-base font-semibold tracking-tight text-ink-50">
                                         <PieChart className="h-5 w-5 text-gold-dark" />
                                         อำนาจการซื้อ (Wealth Distribution)
                                     </h2>
-                                    <p className="text-xs text-gray-500 mt-1">แบ่งกลุ่มผู้ใช้ตามจำนวนเหรียญที่ถือครอง (ทั้งหมด)</p>
+                                    <p className="text-xs text-ink-400 mt-1">แบ่งกลุ่มผู้ใช้ตามจำนวนเหรียญที่ถือครอง (ทั้งหมด)</p>
                                 </div>
                             </div>
                             <div className="h-[300px] w-full">
@@ -344,16 +344,16 @@ export default function UserAnalyticsDashboard() {
 
                     {/* Bottom Row: Top Coin Holders */}
                     <div className="grid grid-cols-1 gap-6">
-                        <div className="rounded-xl bg-white border border-gray-200 p-6 shadow-sm flex flex-col">
-                            <h2 className="mb-1 flex items-center gap-2 text-base font-semibold tracking-tight text-gray-900">
+                        <div className="rounded-xl bg-ink-800 border border-ink-700/50 p-6 shadow-lg shadow-black/20 ring-1 ring-white/5 flex flex-col">
+                            <h2 className="mb-1 flex items-center gap-2 text-base font-semibold tracking-tight text-ink-50">
                                 <Award className="h-5 w-5 text-gold-dark" />
                                 เศรษฐีถือเหรียญรอเปย์ (Top Coin Holders)
                             </h2>
-                            <p className="mb-6 text-xs text-gray-500">กลุ่มลูกค้า VIP ที่มีกำลังซื้อสูง จัดอันดับตามเหรียญคงเหลือในกระเป๋า</p>
+                            <p className="mb-6 text-xs text-ink-400">กลุ่มลูกค้า VIP ที่มีกำลังซื้อสูง จัดอันดับตามเหรียญคงเหลือในกระเป๋า</p>
 
-                            <div className="overflow-x-auto rounded-lg border border-gray-100">
+                            <div className="overflow-x-auto rounded-lg border border-ink-800/80 bg-ink-950/30">
                                 <table className="w-full text-left text-sm">
-                                    <thead className="bg-gray-50 border-b border-gray-100 text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-500">
+                                    <thead className="border-b border-ink-800 text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-400">
                                         <tr>
                                             <th className="px-4 py-3 font-semibold">อันดับ</th>
                                             <th className="px-4 py-3 font-semibold">ผู้ใช้งาน</th>
@@ -361,24 +361,24 @@ export default function UserAnalyticsDashboard() {
                                             <th className="px-4 py-3 font-semibold text-right">วันที่สมัคร</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-100">
+                                    <tbody className="divide-y divide-ink-800/50">
                                         {loading ? (
                                             <tr>
-                                                <td colSpan={4} className="py-8 text-center text-gray-400">
+                                                <td colSpan={4} className="py-8 text-center text-ink-500">
                                                     <Loader2 className="mx-auto h-6 w-6 animate-spin" />
                                                 </td>
                                             </tr>
                                         ) : data?.top_coin_holders.length === 0 ? (
                                             <tr>
-                                                <td colSpan={4} className="py-8 text-center text-gray-400">ไม่พบข้อมูล</td>
+                                                <td colSpan={4} className="py-8 text-center text-ink-500">ไม่พบข้อมูล</td>
                                             </tr>
                                         ) : (
                                             holdersPageItems.map((user, index) => {
                                                 const rank = (tablePage - 1) * ITEMS_PER_PAGE + index;
                                                 return (
-                                                    <tr key={user.id} className="transition-colors hover:bg-gray-50/80">
+                                                    <tr key={user.id} className="transition-colors hover:bg-ink-800/50">
                                                         <td className="px-4 py-3">
-                                                            <div className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold ${rank === 0 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
+                                                            <div className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold ${rank === 0 ? 'bg-amber-500/20 text-amber-500' : 'bg-ink-800 text-ink-300'}`}>
                                                                 #{rank + 1}
                                                             </div>
                                                         </td>
@@ -387,13 +387,13 @@ export default function UserAnalyticsDashboard() {
                                                                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-xs font-bold text-white shadow-sm">
                                                                     {user.display_name.charAt(0).toUpperCase()}
                                                                 </div>
-                                                                <span className="font-medium text-gray-900">{user.display_name}</span>
+                                                                <span className="font-medium text-ink-50">{user.display_name}</span>
                                                             </div>
                                                         </td>
                                                         <td className="px-4 py-3 text-right font-bold text-gold-dark">
                                                             {formatNumber(user.coin_balance)}
                                                         </td>
-                                                        <td className="px-4 py-3 text-right text-gray-500 text-xs">
+                                                        <td className="px-4 py-3 text-right text-ink-400 text-xs">
                                                             {formatDateTime(user.created_at)}
                                                         </td>
                                                     </tr>

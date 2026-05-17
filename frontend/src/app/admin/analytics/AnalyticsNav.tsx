@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, Coins, Users, Layers, BookOpen } from "lucide-react";
+import { Activity, Coins, Users, Layers, BookOpen, Radio } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -12,13 +12,14 @@ const TABS = [
   { name: "ผู้ใช้ (Users)", href: "/admin/analytics/users", icon: Users },
   { name: "ตอน (Chapters)", href: "/admin/analytics/chapters", icon: Layers },
   { name: "มังงะ (Mangas)", href: "/admin/analytics/mangas", icon: BookOpen },
+  { name: "เรียลไทม์ (Realtime)", href: "/admin/analytics/realtime", icon: Radio },
 ];
 
 export function AnalyticsNav() {
   const pathname = usePathname();
 
   return (
-    <div className="mb-8 flex flex-wrap items-center gap-1 rounded-xl bg-white border border-gray-200 p-1.5 shadow-sm">
+    <div className="mb-8 flex flex-wrap items-center gap-1 rounded-xl bg-ink-950 border border-ink-800 p-1.5 shadow-sm">
       {TABS.map((tab) => {
         const isActive = pathname === tab.href;
 
@@ -28,18 +29,18 @@ export function AnalyticsNav() {
             href={tab.href}
             className={cn(
               "relative flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors duration-200",
-              isActive ? "text-gray-900" : "text-gray-500 hover:text-gray-900"
+              isActive ? "text-ink-50" : "text-ink-400 hover:text-ink-50"
             )}
           >
             {isActive && (
               <motion.div
                 layoutId="analytics-nav-bg"
-                className="absolute inset-0 rounded-lg bg-gray-100"
+                className="absolute inset-0 rounded-lg bg-ink-800"
                 transition={{ type: "spring", bounce: 0.18, duration: 0.5 }}
               />
             )}
             <div className="relative z-10 flex items-center gap-2">
-              <tab.icon className={cn("h-4 w-4", isActive ? "text-gold-dark" : "text-gray-400")} />
+              <tab.icon className={cn("h-4 w-4", isActive ? "text-gold" : "text-ink-500")} />
               {tab.name}
             </div>
           </Link>

@@ -196,14 +196,14 @@ export default function AdminMangaPage() {
 
   return (
     <div className="space-y-5 pb-10">
-      <section className="relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 sm:p-6 shadow-sm">
+      <section className="relative overflow-hidden rounded-xl border border-ink-700/50 bg-ink-800 p-5 sm:p-6 shadow-sm">
         <div className="relative flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-ink-50">
               <BookOpen className="mr-2 inline-block h-6 w-6 text-gold-dark" />
               จัดการมังงะ
             </h1>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-ink-400">
               เพิ่ม ลบ และดูรายการมังงะทั้งหมดในระบบ — {mangas.length} เรื่อง
             </p>
           </div>
@@ -221,54 +221,54 @@ export default function AdminMangaPage() {
       </section>
 
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {error}
         </div>
       )}
 
       {/* Create/Edit form */}
       {showForm && (
-        <div className="mb-6 rounded-xl bg-white p-5 border border-gray-200 shadow-sm">
-          <h3 className="mb-4 text-sm font-semibold text-gray-900">
+        <div className="mb-6 rounded-xl bg-ink-900 p-5 border border-ink-800 shadow-sm">
+          <h3 className="mb-4 text-sm font-semibold text-ink-50">
             {editingManga ? `แก้ไขมังงะ: ${editingManga.title}` : "เพิ่มมังงะใหม่"}
           </h3>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">ชื่อเรื่อง *</label>
+              <label className="mb-1 block text-xs font-medium text-ink-300">ชื่อเรื่อง *</label>
               <input
                 type="text"
                 name="title"
                 required
                 defaultValue={editingManga?.title || ""}
-                className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-gold-dark focus:ring-1 focus:ring-gold-dark focus:outline-none"
+                className="h-10 w-full rounded-lg border border-ink-700/50 bg-ink-950 px-3 text-sm text-ink-50 focus:border-gold focus:ring-1 focus:ring-gold focus:outline-none"
                 placeholder="ชื่อมังงะ"
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">ผู้แต่ง</label>
+              <label className="mb-1 block text-xs font-medium text-ink-300">ผู้แต่ง</label>
               <input
                 type="text"
                 name="author"
                 defaultValue={editingManga?.author || ""}
-                className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-gold-dark focus:ring-1 focus:ring-gold-dark focus:outline-none"
+                className="h-10 w-full rounded-lg border border-ink-700/50 bg-ink-950 px-3 text-sm text-ink-50 focus:border-gold focus:ring-1 focus:ring-gold focus:outline-none"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">ผู้วาด</label>
+              <label className="mb-1 block text-xs font-medium text-ink-300">ผู้วาด</label>
               <input
                 type="text"
                 name="artist"
                 defaultValue={editingManga?.artist || ""}
-                className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-gold-dark focus:ring-1 focus:ring-gold-dark focus:outline-none"
+                className="h-10 w-full rounded-lg border border-ink-700/50 bg-ink-950 px-3 text-sm text-ink-50 focus:border-gold focus:ring-1 focus:ring-gold focus:outline-none"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">หมวดหมู่</label>
+              <label className="mb-1 block text-xs font-medium text-ink-300">หมวดหมู่</label>
               <select
                 name="category"
                 defaultValue={editingManga?.category || "action"}
-                className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-gold-dark focus:ring-1 focus:ring-gold-dark focus:outline-none"
+                className="h-10 w-full rounded-lg border border-ink-700/50 bg-ink-950 px-3 text-sm text-ink-50 focus:border-gold focus:ring-1 focus:ring-gold focus:outline-none"
               >
                 {(Object.entries(CATEGORY_LABELS) as [MangaCategory, string][]).map(
                   ([v, l]) => (
@@ -278,11 +278,11 @@ export default function AdminMangaPage() {
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">หมวดหมู่ย่อย</label>
+              <label className="mb-1 block text-xs font-medium text-ink-300">หมวดหมู่ย่อย</label>
               <select
                 name="sub_category"
                 defaultValue={editingManga?.sub_category || "action"}
-                className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-gold-dark focus:ring-1 focus:ring-gold-dark focus:outline-none"
+                className="h-10 w-full rounded-lg border border-ink-700/50 bg-ink-950 px-3 text-sm text-ink-50 focus:border-gold focus:ring-1 focus:ring-gold focus:outline-none"
               >
                 {(Object.entries(CATEGORY_LABELS) as [MangaCategory, string][]).map(
                   ([v, l]) => (
@@ -292,11 +292,11 @@ export default function AdminMangaPage() {
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">สถานะ</label>
+              <label className="mb-1 block text-xs font-medium text-ink-300">สถานะ</label>
               <select
                 name="status"
                 defaultValue={editingManga?.status || "ongoing"}
-                className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-gold-dark focus:ring-1 focus:ring-gold-dark focus:outline-none"
+                className="h-10 w-full rounded-lg border border-ink-700/50 bg-ink-950 px-3 text-sm text-ink-50 focus:border-gold focus:ring-1 focus:ring-gold focus:outline-none"
               >
                 {(Object.entries(STATUS_LABELS) as [MangaStatus, string][]).map(
                   ([v, l]) => (
@@ -306,11 +306,11 @@ export default function AdminMangaPage() {
               </select>
             </div>
             <div className="sm:col-span-2">
-              <label className="mb-1 block text-xs font-medium text-gray-700">เรื่องย่อ</label>
+              <label className="mb-1 block text-xs font-medium text-ink-300">เรื่องย่อ</label>
               <textarea
                 name="description"
                 defaultValue={editingManga?.description || ""}
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-gold-dark focus:ring-1 focus:ring-gold-dark focus:outline-none"
+                className="w-full rounded-lg border border-ink-700/50 bg-ink-950 px-3 py-2 text-sm text-ink-50 focus:border-gold focus:ring-1 focus:ring-gold focus:outline-none"
               />
             </div>
             <div className="sm:col-span-2 flex items-center gap-2">
@@ -319,16 +319,16 @@ export default function AdminMangaPage() {
                 name="is_visible"
                 id="is_visible"
                 defaultChecked={editingManga ? editingManga.is_visible : true}
-                className="h-4 w-4 rounded border-gray-300 text-gold-dark focus:ring-gold-dark"
+                className="h-4 w-4 rounded border-ink-700/50 bg-ink-950 text-gold focus:ring-gold"
               />
-              <label htmlFor="is_visible" className="text-sm text-gray-600">แสดงให้ผู้อ่านเห็น (เปิดการใช้งานสาธารณะ)</label>
+              <label htmlFor="is_visible" className="text-sm text-ink-300">แสดงให้ผู้อ่านเห็น (เปิดการใช้งานสาธารณะ)</label>
             </div>
             <div className="sm:col-span-2">
-              <label className="mb-1 block text-xs font-medium text-gray-700">รูปภาพปก (R2)</label>
+              <label className="mb-1 block text-xs font-medium text-ink-300">รูปภาพปก (R2)</label>
               <div className="flex gap-4 items-start">
                 <div className="flex-1">
                   {previewUrl ? (
-                    <div className="relative aspect-[2/3] w-32 rounded overflow-hidden border border-gray-200 mb-2">
+                    <div className="relative aspect-[2/3] w-32 rounded overflow-hidden border border-ink-800 mb-2">
                       <Image
                         src={previewUrl}
                         alt="Preview"
@@ -346,7 +346,7 @@ export default function AdminMangaPage() {
                           setSelectedFile(null);
                           setPreviewUrl("");
                         }}
-                        className="absolute top-1 right-1 bg-white p-1 rounded-full text-red-500 shadow-sm hover:bg-red-50 transition"
+                        className="absolute top-1 right-1 bg-ink-900 p-1 rounded-full text-red-400 shadow-sm hover:bg-red-900/50 transition"
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>
@@ -356,9 +356,9 @@ export default function AdminMangaPage() {
                     type="file"
                     accept="image/*"
                     onChange={handleFileSelect}
-                    className="w-full bg-white border border-gray-200 rounded px-3 py-2 text-sm text-gray-600 focus:outline-none focus:border-gold-dark focus:ring-1 focus:ring-gold-dark file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
+                    className="w-full bg-ink-950 border border-ink-800 rounded px-3 py-2 text-sm text-ink-300 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-ink-800 file:text-ink-200 hover:file:bg-ink-700"
                   />
-                  <p className="text-[10px] text-gray-500 mt-1">
+                  <p className="text-[10px] text-ink-400 mt-1">
                     รองรับ JPG, PNG, WebP (จะถูกอัปโหลดไปยัง Cloudflare R2 อัตโนมัติ)
                   </p>
                 </div>
@@ -376,7 +376,7 @@ export default function AdminMangaPage() {
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 hover:text-gray-900"
+                className="rounded-lg border border-ink-700/50 bg-ink-950 px-4 py-2 text-sm font-medium text-ink-300 shadow-sm transition hover:bg-ink-800 hover:text-ink-50"
               >
                 ยกเลิก
               </button>
@@ -388,7 +388,7 @@ export default function AdminMangaPage() {
       {/* Search & Filter Bar */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
           <input
             type="text"
             value={searchQuery}
@@ -397,7 +397,7 @@ export default function AdminMangaPage() {
               setCurrentPage(1);
             }}
             placeholder="ค้นหาชื่อเรื่อง..."
-            className="h-10 w-full rounded-lg border border-gray-200 bg-white pl-9 pr-3 text-sm text-gray-900 shadow-sm focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-100"
+            className="h-10 w-full rounded-lg border border-ink-700/50 bg-ink-800 pl-9 pr-3 text-sm text-ink-50 shadow-sm focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
           />
         </div>
         <div className="flex items-center gap-2">
@@ -407,7 +407,7 @@ export default function AdminMangaPage() {
               setFilterCategory(e.target.value);
               setCurrentPage(1);
             }}
-            className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 shadow-sm focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-100"
+            className="h-10 rounded-lg border border-ink-700/50 bg-ink-800 px-3 text-sm text-ink-300 shadow-sm focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
           >
             <option value="">ทุกหมวดหมู่</option>
             {(Object.entries(CATEGORY_LABELS) as [MangaCategory, string][]).map(
@@ -422,7 +422,7 @@ export default function AdminMangaPage() {
               setFilterStatus(e.target.value);
               setCurrentPage(1);
             }}
-            className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 shadow-sm focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-100"
+            className="h-10 rounded-lg border border-ink-700/50 bg-ink-800 px-3 text-sm text-ink-300 shadow-sm focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
           >
             <option value="">ทุกสถานะ</option>
             {(Object.entries(STATUS_LABELS) as [MangaStatus, string][]).map(
@@ -431,17 +431,17 @@ export default function AdminMangaPage() {
               )
             )}
           </select>
-          <span className="rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-600 whitespace-nowrap">
+          <span className="rounded-full bg-ink-800 px-3 py-1.5 text-xs font-medium text-ink-300 whitespace-nowrap">
             {filteredMangas.length} เรื่อง
           </span>
         </div>
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-xl bg-white border border-gray-200 shadow-sm">
+      <div className="overflow-x-auto rounded-xl bg-ink-800 border border-ink-700/50 shadow-sm">
         <table className="w-full min-w-[600px] text-sm">
           <thead>
-            <tr className="border-b border-gray-200 bg-gray-50 text-left text-xs text-gray-600 font-medium">
+            <tr className="border-b border-ink-700/50 bg-ink-950 text-left text-xs text-ink-400 font-medium">
               <th className="w-12 px-4 py-3 text-center whitespace-nowrap">#</th>
               <th className="px-4 py-3">ปก</th>
               <th className="px-4 py-3">ชื่อเรื่อง</th>
@@ -451,10 +451,10 @@ export default function AdminMangaPage() {
               <th className="px-4 py-3 text-right">จัดการ</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-ink-800/50">
             {paginatedMangas.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-12 text-center text-gray-500">
+                <td colSpan={7} className="px-4 py-12 text-center text-ink-400">
                   {searchQuery || filterCategory || filterStatus
                     ? "ไม่พบมังงะที่ตรงกับตัวกรอง"
                     : "ยังไม่มีมังงะ — กดปุ่ม \"เพิ่มมังงะ\" เพื่อเริ่มต้น"}
@@ -462,12 +462,12 @@ export default function AdminMangaPage() {
               </tr>
             ) : (
               paginatedMangas.map((m, index) => (
-                <tr key={m.id} className="hover:bg-gray-50/80 transition-colors">
-                  <td className="px-4 py-2 text-center font-medium text-gray-400 text-xs">
+                <tr key={m.id} className="hover:bg-ink-800/50 transition-colors">
+                  <td className="px-4 py-2 text-center font-medium text-ink-500 text-xs">
                     {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
                   </td>
                   <td className="px-4 py-2">
-                    <div className="h-12 w-8 overflow-hidden rounded bg-gray-100 border border-gray-200">
+                    <div className="h-12 w-8 overflow-hidden rounded bg-ink-800 border border-ink-700">
                       {m.cover_url && (
                         <Image
                           src={m.cover_url}
@@ -480,21 +480,21 @@ export default function AdminMangaPage() {
                       )}
                     </div>
                   </td>
-                  <td className="px-4 py-2 font-medium text-gray-900 max-w-xs">
+                  <td className="px-4 py-2 font-medium text-ink-50 max-w-xs">
                     <p className="truncate">{m.title}</p>
                   </td>
-                  <td className="px-4 py-2 text-gray-500">
+                  <td className="px-4 py-2 text-ink-300">
                     <div className="flex flex-col">
                       <span className="text-xs">{CATEGORY_LABELS[m.category]}</span>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-ink-500">
                         {CATEGORY_LABELS[m.sub_category] || "-"}
                       </span>
                     </div>
                   </td>
-                  <td className="px-4 py-2 text-gray-500 text-xs">
+                  <td className="px-4 py-2 text-ink-300 text-xs">
                     {STATUS_LABELS[m.status]}
                   </td>
-                  <td className="px-4 py-2 text-center text-gray-500">{m.chapter_count ?? 0}</td>
+                  <td className="px-4 py-2 text-center text-ink-400">{m.chapter_count ?? 0}</td>
                   <td className="px-4 py-2 text-right">
                     <div className="flex justify-end gap-1">
                       <button
@@ -502,7 +502,7 @@ export default function AdminMangaPage() {
                         title={m.is_visible ? "ซ่อน" : "แสดง"}
                         className={cn(
                           "rounded p-1.5 transition",
-                          m.is_visible ? "text-gold-dark hover:bg-amber-50" : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
+                          m.is_visible ? "text-gold hover:bg-gold/10" : "text-ink-500 hover:text-ink-200 hover:bg-ink-800"
                         )}
                       >
                         {m.is_visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
@@ -510,14 +510,14 @@ export default function AdminMangaPage() {
                       <button
                         onClick={() => handleEdit(m)}
                         title="แก้ไข"
-                        className="rounded p-1.5 text-gray-400 transition hover:bg-gray-50 hover:text-gray-600"
+                        className="rounded p-1.5 text-ink-400 transition hover:bg-ink-800 hover:text-ink-200"
                       >
                         <Edit2 className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(m)}
                         title="ลบ"
-                        className="rounded p-1.5 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
+                        className="rounded p-1.5 text-ink-400 transition hover:bg-red-900/30 hover:text-red-400"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -531,15 +531,15 @@ export default function AdminMangaPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-gray-100 px-4 py-3">
-            <p className="text-xs text-gray-500">
+          <div className="flex items-center justify-between border-t border-ink-800 px-4 py-3">
+            <p className="text-xs text-ink-400">
               แสดง {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredMangas.length)} จาก {filteredMangas.length} เรื่อง
             </p>
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage <= 1}
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition hover:bg-gray-50 disabled:opacity-40"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-ink-800 text-ink-300 transition hover:bg-ink-800 disabled:opacity-40"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -548,15 +548,15 @@ export default function AdminMangaPage() {
                 .map((p, idx, arr) => (
                   <span key={p}>
                     {idx > 0 && arr[idx - 1] !== p - 1 && (
-                      <span className="px-1 text-gray-300">…</span>
+                      <span className="px-1 text-ink-600">…</span>
                     )}
                     <button
                       onClick={() => setCurrentPage(p)}
                       className={cn(
                         "flex h-8 w-8 items-center justify-center rounded-lg text-xs font-medium transition",
                         p === currentPage
-                          ? "bg-amber-100 text-amber-800 border border-amber-200"
-                          : "border border-gray-200 text-gray-600 hover:bg-gray-50"
+                          ? "bg-gold/10 text-gold border border-gold/20"
+                          : "border border-ink-800 text-ink-300 hover:bg-ink-800"
                       )}
                     >
                       {p}
@@ -566,7 +566,7 @@ export default function AdminMangaPage() {
               <button
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage >= totalPages}
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition hover:bg-gray-50 disabled:opacity-40"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-ink-800 text-ink-300 transition hover:bg-ink-800 disabled:opacity-40"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>

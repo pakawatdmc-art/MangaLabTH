@@ -25,10 +25,10 @@ import { getUserProfile, type UserProfileData } from "@/lib/api";
 import { formatNumber, formatDateTime } from "@/lib/utils";
 
 const TX_TYPE_LABELS: Record<string, { label: string; color: string; bg: string }> = {
-  coin_purchase: { label: "เติมเหรียญ", color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
-  chapter_unlock: { label: "ปลดล็อกตอน", color: "text-amber-700", bg: "bg-amber-50 border-amber-200" },
-  admin_grant: { label: "Admin เติม", color: "text-blue-700", bg: "bg-blue-50 border-blue-200" },
-  refund: { label: "คืนเงิน", color: "text-rose-700", bg: "bg-rose-50 border-rose-200" },
+  coin_purchase: { label: "เติมเหรียญ", color: "text-emerald-500", bg: "bg-emerald-500/10 border-emerald-500/20" },
+  chapter_unlock: { label: "ปลดล็อกตอน", color: "text-amber-500", bg: "bg-amber-500/10 border-amber-500/20" },
+  admin_grant: { label: "Admin เติม", color: "text-blue-500", bg: "bg-blue-500/10 border-blue-500/20" },
+  refund: { label: "คืนเงิน", color: "text-rose-500", bg: "bg-rose-500/10 border-rose-500/20" },
 };
 
 export default function AdminUserProfilePage() {
@@ -111,25 +111,25 @@ export default function AdminUserProfilePage() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.back()}
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 shadow-sm transition hover:bg-gray-50 hover:text-gray-900"
+          className="flex h-9 w-9 items-center justify-center rounded-lg border border-ink-700/50 bg-ink-800 text-ink-300 shadow-sm transition hover:bg-ink-800 hover:text-ink-50"
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-gray-400">
+          <p className="text-xs font-medium uppercase tracking-wider text-ink-500">
             User Profile
           </p>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-ink-50">
             โปรไฟล์ผู้ใช้
           </h1>
         </div>
       </div>
 
       {/* ── User Info Card ── */}
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="rounded-2xl border border-ink-700/50 bg-ink-800 p-6 shadow-sm">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
           {/* Avatar */}
-          <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border-2 border-amber-200 bg-amber-50 shadow">
+          <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border-2 border-amber-500/30 bg-amber-500/10 shadow">
             {user.avatar_url ? (
               <Image
                 src={user.avatar_url}
@@ -147,14 +147,14 @@ export default function AdminUserProfilePage() {
           {/* Info */}
           <div className="flex-1 space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-xl font-bold text-gray-900">
+              <h2 className="text-xl font-bold text-ink-50">
                 {getDisplayName(user)}
               </h2>
               <span
                 className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                   user.role === "admin"
-                    ? "bg-amber-100 text-amber-800"
-                    : "bg-gray-100 text-gray-600"
+                    ? "bg-amber-500/20 text-amber-500"
+                    : "bg-ink-800 text-ink-300"
                 }`}
               >
                 {user.role === "admin" && <Shield className="h-3 w-3" />}
@@ -162,7 +162,7 @@ export default function AdminUserProfilePage() {
               </span>
             </div>
 
-            <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-gray-500">
+            <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-ink-400">
               <span className="inline-flex items-center gap-1.5">
                 <Mail className="h-3.5 w-3.5" />
                 {user.email || "—"}
@@ -174,7 +174,7 @@ export default function AdminUserProfilePage() {
               <span className="inline-flex items-center gap-1.5">
                 <Coins className="h-3.5 w-3.5 text-amber-500" />
                 คงเหลือ{" "}
-                <strong className="text-gray-900">
+                <strong className="text-ink-50">
                   {formatNumber(user.coin_balance)}
                 </strong>{" "}
                 เหรียญ
@@ -220,10 +220,10 @@ export default function AdminUserProfilePage() {
 
       {/* ── Top Manga ── */}
       {topManga.length > 0 && (
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-ink-700/50 bg-ink-800 p-6 shadow-sm">
           <div className="mb-4 flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-amber-600" />
-            <h3 className="text-lg font-bold text-gray-900">
+            <h3 className="text-lg font-bold text-ink-50">
               มังงะที่อ่านมากที่สุด
             </h3>
           </div>
@@ -231,29 +231,29 @@ export default function AdminUserProfilePage() {
             {topManga.map((m, i) => (
               <div
                 key={m.manga_id}
-                className="flex items-center gap-4 rounded-xl border border-gray-100 bg-gray-50/50 p-3 transition hover:bg-gray-50"
+                className="flex items-center gap-4 rounded-xl border border-ink-700/50 bg-ink-950 p-3 transition hover:bg-ink-800"
               >
                 {/* Rank */}
                 <div
                   className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold ${
                     i === 0
-                      ? "bg-amber-100 text-amber-700"
+                      ? "bg-amber-500/20 text-amber-500"
                       : i === 1
-                      ? "bg-gray-200 text-gray-700"
+                      ? "bg-ink-800 text-ink-300"
                       : i === 2
-                      ? "bg-orange-100 text-orange-700"
-                      : "bg-gray-100 text-gray-500"
+                      ? "bg-orange-500/20 text-orange-500"
+                      : "bg-ink-800 text-ink-500"
                   }`}
                 >
                   {i + 1}
                 </div>
 
                 {/* Cover */}
-                <div className="relative h-12 w-9 shrink-0 overflow-hidden rounded-md bg-gray-200 shadow-sm">
+                <div className="relative h-12 w-9 shrink-0 overflow-hidden rounded-md bg-ink-800 shadow-sm">
                   {m.cover_url ? (
                     <Image src={m.cover_url} alt={m.title} fill className="object-cover" />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center text-xs text-gray-400">
+                    <div className="flex h-full w-full items-center justify-center text-xs text-ink-500">
                       📖
                     </div>
                   )}
@@ -261,16 +261,16 @@ export default function AdminUserProfilePage() {
 
                 {/* Title & Stats */}
                 <div className="flex-1 min-w-0">
-                  <p className="truncate text-sm font-semibold text-gray-900">
+                  <p className="truncate text-sm font-semibold text-ink-50">
                     {m.title}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-ink-400">
                     {m.chapters_unlocked} ตอน · ใช้ {formatNumber(m.coins_spent)} เหรียญ
                   </p>
                 </div>
 
                 {/* Badge */}
-                <span className="shrink-0 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 border border-amber-200">
+                <span className="shrink-0 rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-500 border border-amber-500/20">
                   {m.chapters_unlocked} ตอน
                 </span>
               </div>
@@ -280,16 +280,16 @@ export default function AdminUserProfilePage() {
       )}
 
       {/* ── Transaction History ── */}
-      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
-        <div className="border-b border-gray-100 p-6 pb-4">
+      <div className="rounded-2xl border border-ink-700/50 bg-ink-800 shadow-sm">
+        <div className="border-b border-ink-800 p-6 pb-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
               <CreditCard className="h-5 w-5 text-amber-600" />
-              <h3 className="text-lg font-bold text-gray-900">
+              <h3 className="text-lg font-bold text-ink-50">
                 ประวัติรายการ
               </h3>
               {txData && (
-                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                <span className="rounded-full bg-ink-800 px-2 py-0.5 text-xs font-medium text-ink-300">
                   {formatNumber(txData.total)} รายการ
                 </span>
               )}
@@ -302,7 +302,7 @@ export default function AdminUserProfilePage() {
                 setTxType(e.target.value);
                 setTxPage(1);
               }}
-              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-100"
+              className="rounded-lg border border-ink-700/50 bg-ink-950 px-3 py-2 text-sm text-ink-50 shadow-sm focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold"
             >
               <option value="">ทุกประเภท</option>
               <option value="coin_purchase">เติมเหรียญ</option>
@@ -317,7 +317,7 @@ export default function AdminUserProfilePage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-100 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
+              <tr className="border-b border-ink-800 text-left text-xs font-semibold uppercase tracking-wider text-ink-500">
                 <th className="px-6 py-3">ประเภท</th>
                 <th className="px-6 py-3 text-right">จำนวน</th>
                 <th className="px-6 py-3 text-right">ยอดคงเหลือ</th>
@@ -325,7 +325,7 @@ export default function AdminUserProfilePage() {
                 <th className="px-6 py-3 text-right">วันที่</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-ink-800/50">
               {loading ? (
                 <tr>
                   <td colSpan={5} className="py-12 text-center">
@@ -334,7 +334,7 @@ export default function AdminUserProfilePage() {
                 </tr>
               ) : txData?.items.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-12 text-center text-gray-400">
+                  <td colSpan={5} className="py-12 text-center text-ink-500">
                     ไม่พบรายการ
                   </td>
                 </tr>
@@ -342,12 +342,12 @@ export default function AdminUserProfilePage() {
                 txData?.items.map((tx) => {
                   const meta = TX_TYPE_LABELS[tx.type] ?? {
                     label: tx.type,
-                    color: "text-gray-700",
-                    bg: "bg-gray-50 border-gray-200",
+                    color: "text-ink-400",
+                    bg: "bg-ink-800 border-ink-700",
                   };
                   const isPositive = tx.amount > 0;
                   return (
-                    <tr key={tx.id} className="transition hover:bg-gray-50/60">
+                    <tr key={tx.id} className="transition hover:bg-ink-800/50">
                       <td className="px-6 py-3">
                         <span
                           className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${meta.bg} ${meta.color}`}
@@ -357,19 +357,19 @@ export default function AdminUserProfilePage() {
                       </td>
                       <td
                         className={`px-6 py-3 text-right font-semibold tabular-nums ${
-                          isPositive ? "text-emerald-600" : "text-rose-600"
+                          isPositive ? "text-emerald-500" : "text-rose-500"
                         }`}
                       >
                         {isPositive ? "+" : ""}
                         {formatNumber(tx.amount)}
                       </td>
-                      <td className="px-6 py-3 text-right tabular-nums text-gray-700">
+                      <td className="px-6 py-3 text-right tabular-nums text-ink-300">
                         {formatNumber(tx.balance_after)}
                       </td>
-                      <td className="max-w-xs truncate px-6 py-3 text-gray-600">
+                      <td className="max-w-xs truncate px-6 py-3 text-ink-400">
                         {tx.note || "—"}
                       </td>
-                      <td className="whitespace-nowrap px-6 py-3 text-right text-gray-400">
+                      <td className="whitespace-nowrap px-6 py-3 text-right text-ink-500">
                         {tx.created_at ? formatDateTime(tx.created_at) : "—"}
                       </td>
                     </tr>
@@ -382,22 +382,22 @@ export default function AdminUserProfilePage() {
 
         {/* Pagination */}
         {txData && txData.total_pages > 1 && (
-          <div className="flex items-center justify-between border-t border-gray-100 px-6 py-4">
-            <p className="text-sm text-gray-500">
+          <div className="flex items-center justify-between border-t border-ink-800 px-6 py-4">
+            <p className="text-sm text-ink-400">
               หน้า {txData.page} / {txData.total_pages}
             </p>
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setTxPage((p) => Math.max(1, p - 1))}
                 disabled={txPage <= 1}
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition hover:bg-gray-50 disabled:opacity-40"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-ink-800 text-ink-400 transition hover:bg-ink-800 disabled:opacity-40"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setTxPage((p) => Math.min(txData.total_pages, p + 1))}
                 disabled={txPage >= txData.total_pages}
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition hover:bg-gray-50 disabled:opacity-40"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-ink-800 text-ink-400 transition hover:bg-ink-800 disabled:opacity-40"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
@@ -424,18 +424,18 @@ function KpiCard({
   color: string;
 }) {
   const bgMap: Record<string, string> = {
-    emerald: "bg-emerald-50 border-emerald-100",
-    rose: "bg-rose-50 border-rose-100",
-    blue: "bg-blue-50 border-blue-100",
-    amber: "bg-amber-50 border-amber-100",
+    emerald: "bg-emerald-500/10 border-emerald-500/20",
+    rose: "bg-rose-500/10 border-rose-500/20",
+    blue: "bg-blue-500/10 border-blue-500/20",
+    amber: "bg-amber-500/10 border-amber-500/20",
   };
   return (
-    <div className={`rounded-2xl border p-5 shadow-sm ${bgMap[color] ?? "bg-gray-50 border-gray-100"}`}>
-      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm">
+    <div className={`rounded-2xl border p-5 shadow-sm ${bgMap[color] ?? "bg-ink-900 border-ink-800"}`}>
+      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-ink-950 shadow-sm">
         {icon}
       </div>
-      <p className="text-2xl font-bold text-gray-900">{value}</p>
-      <p className="mt-0.5 text-xs text-gray-500">
+      <p className="text-2xl font-bold text-ink-50">{value}</p>
+      <p className="mt-0.5 text-xs text-ink-400">
         {label} · {sub}
       </p>
     </div>

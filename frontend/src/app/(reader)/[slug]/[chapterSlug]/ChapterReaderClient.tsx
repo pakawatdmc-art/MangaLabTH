@@ -48,6 +48,11 @@ export default function ChapterReaderClient({
   const lastSaveTime = useRef(0);
   const trackedComplete = useRef(false);
 
+  // Always scroll to top when entering a new chapter
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [chapter.id]);
+
   useEffect(() => {
     trackReadChapterStart(manga.slug, chapter.id, chapter.number, chapter.coin_price === 0);
   }, [manga.slug, chapter.id, chapter.number, chapter.coin_price]);

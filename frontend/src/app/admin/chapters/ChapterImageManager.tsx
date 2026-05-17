@@ -81,8 +81,8 @@ function SortableImageCard({ item, idx, uploading, totalFiles, moveFile, removeF
             {...attributes}
             {...listeners}
             className={cn(
-                "group relative aspect-[2/3] overflow-hidden rounded-lg bg-gray-50 ring-1 ring-gray-200 transition-all shadow-sm",
-                isDragging ? "ring-gold-dark cursor-grabbing shadow-lg scale-105" : "cursor-grab hover:ring-gold-dark/50 hover:shadow-md"
+                "group relative aspect-[2/3] overflow-hidden rounded-lg bg-ink-800 ring-1 ring-ink-700 transition-all shadow-sm",
+                isDragging ? "ring-gold cursor-grabbing shadow-lg scale-105" : "cursor-grab hover:ring-gold/50 hover:shadow-md"
             )}
         >
             <Image
@@ -136,28 +136,28 @@ function SortableImageCard({ item, idx, uploading, totalFiles, moveFile, removeF
             )}
 
             {item.status === "uploading" && (
-                <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm z-30">
-                    <Loader2 className="h-5 w-5 animate-spin text-gold-dark" />
+                <div className="absolute inset-0 flex items-center justify-center bg-ink-950/60 backdrop-blur-sm z-30">
+                    <Loader2 className="h-5 w-5 animate-spin text-gold" />
                 </div>
             )}
             {item.status === "existing" && (
-                <div className="absolute right-1.5 top-1.5 rounded bg-emerald-100 px-1 py-0.5 text-[8px] font-medium text-emerald-700 z-10 pointer-events-none">
+                <div className="absolute right-1.5 top-1.5 rounded bg-emerald-500/10 px-1 py-0.5 text-[8px] font-medium text-emerald-500 z-10 pointer-events-none">
                     ภาพเดิม
                 </div>
             )}
             {item.status === "done" && (
-                <div className="absolute right-1.5 top-1.5 z-10 pointer-events-none bg-white rounded-full">
+                <div className="absolute right-1.5 top-1.5 z-10 pointer-events-none bg-ink-950 rounded-full">
                     <CheckCircle className="h-4 w-4 text-emerald-500" />
                 </div>
             )}
             {item.status === "error" && (
-                <div className="absolute right-1.5 top-1.5 pointer-events-none z-10 bg-white rounded-full">
+                <div className="absolute right-1.5 top-1.5 pointer-events-none z-10 bg-ink-950 rounded-full">
                     <AlertCircle className="h-4 w-4 text-red-500" />
                 </div>
             )}
 
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent px-2 pb-1.5 pt-4 pointer-events-none z-10">
-                <p className="truncate text-[9px] text-gray-300">
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink-950 to-transparent px-2 pb-1.5 pt-4 pointer-events-none z-10">
+                <p className="truncate text-[9px] text-ink-300">
                     {item.file ? item.file.name : `หน้า ${idx + 1} (เดิม)`}
                 </p>
             </div>
@@ -488,21 +488,21 @@ export function ChapterImageManager({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/60 p-4 backdrop-blur-sm">
-            <div className="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-ink-950/80 p-4 backdrop-blur-sm">
+            <div className="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-ink-700/50 bg-ink-800 shadow-2xl">
                 {/* Header */}
-                <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-4">
+                <div className="flex items-center justify-between border-b border-ink-700/50 bg-ink-950 px-6 py-4">
                     <div>
-                        <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                        <h2 className="text-lg font-bold text-ink-50 flex items-center gap-2">
                             <ImagePlus className="h-5 w-5 text-gold-dark" />
                             จัดการรูปภาพตอน — ตอนที่ {chapter.number} {chapter.title ? `(${chapter.title})` : ""}
                         </h2>
-                        <p className="text-xs text-gray-500 mt-1 font-medium">{manga.title}</p>
+                        <p className="text-xs text-ink-500 mt-1 font-medium">{manga.title}</p>
                     </div>
                     <button
                         onClick={onClose}
                         disabled={uploading}
-                        className="rounded-full bg-white border border-gray-200 p-2 text-gray-500 shadow-sm transition hover:bg-gray-50 hover:text-gray-900 disabled:opacity-50"
+                        className="rounded-full bg-ink-800 border border-ink-700/50 p-2 text-ink-400 shadow-sm transition hover:bg-ink-800 hover:text-ink-50 disabled:opacity-50"
                     >
                         <X className="h-5 w-5" />
                     </button>
@@ -511,13 +511,13 @@ export function ChapterImageManager({
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto px-6 py-5">
                     {error && (
-                        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600 flex items-center">
+                        <div className="mb-4 rounded-xl border border-red-900/50 bg-red-900/20 p-4 text-sm text-red-400 flex items-center">
                             <AlertCircle className="mr-2 h-4 w-4" />
                             {error}
                         </div>
                     )}
                     {successMsg && (
-                        <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700 flex items-center">
+                        <div className="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-500 flex items-center">
                             <CheckCircle className="mr-2 h-4 w-4" />
                             {successMsg}
                         </div>
@@ -525,7 +525,7 @@ export function ChapterImageManager({
 
                     {loadingInitial ? (
                         <div className="flex h-40 items-center justify-center">
-                            <Loader2 className="h-8 w-8 animate-spin text-gold-dark" />
+                            <Loader2 className="h-8 w-8 animate-spin text-gold" />
                         </div>
                     ) : (
                         <>
@@ -540,15 +540,15 @@ export function ChapterImageManager({
                                 className={cn(
                                     "mb-6 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center transition",
                                     isDragging
-                                        ? "border-gold-dark bg-amber-50"
-                                        : "border-gray-200 bg-gray-50 hover:border-gold-dark/30 hover:bg-gray-100/50"
+                                        ? "border-gold bg-amber-500/10"
+                                        : "border-ink-700 bg-ink-950 hover:border-gold/30 hover:bg-ink-800"
                                 )}
                             >
-                                <CloudUpload className={cn("mb-3 h-8 w-8", isDragging ? "text-gold-dark" : "text-gray-400")} />
-                                <p className="text-sm text-gray-500">ลากไฟล์ภาพเพิ่มที่นี่ หรือ</p>
+                                <CloudUpload className={cn("mb-3 h-8 w-8", isDragging ? "text-gold" : "text-ink-500")} />
+                                <p className="text-sm text-ink-400">ลากไฟล์ภาพเพิ่มที่นี่ หรือ</p>
                                 <label
                                     htmlFor="manager-upload-input"
-                                    className="mt-2 cursor-pointer rounded-lg border border-amber-200 bg-white px-4 py-1.5 text-sm font-medium text-amber-700 shadow-sm transition hover:border-amber-300 hover:bg-amber-50"
+                                    className="mt-2 cursor-pointer rounded-lg border border-amber-500/30 bg-ink-800 px-4 py-1.5 text-sm font-medium text-amber-500 shadow-sm transition hover:border-amber-500 hover:bg-ink-800"
                                 >
                                     เลือกไฟล์จากเครื่อง
                                 </label>
@@ -566,12 +566,12 @@ export function ChapterImageManager({
                             </div>
 
                             {/* Toolbar */}
-                            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-3">
-                                <p className="text-sm text-gray-700 flex items-center font-medium">
+                            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-ink-800 pb-3">
+                                <p className="text-sm text-ink-50 flex items-center font-medium">
                                     <ListOrdered className="mr-2 h-4 w-4 text-gold-dark" />
                                     ภาพทั้งหมด {files.length} หน้า
                                     {uploading && uploadProgress.total > 0 && (
-                                        <span className="ml-2 text-xs text-gold-dark">
+                                        <span className="ml-2 text-xs text-gold">
                                             (กำลังอัปโหลด {uploadProgress.done}/{uploadProgress.total})
                                         </span>
                                     )}
@@ -580,7 +580,7 @@ export function ChapterImageManager({
                                     <button
                                         onClick={clearAll}
                                         disabled={uploading || files.length === 0}
-                                        className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 shadow-sm transition hover:bg-red-50 hover:text-red-600 hover:border-red-200 disabled:opacity-50"
+                                        className="rounded-lg border border-ink-700/50 bg-ink-950 px-3 py-1.5 text-xs font-medium text-ink-400 shadow-sm transition hover:bg-red-900/20 hover:text-red-400 hover:border-red-900/50 disabled:opacity-50"
                                     >
                                         ลบภาพทั้งหมด
                                     </button>
@@ -599,7 +599,7 @@ export function ChapterImageManager({
                                         strategy={rectSortingStrategy}
                                     >
                                         {files.length === 0 ? (
-                                            <div className="col-span-full py-8 text-center text-sm text-gray-500">
+                                            <div className="col-span-full py-8 text-center text-sm text-ink-500">
                                                 ยังไม่มีรูปภาพสำหรับตอนนี้
                                             </div>
                                         ) : (
@@ -623,11 +623,11 @@ export function ChapterImageManager({
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-end gap-3 border-t border-gray-200 bg-gray-50 px-6 py-4">
+                <div className="flex items-center justify-end gap-3 border-t border-ink-700/50 bg-ink-950 px-6 py-4">
                     <button
                         onClick={onClose}
                         disabled={uploading}
-                        className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 shadow-sm transition hover:bg-gray-50 hover:text-gray-900 disabled:opacity-50"
+                        className="rounded-xl border border-ink-700/50 bg-ink-800 px-4 py-2 text-sm font-medium text-ink-300 shadow-sm transition hover:bg-ink-800 hover:text-ink-50 disabled:opacity-50"
                     >
                         ยกเลิก
                     </button>

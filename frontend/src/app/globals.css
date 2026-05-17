@@ -15,12 +15,11 @@
   --color-surface-200: #0f0f14;
   --color-surface-300: #0a0a0f;
 
-  /* ── "Ink" neutral scale (warm dark, premium-low contrast) ── */
-  /* Tight stops between 950–700 so borders virtually disappear into surfaces. */
+  /* ── "Ink" neutral scale (warm dark, premium-luxury) ── */
   --color-ink-950: #08080b;
   --color-ink-900: #0d0d12;
   --color-ink-800: #131319;
-  --color-ink-700: #18181f;  /* subtle, almost invisible against ink-800 */
+  --color-ink-700: #18181f;
   --color-ink-600: #20202a;
   --color-ink-500: #34343f;
   --color-ink-400: #6c6c7a;
@@ -41,6 +40,22 @@
   /* ── Easing ── */
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
 }
+
+/* ── Admin Dashboard Theme: "Graphite" (charcoal-blue, SaaS) ── */
+/* Scoped override — only applies inside .admin-theme wrapper */
+.admin-theme {
+  --color-ink-950: #0f1219;
+  --color-ink-900: #181d28;
+  --color-ink-800: #222a3a;
+  --color-ink-700: #2e3a50;
+  --color-ink-600: #3e4e68;
+  --color-ink-500: #5c6e88;
+  --color-ink-400: #8494ad;
+  --color-ink-300: #a4b1c4;
+  --color-ink-200: #c6cfdd;
+  --color-ink-100: #e4eaf3;
+}
+
 
 body {
   background-color: var(--color-background);

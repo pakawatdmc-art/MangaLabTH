@@ -32,3 +32,4 @@ Pillow==11.3.0
 
 # Google API Auth
 google-auth==2.38.0
+user-agents>=2.2

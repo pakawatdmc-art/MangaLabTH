@@ -58,8 +58,8 @@ export function ChapterListClient({ chapters, freeChapterCount, mangaSlug }: Cha
                     อ่านฟรี {freeChapterCount}
                 </span>
             </div>
-            <div className="divide-y divide-ink-800 rounded-sm overflow-hidden bg-ink-900/40">
-                {chapters.map((ch) => {
+            <div className="divide-y divide-ink-700/40 rounded-sm overflow-hidden">
+                {chapters.map((ch, idx) => {
                     const isRead = readChapters.includes(ch.id);
 
                     let unlockText = null;
@@ -88,8 +88,8 @@ export function ChapterListClient({ chapters, freeChapterCount, mangaSlug }: Cha
                             key={ch.id}
                             href={`/${mangaSlug}/ตอนที่-${ch.number}`}
                             className={`flex items-start justify-between gap-3 px-3 py-3 transition-colors duration-150 sm:items-center sm:px-4 ${isRead
-                                ? "bg-ink-900/40 opacity-60 hover:bg-ink-900/70 hover:opacity-100"
-                                : "bg-ink-900/30 hover:bg-ink-800"
+                                ? "bg-ink-800/30 opacity-60 hover:bg-ink-800/60 hover:opacity-100"
+                                : idx % 2 === 0 ? "bg-ink-800/20 hover:bg-ink-700/40" : "bg-ink-800/45 hover:bg-ink-700/40"
                                 }`}
                         >
                             <div className="flex min-w-0 items-center gap-3">

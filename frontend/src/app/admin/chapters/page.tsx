@@ -193,24 +193,24 @@ export default function AdminChaptersPage() {
   return (
     <div className="space-y-5 pb-10">
       {/* Header Banner */}
-      <section className="relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 sm:p-6 shadow-sm">
+      <section className="relative overflow-hidden rounded-xl border border-ink-700/50 bg-ink-800 p-5 sm:p-6 shadow-sm">
         <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="mb-2 text-2xl font-bold text-gray-900">
+            <h1 className="mb-2 text-2xl font-bold text-ink-50">
               <Layers className="mr-2 inline-block h-6 w-6 text-gold-dark" />
               ระบบจัดการตอน
             </h1>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-ink-400">
               มีทั้งหมด {chapters.length} ตอนในระบบ
             </p>
-            <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs text-amber-700 font-medium">
+            <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-gold-dark/30 bg-gold-dark/10 px-3 py-1.5 text-xs text-gold font-medium">
               <Sparkles className="h-3.5 w-3.5" />
               จัดการชื่อ ราคา และรูปภาพจบในที่เดียว
             </div>
           </div>
 
-          <div className="w-full shrink-0 rounded-xl border border-gray-200 bg-gray-50 p-5 sm:w-[340px]">
-            <label className="mb-3 block text-sm font-medium tracking-wide text-gray-700">
+          <div className="w-full shrink-0 rounded-xl border border-ink-700/50 bg-ink-950 p-5 sm:w-[340px]">
+            <label className="mb-3 block text-sm font-medium tracking-wide text-ink-300">
               เลือกเรื่องที่ต้องการจัดการ
             </label>
             <select
@@ -220,7 +220,7 @@ export default function AdminChaptersPage() {
                 setShowForm(false);
                 setError("");
               }}
-              className="h-11 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-gold-dark focus:ring-1 focus:ring-gold-dark focus:outline-none transition shadow-sm"
+              className="h-11 w-full rounded-lg border border-ink-700/50 bg-ink-800 px-3 text-sm text-ink-50 focus:border-gold focus:ring-1 focus:ring-gold focus:outline-none transition shadow-sm"
             >
               <option value="">-- กรุณาเลือกมังงะ --</option>
               {[...mangas].reverse().map((m, index) => (
@@ -230,8 +230,8 @@ export default function AdminChaptersPage() {
               ))}
             </select>
             {selectedManga ? (
-              <div className="mt-3 flex items-start gap-3 rounded-lg border border-gray-200 bg-white p-2.5 shadow-sm">
-                <div className="relative h-12 w-9 shrink-0 overflow-hidden rounded bg-gray-100 border border-gray-200 shadow-sm">
+              <div className="mt-3 flex items-start gap-3 rounded-lg border border-ink-700/50 bg-ink-800 p-2.5 shadow-sm">
+                <div className="relative h-12 w-9 shrink-0 overflow-hidden rounded bg-ink-800 border border-ink-700 shadow-sm">
                   <Image
                     src={selectedManga.cover_url || "/placeholder.webp"}
                     alt={selectedManga.title}
@@ -241,14 +241,14 @@ export default function AdminChaptersPage() {
                   />
                 </div>
                 <div className="flex flex-col justify-center">
-                  <p className="text-xs font-medium text-gray-900 line-clamp-1" title={selectedManga.title}>
+                  <p className="text-xs font-medium text-ink-50 line-clamp-1" title={selectedManga.title}>
                     {selectedManga.title}
                   </p>
-                  <p className="mt-0.5 text-[10px] text-gray-500">กำลังจัดการตอนของเรื่องนี้</p>
+                  <p className="mt-0.5 text-[10px] text-ink-400">กำลังจัดการตอนของเรื่องนี้</p>
                 </div>
               </div>
             ) : (
-              <p className="mt-2.5 text-[11px] text-gray-500">
+              <p className="mt-2.5 text-[11px] text-ink-500">
                 กรุณาเลือกมังงะก่อนที่จะสามารถเพิ่มตอนใหม่ได้
               </p>
             )}
@@ -259,17 +259,17 @@ export default function AdminChaptersPage() {
       {/* Stats and Add Button (Only show when selected) */}
       {selectedMangaId ? (
         <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:shadow-md">
-            <p className="text-[11px] uppercase tracking-wide text-gray-500">ตอนทั้งหมดของเรื่องนี้</p>
-            <p className="mt-1.5 text-2xl font-semibold text-gray-900">{filteredChapters.length}</p>
+          <div className="rounded-xl border border-ink-700/50 bg-ink-800 p-4 shadow-sm transition hover:shadow-md">
+            <p className="text-[11px] uppercase tracking-wide text-ink-400">ตอนทั้งหมดของเรื่องนี้</p>
+            <p className="mt-1.5 text-2xl font-semibold text-ink-50">{filteredChapters.length}</p>
           </div>
-          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:shadow-md">
-            <p className="text-[11px] uppercase tracking-wide text-gray-500">ตอนฟรี</p>
-            <p className="mt-1.5 text-2xl font-semibold text-emerald-600">{freeCount}</p>
+          <div className="rounded-xl border border-ink-700/50 bg-ink-800 p-4 shadow-sm transition hover:shadow-md">
+            <p className="text-[11px] uppercase tracking-wide text-ink-400">ตอนฟรี</p>
+            <p className="mt-1.5 text-2xl font-semibold text-emerald-500">{freeCount}</p>
           </div>
-          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:shadow-md">
-            <p className="text-[11px] uppercase tracking-wide text-gray-500">ตอนเสียเหรียญ</p>
-            <p className="mt-1.5 text-2xl font-semibold text-amber-600">{paidCount}</p>
+          <div className="rounded-xl border border-ink-700/50 bg-ink-800 p-4 shadow-sm transition hover:shadow-md">
+            <p className="text-[11px] uppercase tracking-wide text-ink-400">ตอนเสียเหรียญ</p>
+            <p className="mt-1.5 text-2xl font-semibold text-amber-500">{paidCount}</p>
           </div>
           <div className="flex h-full items-center justify-center">
             <button
@@ -282,28 +282,28 @@ export default function AdminChaptersPage() {
           </div>
         </section>
       ) : (
-        <div className="rounded-xl border border-gray-200 bg-gray-50 p-8 text-center">
-          <p className="text-sm text-gray-500">กรุณาเลือกมังงะจากเมนูด้านบน เพื่อเรียกดูข้อมูลทั้งหมด</p>
+        <div className="rounded-xl border border-ink-700/50 bg-ink-950 p-8 text-center">
+          <p className="text-sm text-ink-400">กรุณาเลือกมังงะจากเมนูด้านบน เพื่อเรียกดูข้อมูลทั้งหมด</p>
         </div>
       )}
 
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {error}
         </div>
       )}
 
       {editingChapter && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 px-4 py-6 backdrop-blur-md sm:px-6">
-          <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6 backdrop-blur-md sm:px-6">
+          <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-ink-700/50 bg-ink-800 shadow-xl">
 
-            <div className="relative border-b border-gray-100 bg-transparent px-6 py-5">
-              <h3 className="flex flex-col gap-1.5 text-lg font-bold tracking-tight text-gray-900">
+            <div className="relative border-b border-ink-800 bg-transparent px-6 py-5">
+              <h3 className="flex flex-col gap-1.5 text-lg font-bold tracking-tight text-ink-50">
                 <span className="flex items-center gap-2">
                   <Pencil className="h-5 w-5 text-gold-dark" />
                   แก้ไขตอนที่ {formatChapterNumber(editingChapter.number)}
                 </span>
-                <span className="w-fit rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[11px] font-medium text-amber-700">
+                <span className="w-fit rounded-full border border-gold-dark/30 bg-gold-dark/10 px-2.5 py-0.5 text-[11px] font-medium text-gold">
                   กำลังจัดการ: {selectedManga?.title || "ไม่ได้เลือกเรื่อง"}
                 </span>
               </h3>
@@ -314,7 +314,7 @@ export default function AdminChaptersPage() {
                 {/* Row 1: Number & Price */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="mb-1.5 block text-xs font-medium tracking-wide text-gray-700">ตอนที่ <span className="text-red-500">*</span></label>
+                    <label className="mb-1.5 block text-xs font-medium tracking-wide text-ink-300">ตอนที่ <span className="text-red-500">*</span></label>
                     <input
                       type="number"
                       name="number"
@@ -322,35 +322,35 @@ export default function AdminChaptersPage() {
                       min="0"
                       required
                       defaultValue={editingChapter.number}
-                      className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3.5 text-sm font-medium text-gray-900 transition focus:border-gold-dark focus:ring-1 focus:ring-gold-dark focus:outline-none"
+                      className="h-11 w-full rounded-xl border border-ink-700/50 bg-ink-950 px-3.5 text-sm font-medium text-ink-50 transition focus:border-gold focus:ring-1 focus:ring-gold focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-xs font-medium tracking-wide text-gray-700">ราคา <span className="text-gray-500">(เหรียญ)</span></label>
+                    <label className="mb-1.5 block text-xs font-medium tracking-wide text-ink-300">ราคา <span className="text-ink-500">(เหรียญ)</span></label>
                     <input
                       type="number"
                       name="coin_price"
                       min="0"
                       defaultValue={editingChapter.coin_price || 0}
-                      className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3.5 text-sm font-medium text-gray-900 transition focus:border-gold-dark focus:ring-1 focus:ring-gold-dark focus:outline-none"
+                      className="h-11 w-full rounded-xl border border-ink-700/50 bg-ink-950 px-3.5 text-sm font-medium text-ink-50 transition focus:border-gold focus:ring-1 focus:ring-gold focus:outline-none"
                     />
                   </div>
                 </div>
 
                 {/* Row 2: Title */}
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium tracking-wide text-gray-700">ชื่อตอน <span className="font-normal text-gray-500">(ไม่บังคับ)</span></label>
+                  <label className="mb-1.5 block text-xs font-medium tracking-wide text-ink-300">ชื่อตอน <span className="font-normal text-ink-500">(ไม่บังคับ)</span></label>
                   <input
                     type="text"
                     name="title"
                     defaultValue={editingChapter.title || ""}
                     placeholder="เช่น: บทเริ่มต้น, ศึกตัดสิน"
-                    className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3.5 text-sm text-gray-900 transition placeholder:text-gray-400 focus:border-gold-dark focus:ring-1 focus:ring-gold-dark focus:outline-none"
+                    className="h-11 w-full rounded-xl border border-ink-700/50 bg-ink-950 px-3.5 text-sm text-ink-50 transition placeholder:text-ink-600 focus:border-gold focus:ring-1 focus:ring-gold focus:outline-none"
                   />
                 </div>
 
                 {/* Row 3: Is Free */}
-                <div className="mt-2 rounded-xl border border-gray-200 bg-gray-50 p-4 transition-colors">
+                <div className="mt-2 rounded-xl border border-ink-700/50 bg-ink-950 p-4 transition-colors">
                   <label className="flex cursor-pointer items-center gap-3">
                     <div className="relative flex items-center">
                       <input
@@ -358,22 +358,22 @@ export default function AdminChaptersPage() {
                         name="is_free"
                         checked={editIsFree}
                         onChange={(e) => setEditIsFree(e.target.checked)}
-                        className="peer h-5 w-5 cursor-pointer appearance-none rounded border border-gray-300 bg-white transition-all checked:border-gold-dark checked:bg-gold-dark"
+                        className="peer h-5 w-5 cursor-pointer appearance-none rounded border border-ink-700 bg-ink-900 transition-all checked:border-gold-dark checked:bg-gold-dark"
                       />
                       <svg className="pointer-events-none absolute left-1/2 top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 transition-opacity peer-checked:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium text-gray-900">เปิดให้อ่านฟรี</span>
-                      <span className="text-xs text-gray-500">ผู้อ่านไม่ต้องใช้เหรียญเพื่ออ่านตอนนี้</span>
+                      <span className="text-sm font-medium text-ink-50">เปิดให้อ่านฟรี</span>
+                      <span className="text-xs text-ink-400">ผู้อ่านไม่ต้องใช้เหรียญเพื่ออ่านตอนนี้</span>
                     </div>
                   </label>
 
                   {!editIsFree && (
-                    <div className="mt-4 border-t border-gray-200 pt-4">
-                      <label className="mb-2 block text-xs font-medium tracking-wide text-gray-700">
-                        ตั้งเวลาเปิดให้อ่านฟรีอัตโนมัติ <span className="font-normal text-gray-500">(ถ้ามี)</span>
+                    <div className="mt-4 border-t border-ink-800 pt-4">
+                      <label className="mb-2 block text-xs font-medium tracking-wide text-ink-300">
+                        ตั้งเวลาเปิดให้อ่านฟรีอัตโนมัติ <span className="font-normal text-ink-500">(ถ้ามี)</span>
                       </label>
                       <input
                         type="datetime-local"
@@ -388,7 +388,7 @@ export default function AdminChaptersPage() {
                               })()
                             : ""
                         }
-                        className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3.5 text-sm font-medium text-gray-900 transition focus:border-gold-dark focus:ring-1 focus:ring-gold-dark focus:outline-none [&::-webkit-calendar-picker-indicator]:bg-transparent [&::-webkit-calendar-picker-indicator]:p-1 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                        className="h-11 w-full rounded-xl border border-ink-700/50 bg-ink-800 px-3.5 text-sm font-medium text-ink-50 transition focus:border-gold focus:ring-1 focus:ring-gold focus:outline-none [&::-webkit-calendar-picker-indicator]:bg-transparent [&::-webkit-calendar-picker-indicator]:p-1 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:invert"
                       />
                     </div>
                   )}
@@ -396,11 +396,11 @@ export default function AdminChaptersPage() {
               </div>
 
               {/* Actions */}
-              <div className="mt-8 flex items-center justify-end gap-3 pt-6 border-t border-gray-100">
+              <div className="mt-8 flex items-center justify-end gap-3 pt-6 border-t border-ink-800">
                 <button
                   type="button"
                   onClick={() => setEditingChapter(null)}
-                  className="h-10 rounded-xl px-5 text-sm font-medium text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
+                  className="h-10 rounded-xl px-5 text-sm font-medium text-ink-300 transition hover:bg-ink-800 hover:text-ink-50"
                 >
                   ยกเลิก
                 </button>
@@ -418,13 +418,13 @@ export default function AdminChaptersPage() {
       )}
 
       {showForm && (
-        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <h3 className="mb-4 text-sm font-semibold text-gray-900">
+        <section className="rounded-xl border border-ink-700/50 bg-ink-800 p-5 shadow-sm">
+          <h3 className="mb-4 text-sm font-semibold text-ink-50">
             เพิ่มตอนใหม่ {selectedManga ? `— ${selectedManga.title}` : ""}
           </h3>
           <form onSubmit={handleCreate} className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">ตอนที่ *</label>
+              <label className="mb-1 block text-xs font-medium text-ink-300">ตอนที่ *</label>
               <input
                 type="number"
                 key={`manga-${selectedMangaId}-next-${nextChapterNumber}`}
@@ -433,21 +433,21 @@ export default function AdminChaptersPage() {
                 min="0"
                 required
                 defaultValue={nextChapterNumber}
-                className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-gold-dark focus:ring-1 focus:ring-gold-dark focus:outline-none"
+                className="h-10 w-full rounded-xl border border-ink-700/50 bg-ink-950 px-3 text-sm text-ink-50 focus:border-gold focus:ring-1 focus:ring-gold focus:outline-none"
                 placeholder="1"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">ชื่อตอน</label>
+              <label className="mb-1 block text-xs font-medium text-ink-300">ชื่อตอน</label>
               <input
                 type="text"
                 name="title"
-                className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-gold-dark focus:ring-1 focus:ring-gold-dark focus:outline-none"
+                className="h-10 w-full rounded-xl border border-ink-700/50 bg-ink-950 px-3 text-sm text-ink-50 focus:border-gold focus:ring-1 focus:ring-gold focus:outline-none"
                 placeholder="ชื่อตอน (ไม่บังคับ)"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">ราคา (เหรียญ)</label>
+              <label className="mb-1 block text-xs font-medium text-ink-300">ราคา (เหรียญ)</label>
               <input
                 type="number"
                 name="coin_price"
@@ -455,31 +455,31 @@ export default function AdminChaptersPage() {
                 value={createIsFree ? 0 : createCoinPrice}
                 onChange={(e) => setCreateCoinPrice(Number(e.target.value))}
                 disabled={createIsFree}
-                className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-gold-dark focus:ring-1 focus:ring-gold-dark focus:outline-none disabled:opacity-50 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                className="h-10 w-full rounded-xl border border-ink-700/50 bg-ink-950 px-3 text-sm text-ink-50 focus:border-gold focus:ring-1 focus:ring-gold focus:outline-none disabled:opacity-50 disabled:bg-ink-800 disabled:cursor-not-allowed"
               />
             </div>
             <div className="flex items-end">
-              <label className="flex items-center gap-2 text-sm text-gray-700">
+              <label className="flex items-center gap-2 text-sm text-ink-300">
                 <input
                   type="checkbox"
                   name="is_free"
                   checked={createIsFree}
                   onChange={(e) => setCreateIsFree(e.target.checked)}
-                  className="rounded border-gray-300 text-gold-dark focus:ring-gold-dark"
+                  className="rounded border-ink-700 bg-ink-950 text-gold focus:ring-gold"
                 />
                 ตอนฟรี
               </label>
             </div>
             
             {!createIsFree && (
-              <div className="col-span-1 sm:col-span-3 border-t border-gray-100 pt-3">
-                 <label className="mb-2 block text-xs font-medium text-gray-700">ตั้งเวลาเปิดให้อ่านฟรีอัตโนมัติ (ไม่บังคับ)</label>
+              <div className="col-span-1 sm:col-span-3 border-t border-ink-800 pt-3">
+                 <label className="mb-2 block text-xs font-medium text-ink-300">ตั้งเวลาเปิดให้อ่านฟรีอัตโนมัติ (ไม่บังคับ)</label>
                  <input
                    type="datetime-local"
                    key={`unlock-${selectedMangaId}-${defaultUnlocksAt}`}
                    name="unlocks_at"
                    defaultValue={defaultUnlocksAt}
-                   className="h-10 w-full sm:w-1/3 rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-gold-dark focus:ring-1 focus:ring-gold-dark focus:outline-none [&::-webkit-calendar-picker-indicator]:bg-transparent [&::-webkit-calendar-picker-indicator]:p-1 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                   className="h-10 w-full sm:w-1/3 rounded-xl border border-ink-700/50 bg-ink-950 px-3 text-sm text-ink-50 focus:border-gold focus:ring-1 focus:ring-gold focus:outline-none [&::-webkit-calendar-picker-indicator]:bg-transparent [&::-webkit-calendar-picker-indicator]:p-1 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:invert"
                  />
               </div>
             )}
@@ -494,7 +494,7 @@ export default function AdminChaptersPage() {
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50"
+                className="rounded-xl border border-ink-700/50 bg-ink-950 px-4 py-2 text-sm font-medium text-ink-300 shadow-sm transition hover:bg-ink-800"
               >
                 ยกเลิก
               </button>
@@ -503,10 +503,10 @@ export default function AdminChaptersPage() {
         </section>
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-xl border border-ink-700/50 bg-ink-800 shadow-sm">
         <table className="w-full min-w-[560px] text-sm">
           <thead>
-            <tr className="border-b border-gray-200 bg-gray-50 text-left text-xs text-gray-600 font-medium">
+            <tr className="border-b border-ink-700/50 bg-ink-950 text-left text-xs text-ink-400 font-medium">
               <th className="px-4 py-3">ตอนที่</th>
               <th className="px-4 py-3">ชื่อตอน</th>
               <th className="px-4 py-3">ราคา</th>
@@ -515,16 +515,16 @@ export default function AdminChaptersPage() {
               <th className="px-4 py-3 text-right">จัดการ</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-ink-800/50">
             {!selectedMangaId ? (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-gray-500">
+                <td colSpan={6} className="px-4 py-12 text-center text-ink-500">
                   กรุณาเลือกมังงะก่อน เพื่อดูและจัดการตอน
                 </td>
               </tr>
             ) : filteredChapters.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-gray-500">
+                <td colSpan={6} className="px-4 py-12 text-center text-ink-500">
                   เรื่องนี้ยังไม่มีตอน — กดปุ่ม “เพิ่มตอน” เพื่อเริ่มต้น
                 </td>
               </tr>
@@ -552,20 +552,20 @@ export default function AdminChaptersPage() {
                 }
 
                 return (
-                <tr key={ch.id} className="hover:bg-gray-50/80 transition-colors">
-                  <td className="px-4 py-2.5 font-medium text-gray-900">
+                <tr key={ch.id} className="hover:bg-ink-800/50 transition-colors">
+                  <td className="px-4 py-2.5 font-medium text-ink-50">
                     {formatChapterNumber(ch.number)}
                   </td>
-                  <td className="px-4 py-2.5 text-gray-600">{ch.title || "—"}</td>
+                  <td className="px-4 py-2.5 text-ink-300">{ch.title || "—"}</td>
                   <td className="px-4 py-2.5">
                     {ch.is_free ? (
-                      <span className="text-emerald-600 font-medium">ฟรี</span>
+                      <span className="text-emerald-500 font-medium">ฟรี</span>
                     ) : (
                       <span className="text-gold-dark font-medium">{ch.coin_price ?? 0} เหรียญ</span>
                     )}
                   </td>
-                  <td className="px-4 py-2.5 text-gray-500">{ch.page_count ?? 0}</td>
-                  <td className="px-4 py-2.5 text-xs text-gray-500">
+                  <td className="px-4 py-2.5 text-ink-400">{ch.page_count ?? 0}</td>
+                  <td className="px-4 py-2.5 text-xs text-ink-400">
                     {ch.published_at
                       ? parseUTCDate(ch.published_at).toLocaleDateString("th-TH", {
                           year: "numeric",
@@ -581,7 +581,7 @@ export default function AdminChaptersPage() {
                     {unlockText && (
                         <span 
                             title={`ปลดล็อกให้อ่านฟรีวันที่ ${parseUTCDate(ch.unlocks_at!).toLocaleString("th-TH", { timeZone: "Asia/Bangkok" })}`}
-                            className="mr-3 inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] text-amber-700 border border-amber-200"
+                            className="mr-3 inline-flex items-center gap-1 rounded-full bg-gold-dark/10 px-2 py-0.5 text-[11px] text-gold border border-gold-dark/30"
                         >
                             <Clock className="h-3 w-3" />
                             {unlockText}
@@ -592,21 +592,21 @@ export default function AdminChaptersPage() {
                         setEditingChapter(ch);
                         setEditIsFree(ch.is_free);
                       }}
-                      className="mr-2 rounded-md border border-gray-200 bg-white px-2.5 py-1 text-xs text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
+                      className="mr-2 rounded-md border border-ink-700 bg-ink-800 px-2.5 py-1 text-xs text-ink-300 transition hover:bg-ink-700 hover:text-ink-50"
                     >
                       <Pencil className="mr-1 inline-block h-3 w-3" />
                       แก้ไข
                     </button>
                     <button
                       onClick={() => setManagingChapter(ch)}
-                      className="mr-2 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs text-amber-700 transition hover:bg-amber-100"
+                      className="mr-2 rounded-md border border-gold-dark/40 bg-gold-dark/10 px-2.5 py-1 text-xs text-gold transition hover:bg-gold-dark/20"
                     >
                       <ImagePlus className="mr-1 inline-block h-3 w-3" />
                       จัดการภาพ
                     </button>
                     <button
                       onClick={() => handleDelete(ch)}
-                      className="rounded-md p-1.5 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
+                      className="rounded-md p-1.5 text-ink-500 transition hover:bg-red-900/30 hover:text-red-400"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>

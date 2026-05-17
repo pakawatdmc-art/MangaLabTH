@@ -684,3 +684,23 @@ export async function getMangaDeepdiveAnalytics(token: string, days = 30) {
     }[];
   }>(`/admin-stats/mangas-deepdive?days=${days}`, { token });
 }
+
+// ── Realtime ──────────────────────────────────────────────────────
+
+export interface RealtimeActiveData {
+  active_users: number;
+  sessions: {
+    session_id: string;
+    current_page: string;
+    device: { type: string; browser: string; os: string };
+    duration: string;
+    duration_seconds: number;
+    last_seen_ago: string;
+  }[];
+  pages: { page: string; count: number }[];
+  devices: Record<string, number>;
+}
+
+export function getRealtimeActive(token: string) {
+  return fetcher<RealtimeActiveData>(`/realtime/active`, { token });
+}

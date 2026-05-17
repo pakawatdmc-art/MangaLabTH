@@ -94,8 +94,7 @@ export default function AdminLayoutClient({ children, isPrimaryAdmin, adminToken
     }, [pathname]);
 
     return (
-        <div className="relative min-h-screen overflow-hidden bg-ink-900">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(212,168,67,0.06),transparent_50%)]" />
+        <div className="admin-theme relative min-h-screen overflow-hidden bg-ink-900">
 
             {/* Mobile overlay */}
             {sidebarOpen && (
@@ -109,7 +108,7 @@ export default function AdminLayoutClient({ children, isPrimaryAdmin, adminToken
                 {/* Sidebar */}
                 <aside
                     className={cn(
-                        "fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-ink-950/95 backdrop-blur-xl transition-transform duration-300 ease-out lg:static lg:translate-x-0",
+                        "fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-ink-950 border-r border-ink-700/40 backdrop-blur-xl transition-transform duration-300 ease-out lg:static lg:translate-x-0",
                         sidebarOpen ? "translate-x-0" : "-translate-x-full"
                     )}
                 >
@@ -136,7 +135,7 @@ export default function AdminLayoutClient({ children, isPrimaryAdmin, adminToken
                     </div>
 
                     <div className="px-3 pb-2 pt-3">
-                        <div className="rounded-md bg-ink-900 px-3 py-2.5">
+                        <div className="rounded-md bg-ink-800/60 px-3 py-2.5">
                             <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-gold">
                                 <Sparkles className="h-3.5 w-3.5" />
                                 โหมดผู้ดูแลระบบ
@@ -166,8 +165,8 @@ export default function AdminLayoutClient({ children, isPrimaryAdmin, adminToken
                                             className={cn(
                                                 "group relative flex items-center gap-2.5 rounded-sm px-3 py-2 text-sm transition-colors duration-200",
                                                 isActive
-                                                    ? "bg-ink-800/80 text-ink-100 border border-ink-700/50"
-                                                    : "text-ink-300 hover:bg-ink-800/60 hover:text-ink-100"
+                                                    ? "bg-ink-800 text-ink-100 shadow-sm border border-ink-700/50"
+                                                    : "text-ink-300 hover:bg-ink-800/50 hover:text-ink-100"
                                             )}
                                         >
                                             {isActive && (
@@ -195,7 +194,7 @@ export default function AdminLayoutClient({ children, isPrimaryAdmin, adminToken
                         </Link>
                         <Link
                             href="/"
-                            className="flex items-center justify-center gap-1.5 rounded-sm bg-ink-900/60 px-3 py-2 text-xs text-ink-300 transition-colors duration-200 hover:bg-ink-900 hover:text-ink-100"
+                            className="flex items-center justify-center gap-1.5 rounded-sm bg-ink-800/60 px-3 py-2 text-xs text-ink-300 transition-colors duration-200 hover:bg-ink-800 hover:text-ink-100"
                         >
                             <Home className="h-3.5 w-3.5" />
                             กลับหน้าอ่าน
@@ -204,19 +203,19 @@ export default function AdminLayoutClient({ children, isPrimaryAdmin, adminToken
                 </aside>
 
                 {/* Main Content Area */}
-                <div className="flex min-w-0 flex-1 flex-col bg-gray-50">
-                    <header className="sticky top-0 z-30 border-b border-gray-200 bg-white/80 backdrop-blur-xl">
+                <div className="flex min-w-0 flex-1 flex-col bg-ink-900">
+                    <header className="sticky top-0 z-30 border-b border-ink-700/40 bg-ink-900/90 backdrop-blur-xl">
                         <div className="flex h-16 items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
                             <div className="flex min-w-0 items-center gap-3">
                                 <button
                                     onClick={() => setSidebarOpen(true)}
-                                    className="rounded-md p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 lg:hidden"
+                                    className="rounded-md p-2 text-ink-400 transition-colors hover:bg-ink-800 hover:text-ink-100 lg:hidden"
                                 >
                                     <Menu className="h-5 w-5" />
                                 </button>
                                 <div className="min-w-0">
-                                    <p className="truncate text-base font-semibold text-gray-900">{activeSection}</p>
-                                    <p className="truncate text-[11px] uppercase tracking-[0.18em] text-gray-500">Admin workspace · MangaLabTH</p>
+                                    <p className="truncate text-base font-semibold text-ink-50">{activeSection}</p>
+                                    <p className="truncate text-[11px] uppercase tracking-[0.18em] text-ink-400">Admin workspace · MangaLabTH</p>
                                 </div>
                             </div>
                         </div>
