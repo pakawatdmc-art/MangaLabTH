@@ -177,10 +177,16 @@ async def create_checkout(
     
     frontend_base = settings.cors_origin_list[0]
     
-    # Use the request base URL for the webhook assuming the backend is publicly accessible.
-    # IMPORTANT: FFP's CloudFront WAF blocks any request containing "localhost" or "127.0.0.1" 
-    # to protect against SSRF. For local testing, use lvh.me (resolves to 127.0.0.1) for the webhooks.
-    api_base_url = str(request.base_url).rstrip("/")
+    # Use the public SITE_URL / FRONTEND_URL for the webhook callback.
+    # IMPORTANT: Do NOT use request.base_url here! In Cloud Run, Next.js
+    # rewrites /api/v1/* to http://localhost:8000, so request.base_url
+    # resolves to "http://localhost:8000" — which FFP can never reach.
+    # Instead, use the configured public URL that FFP can call over the internet.
+    api_base_url = (
+        settings.SITE_URL
+        or settings.FRONTEND_URL
+        or str(request.base_url).rstrip("/")
+    ).rstrip("/")
     if "localhost" in api_base_url or "127.0.0.1" in api_base_url:
         api_base_url = api_base_url.replace("localhost", "lvh.me").replace("127.0.0.1", "lvh.me")
         
@@ -484,11 +490,12 @@ async def confirm_checkout_payment(
     verify_result_code = status_data.get("resultCode")
     verify_status = status_data.get("txn.status") or status_data.get("status")
 
-    # Determine accepted statuses based on payment method:
-    # - QR Code: Only accept "S" (Settled). "G" means QR generated but NOT paid.
-    # - TrueWallet: Accept both "S" and "G" (Granted = paid).
-    is_truewallet = existing_tx and existing_tx.note and "truewallet" in existing_tx.note.lower()
-    accepted_statuses = {"S", "G"} if is_truewallet else {"S"}
+    # Accept both "S" (Settled) and "G" (Granted) for all payment methods.
+    # "G" means the customer has already paid — the money is confirmed by FFP
+    # but hasn't fully settled into the merchant account yet.
+    # Previously only QR accepted "S" (rejecting "G"), which caused coins
+    # not to be credited for larger amounts that take longer to settle.
+    accepted_statuses = {"S", "G"}
     
     if verify_result_code != "00" or verify_status not in accepted_statuses:
         return {"status": "pending", "reason": "payment_not_settled"}
